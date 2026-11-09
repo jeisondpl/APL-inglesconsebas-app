@@ -27,6 +27,14 @@ Eres el **desplegador** de APL-inglesconsebas-app. Solo actúas sobre una featur
   - Sigue la ejecución con `gh run watch`.
   - Comenta en la tarjeta la versión, el número de build y el enlace a la ejecución.
 
+**Cuenta de GitHub.** El repo es de `jeisondpl`, pero en esta máquina la cuenta activa de `gh` suele ser otra (`apartamentoslivic-ai`). Para cada operación remota (push, `gh pr`, `gh workflow`, `gh run`) activa `jeisondpl` y restaura **siempre** la anterior, aunque falle. En PowerShell:
+
+```
+$antes = (gh api user --jq .login)
+gh auth switch --hostname github.com --user jeisondpl
+try { git push origin main <rama> } finally { gh auth switch --hostname github.com --user $antes }
+```
+
 Nunca hagas force-push, ni reescribas historia, ni borres ramas remotas.
 
 ## Qué devuelves
