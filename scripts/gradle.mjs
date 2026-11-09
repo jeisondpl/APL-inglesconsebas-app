@@ -15,7 +15,9 @@ if (!args.length) {
   console.error('Uso: node scripts/gradle.mjs <tarea> [argumentos]');
   process.exit(2);
 }
-const r = spawnSync(windows ? 'gradlew.bat' : './gradlew', args, {
+// Ruta absoluta: cmd.exe no siempre busca en el directorio actual (NoDefaultCurrentDirectoryInExePath).
+const wrapper = path.join(android, windows ? 'gradlew.bat' : 'gradlew');
+const r = spawnSync(windows ? `"${wrapper}"` : wrapper, args, {
   cwd: android,
   stdio: 'inherit',
   shell: windows,

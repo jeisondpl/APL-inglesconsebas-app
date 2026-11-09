@@ -73,3 +73,15 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Entorno y firma (docs/DISTRIBUCION.md)
+.env
+.env.*
+!.env.example
+android/keystore.properties
+*.jks
+# Artefactos de distribución
+dist/
+*.apk
+*.aab
+coverage/
