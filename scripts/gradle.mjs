@@ -22,4 +22,8 @@ const r = spawnSync(windows ? `"${wrapper}"` : wrapper, args, {
   stdio: 'inherit',
   shell: windows,
 });
+if (r.error) {
+  // p. ej. EACCES si gradlew perdió el permiso de ejecución (git update-index --chmod=+x android/gradlew).
+  console.error(`No se pudo ejecutar ${wrapper}: ${r.error.message}`);
+}
 process.exit(r.status ?? 1);

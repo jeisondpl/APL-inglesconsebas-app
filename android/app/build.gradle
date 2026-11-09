@@ -106,7 +106,9 @@ if (System.getenv('ANDROID_KEYSTORE_FILE')) {
     }
 }
 def hayFirmaRelease = firmaRelease.storeFile != null
-if (!hayFirmaRelease && System.getenv('CI')) {
+// Solo cuando se pide un build de release: el CI de los PR compila debug sin keystore.
+def pideRelease = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+if (!hayFirmaRelease && pideRelease && System.getenv('CI')) {
     throw new GradleException('Falta la keystore de release (ANDROID_KEYSTORE_FILE y compañía). Ver docs/DISTRIBUCION.md.')
 }
 
