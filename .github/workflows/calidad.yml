@@ -1,0 +1,51 @@
+# Puerta de calidad (docs/CALIDAD.md) en cada PR y en cada push a main.
+name: Calidad
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: calidad-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad:
+    name: tsc · lint · prettier · jest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Puerta de calidad
+        run: npm run calidad
+      - name: Cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 7
+
+  android:
+    name: Build Android (debug)
+    needs: calidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: assembleDebug
+        run: npm run build:android:debug -- --no-daemon
