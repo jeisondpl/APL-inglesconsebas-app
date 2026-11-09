@@ -1,0 +1,8 @@
+# Fin de línea LF en el repo (gradlew, scripts y proyecto Xcode se rompen con CRLF en macOS/CI).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jar binary
+*.keystore binary
+*.png binary
+*.jpg binary
