@@ -1,6 +1,72 @@
 # Plan · F1-01 · Proyecto base, sistema de diseño y marca
 
-> Redactado por el agente **planificador** el 2026-11-09. Estado: **pendiente de aprobación del usuario.**
+> Redactado por el agente **planificador** el 2026-11-09. Estado: **APROBADO por el usuario el 2026-11-09, con el alcance reducido que fija la sección 0.**
+
+## 0. Decisiones del usuario (prevalecen sobre el resto del documento)
+
+1. **Plan aprobado.** P1 y P3 se aceptan tal como están.
+2. **Identidad: se espera al manual de marca.** Quedan **fuera de esta entrega**, y pasan a una feature posterior de sistema de diseño cuando exista el manual:
+   - los tokens de marca (tabla de § 4);
+   - `src/shared/theme/` (tokens, temas, `TemaProvider`, `useEstilos`, contraste);
+   - los componentes de `src/shared/components/`, salvo lo indicado abajo;
+   - las fuentes;
+   - el splash (`SplashPort`, bootsplash, cambios nativos de splash);
+   - el ícono (`generar-iconos.mjs`, `sharp`);
+   - el escaparate.
+
+   Por tanto **no se instalan** `react-native-bootsplash`, `sharp` ni `react-native-asset`, y **no se inventan colores ni tipografías de marca**.
+3. **Toasts: `react-native-toast-message@2.5.2`**, aislada tras `notify`. El host es el componente `Toast` por defecto de la librería, sin estilos de marca.
+4. **Navegación sin tema propio.** `NavigationContainer` usa `DefaultTheme` o `DarkTheme` de React Navigation según `useColorScheme()`. La ruta inicial es `src/app/inicio/InicioProvisionalScreen.tsx`, una pantalla mínima con primitivas de React Native (`View` y `Text`). Muestra el nombre de la app, la versión y el entorno (`APP_ENV`, host de `API_URL`). Sus textos salen de `inicio.textos.ts`. Se sustituye con la feature de sesión.
+5. **`LimiteDeErrores`** usa primitivas de React Native, sin componentes de diseño. Su fallback tiene un título, un mensaje y un botón accesible «Reintentar» con alto ≥ 44.
+
+**Alcance de esta entrega:**
+- Configuración: alias `@/`, `jest.setup.ts`, retirar la plantilla y la dependencia `@react-native/new-app-screen`.
+- `src/shared/lib/`: `HttpResponse`, `textos`, `utils`, `entorno`, `api` y `notify`.
+- `src/app/di`.
+- `src/app/providers`: SafeArea, dependencias y límite de errores.
+- `src/app/navigation`, con la pantalla de inicio provisional.
+- `src/app/App.tsx`.
+- El lado de repositorio del ítem 1.3:
+  - `CFBundleDevelopmentRegion=es`;
+  - sin el permiso de ubicación vacío;
+  - `MARKETING_VERSION=0.1.0`;
+  - pasos de tiendas en `docs/DISTRIBUCION.md`.
+- Documentación.
+
+`INativos` queda vacío por ahora, con la misma justificación que `IRepositorios`.
+
+**Criterios que aplican:** CA1, CA2 (muestra la pantalla de inicio provisional), CA3, CA9, CA10 (sin colores de tema: el host se renderiza), CA11, CA14 y CA16.
+
+**Criterios nuevos:**
+- **CA17**: la pantalla de inicio provisional muestra el nombre, la versión de `package.json` y el entorno leído de `react-native-config`. Lo cubre un test.
+- **CA18**: `NavegadorRaiz` usa `DarkTheme` si `useColorScheme()` es `dark` y `DefaultTheme` en cualquier otro caso. Lo cubre un test.
+
+**Criterios aplazados** a la feature de sistema de diseño: CA4, CA5, CA6, CA7, CA8, CA12, CA13 y CA15.
+
+**Dependencias de esta entrega** (versiones exactas de § 7):
+- `@react-navigation/native` 7.5.1;
+- `@react-navigation/native-stack` 7.21.0;
+- `react-native-screens` 4.30.1;
+- `react-native-toast-message` 2.5.2;
+- `react-native-safe-area-context` 5.11.1, fijada;
+- `babel-plugin-module-resolver` 5.0.3, como dev.
+
+**Commits** (sustituyen a los de § 10):
+1. `build: alias @/ hacia src en tsconfig, babel y jest`
+2. `build: dependencias de navegación y toasts con versiones fijas`
+3. `feat(api): HttpResponse, entorno y cliente HTTP con Bearer y manejo del 401`
+4. `feat(ui): fachada notify sobre react-native-toast-message`
+5. `feat(app): composición en src/app con providers, DI, navegación raíz y límite de errores`
+6. `feat(app): pantalla de inicio provisional con versión y entorno`
+7. `chore(ios): región es, versión 0.1.0 y limpieza de permisos de Info.plist`
+8. `docs: base técnica, alias y pasos de tiendas del ítem 1.3`
+
+El tester añade sus commits `test(...)` después.
+
+**Tablero.** F1-01 se cierra en esta entrega con:
+- 1.1 hecho;
+- 1.3 parcial: repo listo, cuentas bloqueadas por el D-U-N-S;
+- 1.2 y 1.10 aplazados, esperando el manual de marca.
 >
 > **Definition of Ready: se cumple con salvedades.**
 > - **El ítem 1.3 no se puede cerrar todavía.** Depende de las cuentas de Apple Developer y de Google Play de organización, que necesitan el D-U-N-S y son trámite del cliente (contrato, `build-contrato-app-movil.js:370`). La feature deja preparado el repo y una lista de pasos manuales (P1).
