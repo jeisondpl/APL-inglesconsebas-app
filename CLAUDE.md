@@ -45,16 +45,25 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 
 - **Alias `@/` → `src/`**, definido en tres sitios que deben coincidir: `tsconfig.json` (`paths`), `babel.config.js` (`module-resolver`) y `jest.config.js` (`moduleNameMapper`). ESLint lo resuelve con `eslint-import-resolver-typescript`, así que la regla de capas también vigila los imports con alias.
 - **Composición en `src/app/`**:
-  - `App.tsx`: `Providers` + `NavegadorRaiz` + el host `Toast` al final;
+  - `App.tsx`: `Providers` + `NavegadorRaiz`;
   - `di/`: `crearDependencias()` es el único sitio donde se instancian el cliente HTTP, los repositorios y los adaptadores. Un módulo nuevo añade su puerto a `IRepositorios`; un SDK nuevo, el suyo a `INativos`. Se consumen con `useRepository` y `useNative`. En los tests, `DependenciasProvider valor={…}` (o `Providers dependencias={…}`) sustituye el contenedor;
-  - `providers/`: SafeArea, dependencias y `LimiteDeErrores`;
-  - `navigation/`: native-stack con `DefaultTheme`/`DarkTheme` según el sistema y `RaizParamList` tipado globalmente;
+  - `providers/`: SafeArea, `TemaProvider`, dependencias y `LimiteDeErrores`, con `HostNotificaciones` como hermano dentro del tema;
+  - `navigation/`: native-stack con `temaNavegacion(tema)` desde los tokens y `RaizParamList` tipado globalmente; `onReady` oculta el splash;
   - `inicio/InicioProvisionalScreen.tsx`: ruta inicial **provisional** (nombre, versión y entorno). La sustituye la feature de sesión.
 - **`src/shared/lib/`**: `HttpResponse`, `api.ts` (`crearClienteApi`, nunca lanza), `entorno.ts` (`leerEntorno` puro + `entorno`), `notify.ts` (única puerta a los toasts), `utils.ts` y `textos.ts`.
 - **Sesión pendiente**: el cliente HTTP sale del contenedor con `obtenerToken = () => null` y un `alNoAutorizado` vacío. La feature de sesión solo cambia esas dos funciones.
-- **Tema, componentes, fuentes, splash e ícono** esperan al manual de marca. No se inventan colores ni tipografías de marca.
-- **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context` y `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
-- **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context`, y versionar `Podfile.lock`.
+- **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context`, `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`) y `react-native-bootsplash` (`hide` resuelve). `react-native-svg` se renderiza sin mock. Lo que use `useTema` se monta dentro de `TemaProvider` (o de `Providers`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
+- **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context` (y los de F1-01b), y versionar `Podfile.lock`.
+
+## Sistema de diseño y marca (F1-01b)
+
+- **Dirección A · Evolución**, elegida por Sebastián el 2026-11-09. Logo y nombre son provisionales.
+- **Tokens** en `src/shared/theme`: `temaOscuro`/`temaClaro` con las mismas claves semánticas; se consumen con `useTema()` y `useEstilos(fabrica)` (fábrica declarada fuera del componente). No se escriben hex en pantallas. `PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'` (sin dato del sistema, oscuro); guardar la preferencia es el ítem 1.14.
+- **Componentes** en `src/shared/components`. Solo `HostNotificaciones` y `notify.ts` importan `react-native-toast-message`. Escaparate en `src/app/escaparate`, abierto desde el inicio provisional (con la sesión, solo en `__DEV__`).
+- **Fuentes** en `assets/fuentes` (OFL, licencias en `assets/licencias` para que `react-native-asset` no las copie): el archivo se llama como su nombre PostScript y `fontFamily` usa ese nombre; nunca `fontWeight`. Se enlazan con `npx react-native-asset` (`react-native.config.js`).
+- **Logo, ícono y splash** salen de `assets/marca/logo.json` con `npm run marca:logo` → `marca:iconos` → `marca:splash` (idempotentes). Su salida se versiona y no se edita a mano (lista en el README).
+- **Splash**: `react-native-bootsplash` solo en ejecución (`BootTheme`, `RNBootSplash.init`, `initWithStoryboard`, `hide`). Los recursos claro y oscuro los genera `scripts/generar-splash.mjs`, no el CLI (su modo oscuro es de pago). Se oculta con `SplashPort` (`useNative('splash')`) en el `onReady` de la navegación.
+- **Pasos nativos hechos**: Android `BootTheme`, la Activity con `@style/BootTheme` y `RNBootSplash.init` tras `RNScreensFragmentFactory`; iOS `SceneDelegate.customize`, `UILaunchStoryboardName=BootSplash`, `Colors.xcassets` y `BootSplash.storyboard` en el pbxproj y `UIAppFonts`. **Pendiente sin Mac**: `pod install` (bootsplash y svg), compilar iOS y versionar `Podfile.lock`.
 
 ## Contexto
 
