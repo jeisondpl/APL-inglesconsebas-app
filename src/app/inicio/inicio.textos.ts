@@ -5,4 +5,5 @@ export const textosInicio = {
   version: (version: string) => `Versión ${version}`,
   entorno: (entorno: string) => `Entorno: ${entorno}`,
   servidor: (host: string) => `Servidor: ${host}`,
+  verSistemaDiseno: 'Ver sistema de diseño',
 } as const;

@@ -1,6 +1,7 @@
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 
-import { Marca, Pantalla, Texto } from '@/shared/components';
+import { Boton, Marca, Pantalla, Texto } from '@/shared/components';
 import { entorno } from '@/shared/lib/entorno';
 
 import { version } from '../../../package.json';
@@ -16,9 +17,11 @@ function hostDe(url: string): string {
 
 /**
  * Pantalla inicial provisional con el sistema de diseño: la marca, la versión de package.json y el
- * entorno de react-native-config. La sustituye la feature de sesión.
+ * entorno de react-native-config, y el acceso al escaparate del sistema de diseño. La sustituye la
+ * feature de sesión.
  */
 export function InicioProvisionalScreen() {
+  const navegacion = useNavigation();
   return (
     <Pantalla style={estilos.contenido}>
       <Marca esEncabezado />
@@ -36,6 +39,11 @@ export function InicioProvisionalScreen() {
           {textos.servidor(hostDe(entorno.apiUrl))}
         </Texto>
       </View>
+      <Boton
+        variante="secundario"
+        titulo={textos.verSistemaDiseno}
+        onPress={() => navegacion.navigate('SistemaDiseno')}
+      />
     </Pantalla>
   );
 }

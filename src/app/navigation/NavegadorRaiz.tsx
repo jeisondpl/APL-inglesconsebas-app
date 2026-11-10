@@ -4,6 +4,8 @@ import { useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'react-native';
 
 import { useNative } from '@/app/di';
+import { textosEscaparate } from '@/app/escaparate/escaparate.textos';
+import { SistemaDisenoScreen } from '@/app/escaparate/SistemaDisenoScreen';
 import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
 import { useTema } from '@/shared/theme';
 
@@ -35,6 +37,11 @@ export function NavegadorRaiz() {
         <Pila.Screen
           name="InicioProvisional"
           component={InicioProvisionalScreen}
+        />
+        <Pila.Screen
+          name="SistemaDiseno"
+          component={SistemaDisenoScreen}
+          options={{ headerShown: true, title: textosEscaparate.titulo }}
         />
       </Pila.Navigator>
     </NavigationContainer>
