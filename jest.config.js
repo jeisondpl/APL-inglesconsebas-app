@@ -18,6 +18,13 @@ if (fs.existsSync(modulos)) {
 
 module.exports = {
   preset: '@react-native/jest-preset',
+  // Alias @/ → src/ (mismo que tsconfig.json y babel.config.js).
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+  // Se transforman los paquetes de React Native y React Navigation, que publican ESM o JSX sin compilar.
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native(-[^/]+)?|@react-native(-community)?|@react-navigation)/)',
+  ],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/__tests__/**',

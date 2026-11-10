@@ -41,6 +41,21 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - `node scripts/build-apk.mjs` es el respaldo local. En Windows compila desde una unidad `subst` temporal, porque el `ninja` de CMake no soporta rutas de más de 260 caracteres. Por eso `metro.config.js` vigila también la ruta real.
 - `react-native-config` lee `.env` (copiar de `.env.example`). Toda variable nueva va en `.env.example`. Nada secreto, porque termina dentro del APK.
 
+## Base técnica (F1-01)
+
+- **Alias `@/` → `src/`**, definido en tres sitios que deben coincidir: `tsconfig.json` (`paths`), `babel.config.js` (`module-resolver`) y `jest.config.js` (`moduleNameMapper`). ESLint lo resuelve con `eslint-import-resolver-typescript`, así que la regla de capas también vigila los imports con alias.
+- **Composición en `src/app/`**:
+  - `App.tsx`: `Providers` + `NavegadorRaiz` + el host `Toast` al final;
+  - `di/`: `crearDependencias()` es el único sitio donde se instancian el cliente HTTP, los repositorios y los adaptadores. Un módulo nuevo añade su puerto a `IRepositorios`; un SDK nuevo, el suyo a `INativos`. Se consumen con `useRepository` y `useNative`. En los tests, `DependenciasProvider valor={…}` (o `Providers dependencias={…}`) sustituye el contenedor;
+  - `providers/`: SafeArea, dependencias y `LimiteDeErrores`;
+  - `navigation/`: native-stack con `DefaultTheme`/`DarkTheme` según el sistema y `RaizParamList` tipado globalmente;
+  - `inicio/InicioProvisionalScreen.tsx`: ruta inicial **provisional** (nombre, versión y entorno). La sustituye la feature de sesión.
+- **`src/shared/lib/`**: `HttpResponse`, `api.ts` (`crearClienteApi`, nunca lanza), `entorno.ts` (`leerEntorno` puro + `entorno`), `notify.ts` (única puerta a los toasts), `utils.ts` y `textos.ts`.
+- **Sesión pendiente**: el cliente HTTP sale del contenedor con `obtenerToken = () => null` y un `alNoAutorizado` vacío. La feature de sesión solo cambia esas dos funciones.
+- **Tema, componentes, fuentes, splash e ícono** esperan al manual de marca. No se inventan colores ni tipografías de marca.
+- **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context` y `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
+- **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context`, y versionar `Podfile.lock`.
+
 ## Contexto
 
 - **Backend**: la API PHP de Leap, en `../app/api/`. Para el dominio (ciclos, tokens, `class_sessions.status`) hay que leer `../app/CLAUDE.md`. La app no duplica la lógica de negocio, solo la consume.

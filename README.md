@@ -1,97 +1,67 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Inglés con Sebas · app móvil
 
-# Getting Started
+App móvil de la academia *Inglés con Sebas* para estudiantes, profes y admin. React Native CLI 0.88.1 en modo bare (sin Expo), TypeScript estricto, identificador `com.inglesconsebas.app`.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+- Arquitectura, capas y convenciones: [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
+- Cómo se construye y se aprueba cada feature: [`docs/CALIDAD.md`](docs/CALIDAD.md).
+- Builds, firma y reparto a testers: [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 
-## Step 1: Start Metro
+## Puesta en marcha
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
+Requisitos: Node ≥ 22.11, JDK y Android SDK (ver la guía [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment)). iOS necesita macOS con Xcode y CocoaPods.
 
 ```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npm install
+cp .env.example .env        # API_URL y APP_ENV; sin secretos, terminan dentro del APK
+npm start                   # Metro
+npm run android             # emulador o dispositivo Android
 ```
 
-### iOS
+En iOS, la primera vez y tras cada dependencia nativa nueva: `bundle install` y `bundle exec pod install` dentro de `ios/`; luego `npm run ios`.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+Comandos útiles:
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+| Comando | Qué hace |
+|---|---|
+| `npm run calidad` | `tsc`, ESLint (regla de capas), Prettier y Jest con cobertura |
+| `npm test` | Solo Jest |
+| `npm run build:android:debug` | APK de debug con Gradle |
+| `node scripts/build-apk.mjs` | APK local de respaldo (ver `docs/DISTRIBUCION.md`) |
 
-```sh
-bundle install
+## Estructura base (F1-01)
+
+```
+index.js                      # AppRegistry → src/app/App
+jest.setup.ts                 # mocks globales: react-native-config, safe-area-context, toast-message
+src/
+├── app/                      # composición: solo aquí se conecta todo
+│   ├── App.tsx               # Providers + navegación raíz + host de toasts
+│   ├── di/                   # contenedor: crearDependencias, DependenciasProvider, useRepository, useNative
+│   ├── providers/            # SafeArea, dependencias y LimiteDeErrores
+│   ├── navigation/           # NavegadorRaiz (native-stack), RaizParamList, tema de navegación
+│   └── inicio/               # InicioProvisionalScreen (temporal)
+└── shared/
+    └── lib/                  # HttpResponse, api (cliente HTTP), entorno, notify, utils, textos
 ```
 
-Then, and every time you update your native dependencies, run:
+- **Alias `@/` → `src/`.** Está en `tsconfig.json` (`paths`, sin `baseUrl`), `babel.config.js` (`babel-plugin-module-resolver`, para Metro) y `jest.config.js` (`moduleNameMapper`). ESLint lo resuelve con `eslint-import-resolver-typescript`, así que `eslint-plugin-boundaries` sigue aplicando la regla de capas a los imports con alias. Si se cambia el alias, hay que tocar los tres archivos.
+- **Cliente HTTP** (`src/shared/lib/api.ts`). `crearClienteApi` habla con la API de Leap (solo GET y POST, rutas `?endpoint=&action=`), añade `Authorization: Bearer` si `obtenerToken` devuelve un token, llama a `alNoAutorizado` ante un 401 y **nunca lanza**: todo sale como `HttpResponse`. Los fallos de red y el tiempo agotado (15 s) devuelven `code: 0`. El contenedor (`src/app/di/contenedor.ts`) lo crea sin sesión; la feature de sesión solo cambiará esas dos funciones.
+- **Entorno** (`src/shared/lib/entorno.ts`). `leerEntorno(config)` valida `API_URL` y `APP_ENV` (`dev`, `staging` o `prod`) y la constante `entorno` lo lee de `react-native-config`.
+- **Toasts**: siempre con `notify` (`success`, `error`, `warning`, `info`, `fromError`). Por debajo está `react-native-toast-message`; su host va al final de `App.tsx`, sin estilos de marca.
+- **Navegación**: `@react-navigation/native-stack` sobre `react-native-screens`. Usa `DefaultTheme` o `DarkTheme` según el esquema del sistema hasta que exista el tema de marca.
 
-```sh
-bundle exec pod install
-```
+### Pantalla de inicio provisional
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+`src/app/inicio/InicioProvisionalScreen.tsx` es la ruta inicial mientras no exista la feature de sesión. Con primitivas de React Native, muestra el nombre de la app (`app.json`), la versión (`package.json`) y el entorno (`APP_ENV` y el host de `API_URL`). Sirve para comprobar en un build de testers qué versión y qué servidor llevan. La sustituye la feature de sesión.
 
-```sh
-# Using npm
-npm run ios
+### Pendiente del sistema de diseño
 
-# OR using Yarn
-yarn ios
-```
+El tema (tokens claro y oscuro), los componentes de `src/shared/components/`, las fuentes, el splash y el ícono **esperan al manual de marca** y van en una feature posterior. Hasta entonces no se usan colores ni tipografías de marca.
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Dependencias nativas
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+| Paquete | Por qué | Pasos manuales |
+|---|---|---|
+| `react-native-config` | Variables de `.env` | Recompilar tras cambiar `.env` |
+| `react-native-safe-area-context` | Insets (edge-to-edge obligatorio con targetSdk 36) | Ninguno (autolinking) |
+| `react-native-screens` | Pantallas nativas de native-stack | Android: `RNScreensFragmentFactory` en `MainActivity.kt` (hecho). iOS: `pod install` |
