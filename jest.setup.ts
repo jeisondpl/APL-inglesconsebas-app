@@ -23,3 +23,17 @@ jest.mock('react-native-toast-message', () => {
   });
   return { ...real, __esModule: true, default: Toast };
 });
+
+// react-native-bootsplash: el splash nativo no existe en Jest (mock del README de la librería).
+jest.mock('react-native-bootsplash', () => {
+  const BootSplash = {
+    hide: jest.fn(() => Promise.resolve()),
+    isVisible: jest.fn(() => false),
+    useHideAnimation: jest.fn(() => ({
+      container: {},
+      logo: { source: 0 },
+      brand: { source: 0 },
+    })),
+  };
+  return { __esModule: true, default: BootSplash, ...BootSplash };
+});
