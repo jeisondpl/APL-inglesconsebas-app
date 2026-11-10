@@ -87,6 +87,34 @@ node scripts/build-apk.mjs --aab                   # también el .aab
 - **Windows**: el `ninja` de CMake no soporta rutas de más de 260 caracteres. Por eso el script compila desde una unidad temporal (`subst`) que se retira al terminar. Si se queda colgada: `subst R: /D`.
 - El APK local se sube a mano en Firebase Console → App Distribution.
 
+## Cuentas de tienda (ítem 1.3)
+
+**Estado:** el repositorio está listo; las cuentas están **bloqueadas por el D-U-N-S**, que es trámite del cliente.
+
+Lo que ya está en el repo:
+- identificador `com.inglesconsebas.app` en Android (`applicationId`) y en iOS (`PRODUCT_BUNDLE_IDENTIFIER`);
+- `Info.plist` con `CFBundleDevelopmentRegion=es` y sin permisos vacíos (se quitó el de ubicación, que la app no usa);
+- `MARKETING_VERSION=0.1.0` en iOS, igual que la versión de `package.json`;
+- firma de release de Android documentada más arriba.
+
+Pasos manuales, responsabilidad de Sebastián con apoyo de JEISON-DEV:
+
+1. Conseguir el **D-U-N-S** de la academia. Apple y Google lo exigen para cuentas de organización.
+2. **Apple Developer**, como organización:
+   - darle a JEISON-DEV el rol Admin o App Manager;
+   - crear el App ID `com.inglesconsebas.app` (Push se activa en F2);
+   - crear la app en App Store Connect con idioma principal Español (México);
+   - anotar el **Team ID**, que irá en `DEVELOPMENT_TEAM` del proyecto de Xcode;
+   - preparar certificados y perfiles (F4);
+   - generar la clave APNs `.p8` (F2).
+3. **Google Play Console**, como organización:
+   - darle acceso a JEISON-DEV;
+   - crear la app;
+   - activar **Play App Signing** con la keystore de release como clave de subida;
+   - registrar los SHA-1 y SHA-256 en Firebase;
+   - crear la pista de **prueba interna**.
+4. Anotar en el acta el estado de las cuentas.
+
 ## Pendiente (F4)
 
 - **iOS**: TestFlight con `xcodebuild` en un runner macOS, o con EAS Build sobre el proyecto bare.
