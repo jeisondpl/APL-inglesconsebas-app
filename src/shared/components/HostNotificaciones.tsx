@@ -34,7 +34,7 @@ export function configuracionNotificaciones(tema: ITema): ToastConfig {
     contenido: { paddingHorizontal: 16 },
     titulo: {
       color: colores.texto,
-      fontFamily: familias.soraSemiBold,
+      fontFamily: familias.nohemiMedium,
       fontWeight: 'normal',
       fontSize: 14,
       lineHeight: 18,

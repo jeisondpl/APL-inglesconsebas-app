@@ -1,12 +1,12 @@
 /**
- * Tipografía, espaciado y radios de la Dirección A. Las familias son el nombre PostScript de cada
- * TTF de assets/fuentes, que coincide con el nombre del archivo: Android busca la fuente por el
- * nombre del archivo e iOS por el PostScript. Con estas fuentes no se usa `fontWeight`: cada peso
- * es su propio archivo.
+ * Tipografía, espaciado y radios. Kit de marca oficial: Nohemi Medium en los títulos (tipografía
+ * complementaria del manual, p. 8; Thin y ExtraLight no se usan por legibilidad) y DM Sans en el
+ * cuerpo. Las familias son el nombre PostScript de cada archivo de assets/fuentes, que coincide con
+ * el nombre del archivo: Android busca la fuente por el nombre del archivo e iOS por el PostScript.
+ * Con estas fuentes no se usa `fontWeight`: cada peso es su propio archivo.
  */
 export const familias = {
-  soraSemiBold: 'Sora-SemiBold',
-  soraBold: 'Sora-Bold',
+  nohemiMedium: 'Nohemi-Medium',
   dmSansRegular: 'DMSans-Regular',
   dmSansMedium: 'DMSans-Medium',
   dmSansSemiBold: 'DMSans-SemiBold',
@@ -29,16 +29,16 @@ export interface IEstiloTexto {
   fontSize: number;
   lineHeight: number;
   letterSpacing?: number;
-  /** Solo `etiqueta`: la lámina la escribe en mayúsculas. */
+  /** Solo `etiqueta`: va en mayúsculas. */
   textTransform?: 'uppercase';
 }
 
 export const tipografia: Record<VarianteTexto, IEstiloTexto> = {
-  h1: { fontFamily: familias.soraBold, fontSize: 28, lineHeight: 34 },
-  h2: { fontFamily: familias.soraBold, fontSize: 20, lineHeight: 26 },
-  titulo: { fontFamily: familias.soraBold, fontSize: 17, lineHeight: 22 },
+  h1: { fontFamily: familias.nohemiMedium, fontSize: 28, lineHeight: 34 },
+  h2: { fontFamily: familias.nohemiMedium, fontSize: 20, lineHeight: 26 },
+  titulo: { fontFamily: familias.nohemiMedium, fontSize: 17, lineHeight: 22 },
   subtitulo: {
-    fontFamily: familias.soraSemiBold,
+    fontFamily: familias.nohemiMedium,
     fontSize: 15,
     lineHeight: 20,
   },
@@ -48,10 +48,10 @@ export const tipografia: Record<VarianteTexto, IEstiloTexto> = {
     fontSize: 13.5,
     lineHeight: 18,
   },
-  boton: { fontFamily: familias.soraSemiBold, fontSize: 14, lineHeight: 18 },
+  boton: { fontFamily: familias.nohemiMedium, fontSize: 14, lineHeight: 18 },
   detalle: { fontFamily: familias.dmSansRegular, fontSize: 12, lineHeight: 16 },
   etiqueta: {
-    fontFamily: familias.soraBold,
+    fontFamily: familias.nohemiMedium,
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 2,
@@ -74,7 +74,7 @@ export const espaciado = {
   xxxl: 32,
 } as const;
 
-/** Radios de la lámina: 16 en botones y campos, 20 en tarjetas, 26 en héroes y 12 en íconos. */
+/** Radios: 16 en botones y campos, 20 en tarjetas, 26 en héroes y 12 en íconos. */
 export const radios = {
   icono: 12,
   boton: 16,

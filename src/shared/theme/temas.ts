@@ -58,66 +58,70 @@ export interface ITema {
   toqueMinimo: typeof TOQUE_MINIMO;
 }
 
-/** Tema oscuro, el principal de la lámina (pantallas A-M* oscuras). */
+/**
+ * Tema oscuro (manual de marca, p. 3: logo claro sobre negro). Fondo negro, texto blanco, gris
+ * oficial para el texto secundario y verde oficial como marca. Superficies, bordes y estados no
+ * están en el kit: son derivados neutros que conviven con la paleta.
+ */
 const coloresOscuros: IColoresTema = {
-  fondo: paleta.noche,
-  superficie: paleta.grafito,
-  superficieAlterna: '#121B27',
-  campoFondo: '#0A0F16',
-  borde: '#1F2A38',
-  bordeMarca: '#2A5B37',
-  pista: '#1B2533',
-  texto: paleta.textoClaro,
-  textoSecundario: '#9AA6BB',
-  textoTenue: '#5A6B84',
-  marca: paleta.verdeMarca,
+  fondo: paleta.negro,
+  superficie: '#0E1210', // derivado
+  superficieAlterna: '#161B18', // derivado
+  campoFondo: '#0A0D0B', // derivado
+  borde: '#262D29', // derivado
+  bordeMarca: '#2A5B37', // derivado
+  pista: '#1E2420', // derivado
+  texto: paleta.blanco,
+  textoSecundario: paleta.gris,
+  textoTenue: '#6F7A72', // derivado del gris oficial
+  marca: paleta.verde,
   marcaActiva: paleta.verdeProfundo,
-  acento: paleta.verdeMarca,
-  sobreMarca: '#04230D',
-  destacado: '#0F2A18',
-  bordeDestacado: '#1E4A2B',
-  exitoSuave: '#123122',
-  sobreExitoSuave: '#A6F3AE',
+  acento: paleta.verde,
+  sobreMarca: paleta.negro,
+  destacado: '#0F2A18', // derivado
+  bordeDestacado: '#1E4A2B', // derivado
+  exitoSuave: '#123122', // derivado
+  sobreExitoSuave: '#A6F3AE', // derivado
   peligro: paleta.rojoAviso,
-  peligroSuave: '#361316',
-  sobrePeligroSuave: '#FFB4B4',
-  bordePeligro: '#4A2226',
+  peligroSuave: '#361316', // derivado
+  sobrePeligroSuave: '#FFB4B4', // derivado
+  bordePeligro: '#4A2226', // derivado
   aviso: paleta.ambar,
-  avisoSuave: '#33260F',
+  avisoSuave: '#33260F', // derivado
   sobreAvisoSuave: paleta.ambar,
-  // Provisional: el azul de `.btn-blue` de Leap. La lámina no define un azul.
+  // Provisional: el azul de `.btn-blue` de Leap. El kit no define un azul.
   info: '#60A5FA',
 };
 
 /**
- * Tema claro (pantallas A-M* claras). Los marcados como derivados no están en la lámina: se
- * derivan de la paleta y se validan por contraste (salvedad 2 del plan).
+ * Tema claro (manual de marca, p. 4: logo gris sobre blanco). Fondo y superficie blancos (las
+ * tarjetas se separan por el borde), texto negro y el gris del logo para el texto secundario. El
+ * verde oficial no llega a 4.5:1 sobre blanco, así que `marca` es un verde bosque derivado.
  */
 const coloresClaros: IColoresTema = {
-  fondo: paleta.niebla,
+  fondo: paleta.blanco,
   superficie: paleta.blanco,
-  superficieAlterna: '#F4F8F4',
-  campoFondo: paleta.blanco, // derivado
-  borde: '#DBE5DB',
-  bordeMarca: '#9FC5A0',
-  pista: '#DCE6DC',
-  texto: paleta.tinta,
-  textoSecundario: '#54665A',
-  // R7: los grises de la lámina (#8A9A8E y #93A497) no llegan a 3:1 sobre Niebla.
-  textoTenue: '#6B7C6F',
+  superficieAlterna: '#F2F5F2', // derivado
+  campoFondo: paleta.blanco,
+  borde: '#DCE2DC', // derivado
+  bordeMarca: '#9FC5A0', // derivado
+  pista: '#E1E6E1', // derivado
+  texto: paleta.negro,
+  textoSecundario: paleta.grisLogo,
+  // El gris oficial da 2.2:1 sobre blanco: se oscurece para llegar a 3:1.
+  textoTenue: '#7A857C', // derivado
   marca: paleta.verdeBosque,
-  marcaActiva: '#174F17',
+  marcaActiva: '#174F17', // derivado
   acento: paleta.verdeMedio,
   sobreMarca: paleta.blanco,
-  destacado: '#E2EFE2',
-  bordeDestacado: '#C9E0C9',
-  exitoSuave: '#DCEDDC',
-  sobreExitoSuave: '#1C5E1C',
+  destacado: '#E6F2E6', // derivado
+  bordeDestacado: '#C9E0C9', // derivado
+  exitoSuave: '#DCEDDC', // derivado
+  sobreExitoSuave: '#1C5E1C', // derivado
   peligro: paleta.rojoAvisoClaro,
   peligroSuave: '#FBE4E4', // derivado
   sobrePeligroSuave: '#9B2C2C', // derivado
   bordePeligro: '#E7B3B3', // derivado
-  // R7: sobre `fondo` da 4.38, así que solo se usa en texto grande o íconos.
   aviso: paleta.ambarClaro,
   avisoSuave: '#F7ECD6', // derivado
   sobreAvisoSuave: '#7A5200', // derivado

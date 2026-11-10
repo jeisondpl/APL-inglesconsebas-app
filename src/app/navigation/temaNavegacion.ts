@@ -21,8 +21,8 @@ export function temaNavegacion(tema: ITema): Theme {
     fonts: {
       regular: { fontFamily: familias.dmSansRegular, fontWeight: '400' },
       medium: { fontFamily: familias.dmSansMedium, fontWeight: '400' },
-      bold: { fontFamily: familias.soraSemiBold, fontWeight: '400' },
-      heavy: { fontFamily: familias.soraBold, fontWeight: '400' },
+      bold: { fontFamily: familias.nohemiMedium, fontWeight: '400' },
+      heavy: { fontFamily: familias.nohemiMedium, fontWeight: '400' },
     },
   };
 }

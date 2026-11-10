@@ -70,7 +70,7 @@ function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
           accessibilityRole="header"
           style={[
             estilos.titulo,
-            { color: colores.texto, fontFamily: familias.soraBold },
+            { color: colores.texto, fontFamily: familias.nohemiMedium },
           ]}
         >
           {textos.titulo}
@@ -100,7 +100,7 @@ function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
         <Text
           style={[
             estilos.textoBoton,
-            { color: colores.marca, fontFamily: familias.soraSemiBold },
+            { color: colores.marca, fontFamily: familias.nohemiMedium },
           ]}
         >
           {textos.reintentar}
