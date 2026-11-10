@@ -1,11 +1,13 @@
 // CA17: la pantalla de inicio provisional muestra el nombre, la versión de package.json y el
 // entorno leído de react-native-config. Este archivo usa una configuración de producción distinta
 // de la del mock global (dev, localhost) para comprobar que la pantalla la lee de verdad.
+// F1-01b: el constructor añade TemaProvider al montaje (la pantalla usa el sistema de diseño).
 import { NavigationContainer } from '@react-navigation/native';
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
+import { TemaProvider } from '@/shared/theme';
 
 import { version } from '../../../../package.json';
 
@@ -20,9 +22,11 @@ jest.mock('react-native-config', () => {
 const montar = () =>
   render(
     <SafeAreaProvider>
-      <NavigationContainer>
-        <InicioProvisionalScreen />
-      </NavigationContainer>
+      <TemaProvider>
+        <NavigationContainer>
+          <InicioProvisionalScreen />
+        </NavigationContainer>
+      </TemaProvider>
     </SafeAreaProvider>,
   );
 

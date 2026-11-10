@@ -1,10 +1,11 @@
-// CA18: NavegadorRaiz usa DarkTheme si useColorScheme() es `dark` y DefaultTheme en cualquier otro
-// caso. La ruta inicial es la pantalla de inicio provisional.
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
+// CA18: NavegadorRaiz usa el tema oscuro con `dark` (o null) y el claro con `light`. La ruta
+// inicial es la pantalla de inicio provisional.
+// F1-01b: aserciones ajustadas por el constructor al migrar de DarkTheme/DefaultTheme a los tokens.
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
+import { TemaProvider, temaClaro, temaOscuro } from '@/shared/theme';
 
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
@@ -18,38 +19,42 @@ const useColorScheme = jest.requireMock(
 const montar = () =>
   render(
     <SafeAreaProvider>
-      <NavegadorRaiz />
+      <TemaProvider>
+        <NavegadorRaiz />
+      </TemaProvider>
     </SafeAreaProvider>,
   );
 
 describe('temaNavegacion (CA18)', () => {
-  it('devuelve DarkTheme con el esquema dark', () => {
-    expect(temaNavegacion('dark')).toBe(DarkTheme);
+  it('con el tema oscuro es dark y usa sus colores', () => {
+    const tema = temaNavegacion(temaOscuro);
+    expect(tema.dark).toBe(true);
+    expect(tema.colors.text).toBe(temaOscuro.colores.texto);
   });
 
-  it.each(['light', null] as const)(
-    'devuelve DefaultTheme con el esquema %p',
-    esquema => {
-      expect(temaNavegacion(esquema)).toBe(DefaultTheme);
-    },
-  );
+  it('con el tema claro no es dark y usa sus colores', () => {
+    const tema = temaNavegacion(temaClaro);
+    expect(tema.dark).toBe(false);
+    expect(tema.colors.background).toBe(temaClaro.colores.fondo);
+  });
 });
 
 describe('NavegadorRaiz (CA18)', () => {
-  it('con el sistema en oscuro pinta la pantalla inicial con los colores de DarkTheme', async () => {
-    useColorScheme.mockReturnValue('dark');
-    await montar();
-    const titulo = screen.getByRole('header', { name: 'Inglés con Sebas' });
-    expect(titulo).toHaveStyle({ color: DarkTheme.colors.text });
-  });
-
-  it.each(['light', null])(
-    'con el esquema %p usa los colores de DefaultTheme',
-    async esquema => {
+  it.each([
+    ['dark', temaOscuro],
+    [null, temaOscuro],
+    ['light', temaClaro],
+  ] as const)(
+    'con el esquema %p pinta la pantalla inicial con los colores del tema',
+    async (esquema, tema) => {
       useColorScheme.mockReturnValue(esquema);
       await montar();
-      const titulo = screen.getByRole('header', { name: 'Inglés con Sebas' });
-      expect(titulo).toHaveStyle({ color: DefaultTheme.colors.text });
+      expect(
+        screen.getByRole('header', { name: 'Inglés con Sebas' }),
+      ).toBeOnTheScreen();
+      expect(screen.getByText('Inglés con Sebas')).toHaveStyle({
+        color: tema.colores.texto,
+      });
     },
   );
 

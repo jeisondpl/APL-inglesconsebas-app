@@ -1,13 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { temaNavegacion } from '@/app/navigation/temaNavegacion';
+import { useTema } from '@/shared/theme';
 
 import { textosLimiteDeErrores as textos } from './limiteDeErrores.textos';
 
@@ -58,10 +52,12 @@ export class LimiteDeErrores extends Component<
 }
 
 function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
-  // Fuera del NavigationContainer: se toman los mismos colores del tema de navegación.
-  const { colors } = temaNavegacion(useColorScheme());
+  // Fuera del NavigationContainer: usa los tokens del tema con primitivas de React Native, para
+  // no depender de los componentes compartidos que podrían ser los que fallan.
+  const { tema } = useTema();
+  const { colores, familias } = tema;
   return (
-    <View style={[estilos.fallback, { backgroundColor: colors.background }]}>
+    <View style={[estilos.fallback, { backgroundColor: colores.fondo }]}>
       {/* El anuncio agrupa solo título y mensaje: `accessible` en el contenedor raíz ocultaría
           el botón a TalkBack/VoiceOver. La región viva hace que Android lo lea al aparecer. */}
       <View
@@ -72,11 +68,22 @@ function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
       >
         <Text
           accessibilityRole="header"
-          style={[estilos.titulo, { color: colors.text }]}
+          style={[
+            estilos.titulo,
+            { color: colores.texto, fontFamily: familias.soraBold },
+          ]}
         >
           {textos.titulo}
         </Text>
-        <Text style={[estilos.mensaje, { color: colors.text }]}>
+        <Text
+          style={[
+            estilos.mensaje,
+            {
+              color: colores.textoSecundario,
+              fontFamily: familias.dmSansRegular,
+            },
+          ]}
+        >
           {textos.mensaje}
         </Text>
       </View>
@@ -87,10 +94,15 @@ function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
         onPress={alReintentar}
         style={({ pressed }) => [
           estilos.boton,
-          { borderColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+          { borderColor: colores.bordeMarca, opacity: pressed ? 0.7 : 1 },
         ]}
       >
-        <Text style={[estilos.textoBoton, { color: colors.primary }]}>
+        <Text
+          style={[
+            estilos.textoBoton,
+            { color: colores.marca, fontFamily: familias.soraSemiBold },
+          ]}
+        >
           {textos.reintentar}
         </Text>
       </Pressable>
@@ -108,16 +120,16 @@ const estilos = StyleSheet.create({
     gap: 16,
   },
   anuncio: { alignItems: 'center', gap: 16 },
-  titulo: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  mensaje: { fontSize: 15, textAlign: 'center' },
+  titulo: { fontSize: 20, lineHeight: 26, textAlign: 'center' },
+  mensaje: { fontSize: 15, lineHeight: 22, textAlign: 'center' },
   boton: {
-    minHeight: 44,
+    minHeight: 48,
     minWidth: 44,
     paddingHorizontal: 24,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textoBoton: { fontSize: 15, fontWeight: '600' },
+  textoBoton: { fontSize: 14, lineHeight: 18 },
 });
