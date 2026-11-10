@@ -12,4 +12,10 @@ export const textosComunes = {
     servidor: 'Ocurrió un error en el servidor. Inténtalo más tarde.',
     desconocido: 'Ocurrió un error inesperado.',
   },
+  /** Nombre visible de la marca (provisional, P4). `Marca` lo pinta como «Inglés con» + «Sebas». */
+  marca: {
+    nombre: 'Inglés con Sebas',
+    inicio: 'Inglés con ',
+    destacado: 'Sebas',
+  },
 } as const;
