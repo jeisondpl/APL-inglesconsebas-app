@@ -23,6 +23,42 @@
    - El constructor comprueba en el README de bootsplash qué nombres de recurso y estilos espera en ejecución (`bootsplash_background`, `bootsplash_logo`, `BootTheme`), y los respeta.
 4. **P3.** Se mantiene: la continuación animada del splash queda fuera de alcance.
 5. **P5 · Onboarding.** Se crea una tarjeta pendiente en el tablero, fuera del contrato. No forma parte de esta feature.
+6. **Marca oficial (2026-11-10, reunión con Sebastián).** Sebastián entregó el **kit de marca oficial**. Por decisión del usuario, F1-01b se rehace con él antes de cerrarse. La «Dirección A» era solo una propuesta de exploración. Esta decisión prevalece sobre lo que el plan dice del logo, la paleta y la tipografía.
+   - **Fuente del kit:** `../KIT DE MARCA - INGLES CON SEBAS-20261110T151059Z-1-001/KIT DE MARCA - INGLES CON SEBAS/`. Contiene:
+     - `MANUAL DE MARCA INGLES CON SEBAS.pdf`, de 11 páginas;
+     - `LOGO AI.pdf` y `INGLES CON SEBAS NEGRO .pdf`, ambos vectoriales;
+     - los `.ai`;
+     - `PNGS/`;
+     - `TIPOGRAFIA COMPLEMENTARIA/`.
+     - Se ignora `Zoom account invitation…pdf`, que tiene datos personales y no es de marca.
+   - **Logo.**
+     - El logo principal es la **mano haciendo «OK» con la «C» de «con» y el texto «Inglés con sebas»**.
+     - El isotipo es la mano dentro de un círculo, con la «S» en gris.
+     - Hay tres isotipos por categoría (Corporate, Self y Kids) que Sebastián usa indistintamente.
+     - Se reemplaza la burbuja con la «S» de la exploración.
+     - Los trazados se toman **vectoriales del PDF**, no de los PNG. La única fuente de verdad sigue siendo `assets/marca/logo.json`, o su equivalente, y los scripts.
+     - Se mantiene la idea de que el nombre «Inglés con Sebas» se vea claro. Sebastián va migrando la marca a «Leap» y prioriza el isologo, pero el logo con el nombre se sigue usando.
+   - **Paleta oficial** (manual, p. 7): blanco **#FFFFFF**, negro **#000000**, verde **#86EF86** y gris **#A5AFA5**.
+     - El verde ya es `marca` en el tema oscuro.
+     - El gris se añade a la paleta y se le da un uso semántico que cumpla los contrastes de CA3.
+     - Los tokens de superficie y estado que el kit no define se mantienen, pero se revisan para que convivan con esa paleta.
+   - **Tipografía:**
+     - **Nohemi Medium** (`TIPOGRAFIA COMPLEMENTARIA/Nohemi-Medium.otf`) en los títulos;
+     - **DM Sans** en el cuerpo;
+     - se retiran Sora y la fuente de origen que servía para vectorizar la «S» de la burbuja;
+     - no se usan Nohemi Thin ni ExtraLight, porque según Sebastián son poco legibles.
+     - El kit no trae la licencia de Nohemi: hay que verificarla y reportar el resultado (riesgo).
+   - **Splash** (manual, pp. 3 y 4):
+     - en oscuro, el logo blanco y gris sobre negro;
+     - en claro, el logo gris sobre blanco;
+     - lo genera el mismo script propio, sin la licencia de pago.
+   - **Ícono:** el isotipo (la mano en el círculo), adaptativo, monocromo y legacy en Android, más el AppIcon de iOS.
+   - **Criterios que cambian:**
+     - **CA2:** los hex de la paleta oficial.
+     - **CA6:** Nohemi Medium en los títulos.
+     - **CA11:** el logo vectorial sale del PDF del kit y no lleva `<text>`.
+     - **CA9 y CA10:** con el logo y el isotipo oficiales.
+   - **Tests.** Los del tester quedaron a medias en el stash `F1-01b: tests del tester a medias…`. Los retomará después del cambio.
 
 ## Definition of Ready: se cumple con tres salvedades
 
