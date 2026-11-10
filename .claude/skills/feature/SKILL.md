@@ -11,7 +11,7 @@ Argumento: el código de una tarjeta del tablero (`F1-03`) o una descripción li
 
 ## 0. Preparar
 
-1. Comprueba con `git status` que el árbol está limpio y que estás en `main`, actualizado. Si no, detente e informa.
+1. Comprueba con `git status` que el árbol está limpio y que estás en `develop`, actualizada con `git pull --ff-only origin develop`. Si no, detente e informa. Las features salen de `develop`, nunca de `main`.
 2. Si recibes un código, lee la tarjeta con `tarjeta_ver`: título, descripción, subtareas y fechas. Si es una descripción libre, pide al usuario un código corto o usa `X-<slug>`.
 3. Crea la rama `feat/<CÓDIGO>-<slug>` (o `fix/…` o `chore/…`) y la carpeta `docs/features/<CÓDIGO>-<slug>/`.
 4. Mueve la tarjeta a «En curso» con `tarjeta_mover` si no lo está.
@@ -34,7 +34,7 @@ Argumento: el código de una tarjeta del tablero (`F1-03`) o una descripción li
 ## 2. Construir
 
 1. Lanza el **constructor** con la ruta del `plan.md` aprobado, la rama y las decisiones que el usuario tomó en la puerta.
-2. Revisa que sus commits estén en la rama (`git log main..HEAD --oneline`) y que el árbol esté limpio.
+2. Revisa que sus commits estén en la rama (`git log develop..HEAD --oneline`) y que el árbol esté limpio.
 
 ## 3. Probar
 
@@ -47,7 +47,7 @@ Argumento: el código de una tarjeta del tablero (`F1-03`) o una descripción li
 1. Lanza el **aprobador** en un contexto nuevo, solo con:
    - la rama;
    - la ruta del `plan.md`;
-   - la instrucción de revisar `git diff main...HEAD`.
+   - la instrucción de revisar `git diff develop...HEAD`.
 
    **No le pases las conclusiones del constructor ni del tester.**
 2. Guarda su informe en `docs/features/<…>/aprobacion.md` y haz commit: `docs(<CÓDIGO>): veredicto del aprobador`.
@@ -55,13 +55,17 @@ Argumento: el código de una tarjeta del tablero (`F1-03`) o una descripción li
 
 ## 5. Desplegar
 
-1. Lanza el **desplegador** para la etapa A: puerta y APK de debug **en la rama**, y propuesta para el tablero. No se toca `main` en local.
+1. Lanza el **desplegador** para la etapa A: puerta y APK de debug **en la rama**, y propuesta para el tablero. No se tocan `develop` ni `main` en local.
 2. Presenta al usuario el resultado y pregunta con `AskUserQuestion` qué hacer después. Las opciones son:
    - «PR y merge en GitHub», que sube la rama, abre el PR, espera el CI, fusiona y aplica el tablero;
    - «PR, merge y distribuir a testers»;
    - «Dejarlo local por ahora».
 
-   El merge a `main` siempre lo hace GitHub a través del PR, con el CI en verde.
+   El merge a `develop` siempre lo hace GitHub a través del PR, con el CI en verde.
+
+## Entrega de fase (develop → main)
+
+`main` es **producción**. Solo recibe `develop` al cerrar una fase (E-F1…E-F4), cuando Sebastián certifica la entrega con el acta de aceptación (Anexo 3 B del contrato). Con el OK explícito del usuario, el desplegador abre el PR `develop → main`, espera el CI, lo fusiona, crea el tag `vX.Y.Z` (que dispara la distribución a testers) y actualiza la tarjeta de la entrega. Nunca se fusiona una feature directamente en `main`.
 3. Si el usuario confirma, vuelve a lanzar el desplegador para la etapa B, **citando la confirmación del usuario** en el brief.
 
 ## Cierre

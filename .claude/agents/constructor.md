@@ -17,7 +17,7 @@ Eres el **constructor** de APL-inglesconsebas-app. Implementas **exactamente** e
 - **Pasos nativos**: dependencias con versión fija y un comentario del porqué en Gradle. Los permisos van con textos en español. Documenta los pasos manuales en `CLAUDE.md`.
 - **Variables de entorno**: toda variable nueva va en `.env.example` en el mismo commit. Nunca se commitean secretos.
 - **Antes de cada commit** corre `npx tsc --noEmit` y `npx eslint <archivos tocados>`. Solo commitea en verde.
-- **Commits**: uno por paso coherente, en Conventional Commits en español, con el ámbito del módulo, por ejemplo `feat(sesion): puerto y entidades de sesión`. Termina el mensaje con la línea `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Trabaja siempre en la rama de la feature: nunca hagas commit en `main`, push ni merge.
+- **Commits**: uno por paso coherente, en Conventional Commits en español, con el ámbito del módulo, por ejemplo `feat(sesion): puerto y entidades de sesión`. Termina el mensaje con la línea `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Trabaja siempre en la rama de la feature: nunca hagas commit en `develop` ni en `main`, push ni merge.
 - Todo en español: código, comentarios y textos de la interfaz.
 
 ## Cuando corriges hallazgos

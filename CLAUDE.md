@@ -14,7 +14,7 @@ Cada punto de la app se construye con la skill **`/feature <código de tarjeta>`
 4. **aprobador**: revisión independiente de solo lectura. Escribe `aprobacion.md` con APROBADO o RECHAZADO.
 5. **desplegador**:
    - con el veredicto APROBADO, verifica la rama (puerta y APK de debug);
-   - con el OK del usuario, abre el PR, espera el CI, fusiona en GitHub (nunca en `main` local) y actualiza el tablero;
+   - con el OK del usuario, abre el PR, espera el CI, fusiona en `develop` desde GitHub (nunca en local) y actualiza el tablero;
    - solo con el OK del usuario hace push, abre el PR o distribuye.
 
 Hay un máximo de 2 vueltas de corrección por feature. Después se consulta al usuario.
@@ -26,9 +26,9 @@ Hay un máximo de 2 vueltas de corrección por feature. Después se consulta al 
   - `pre-commit`: lint-staged (Prettier y ESLint de lo que se commitea);
   - `commit-msg`: commitlint, con Conventional Commits en español. El cuerpo admite como máximo 100 caracteres por línea. El tipo `merge` es para el desplegador.
 - **Ramas**:
-  - salen de `main` como `feat/<CÓDIGO>-<slug>`, `fix/…` o `chore/…`;
+  - salen de `develop` como `feat/<CÓDIGO>-<slug>`, `fix/…` o `chore/…`;
   - hay un commit por cada cambio coherente;
-  - nunca hay push directo ni force-push a `main`;
+  - nunca hay push directo ni force-push a `main` ni a `develop`; `main` (producción) solo recibe `develop` en cada entrega de fase, con el acta de Sebastián;
   - el push y el PR van siempre con el OK del usuario.
 - **CI** (`.github/workflows/calidad.yml`): la puerta automática y el build de debug en cada PR.
 
@@ -62,7 +62,7 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - **Backend**: la API PHP de Leap, en `../app/api/`. Para el dominio (ciclos, tokens, `class_sessions.status`) hay que leer `../app/CLAUDE.md`. La app no duplica la lógica de negocio, solo la consume.
 - **Contrato y alcance**: `../docs/propuestas/02-propuesta-app-movil.md`, fases F1 a F4. Dice Expo, pero se decidió React Native CLI puro. Ver la nota en `docs/ARQUITECTURA.md`.
 - **Seguimiento**: el tablero «App móvil · Inglés con Sebas» de APL-Tareas (#4 en https://tareas.demojd.online), por el MCP `apl-tareas`.
-- **Repo**: `origin` = https://github.com/jeisondpl/APL-inglesconsebas-app.git, rama `main`.
+- **Repo**: `origin` = https://github.com/jeisondpl/APL-inglesconsebas-app.git. Ramas: `develop` (desarrollo, base de las features) y `main` (producción).
 - **Compilar**:
   - `npm run build:android:debug` en cualquier sistema;
   - `npm run android` en un emulador o dispositivo;
