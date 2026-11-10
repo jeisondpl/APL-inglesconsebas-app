@@ -18,6 +18,8 @@ if (fs.existsSync(modulos)) {
 
 module.exports = {
   preset: '@react-native/jest-preset',
+  // Alias @/ → src/ (mismo que tsconfig.json y babel.config.js).
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/__tests__/**',
