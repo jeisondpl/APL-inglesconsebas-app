@@ -9,6 +9,8 @@ const capa = (type, extra = {}) => ({ element: { type, ...extra } });
 module.exports = {
   root: true,
   extends: '@react-native',
+  // Salida generada por `jest --coverage`: no es código fuente.
+  ignorePatterns: ['coverage/'],
   plugins: ['boundaries'],
   settings: {
     'import/resolver': { typescript: { alwaysTryTypes: true }, node: true },
