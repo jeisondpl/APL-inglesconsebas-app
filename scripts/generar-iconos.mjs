@@ -1,16 +1,17 @@
-// Genera el ícono de la app a partir de assets/marca/logo.json (burbuja verde con la «S» sobre
-// Noche #05070B, variante oscura de la lámina).
+// Genera el ícono de la app con el isotipo oficial (la mano «OK» en el círculo con la «S»,
+// categoría Corporate: círculo negro, mano blanca y «S» gris; manual de marca, pp. 9 y 10), a
+// partir de assets/marca/logo.json.
 //
 // Android (android/app/src/main/res):
 //   mipmap-<densidad>/ic_launcher.png y ic_launcher_round.png   legacy (API 24–25), 48–192 px
 //   mipmap-<densidad>/ic_launcher_foreground.png                 adaptativo, 108 dp (108–432 px)
 //   mipmap-<densidad>/ic_launcher_monochrome.png                 íconos temáticos (Android 13+)
 //   mipmap-anydpi-v26/ic_launcher.xml e ic_launcher_round.xml    background + foreground + monochrome
-//   values/ic_launcher_background.xml                            #05070B
-//   El logo del adaptativo mide 58 dp dentro del lienzo de 108 dp: cabe en la zona segura
-//   (círculo de 66 dp) con cualquier máscara.
+//   values/ic_launcher_background.xml                            #000000 (el círculo del isotipo)
+//   En el adaptativo, la mano se escala para que todos sus puntos queden a menos de 32 dp del
+//   centro: dentro de la zona segura (círculo de 66 dp) con cualquier máscara.
 // iOS (ios/InglesConSebas/Images.xcassets/AppIcon.appiconset): los 9 PNG del Contents.json,
-//   opacos. El de 1024 px se aplana con removeAlpha y el script falla si conserva canal alfa.
+//   opacos. El script falla si alguno conserva canal alfa (el App Store rechaza el de 1024).
 // Play: assets/marca/icono-play-512.png.
 //
 // Uso: npm run marca:iconos   (idempotente: si nada cambia, no escribe)
@@ -21,17 +22,14 @@ import {
   RAIZ,
   aJson,
   escribirSiCambia,
-  grupoLogo,
+  grupoIsotipo,
   leerLogo,
+  medidas,
   svg,
 } from './marca-svg.mjs';
 
 const logo = leerLogo();
-const FONDO = logo.colores.fondoIcono;
-const COLORES_LOGO = {
-  burbuja: logo.colores.oscuro.burbuja,
-  letra: logo.colores.oscuro.letra,
-};
+const FONDO = logo.colores.isotipo.corporate.circulo;
 const res = path.join(RAIZ, 'android', 'app', 'src', 'main', 'res');
 const appIcon = path.join(
   RAIZ,
@@ -41,11 +39,10 @@ const appIcon = path.join(
   'AppIcon.appiconset',
 );
 
-/** Fracción del lado que ocupa la caja de 48 del logo en los íconos legacy, de iOS y de Play. */
-const PROPORCION_LOGO = 0.56;
-/** Adaptativo: lienzo de 108 dp con el logo en una caja de 58 dp centrada. */
-const LIENZO_ADAPTATIVO = 108;
-const LOGO_ADAPTATIVO = 58;
+/** Fracción del lado que ocupa el isotipo en los íconos cuadrados (legacy, iOS y Play). */
+const PROPORCION_CUADRADO = 0.8;
+const LIENZO_ADAPTATIVO = 108; // dp
+const RADIO_SEGURO = 32; // dp, con margen dentro de la zona segura de 66 dp
 
 const DENSIDADES = [
   { sufijo: 'mdpi', escala: 1 },
@@ -55,6 +52,31 @@ const DENSIDADES = [
   { sufijo: 'xxxhdpi', escala: 4 },
 ];
 
+/**
+ * Lado del isotipo (en dp) para que la mano y la «S» queden dentro de RADIO_SEGURO alrededor del
+ * centro del círculo. Se mide sobre todos los puntos de sus trazados (incluidos los de control de
+ * las curvas, que acotan la curva por fuera).
+ */
+function ladoAdaptativo() {
+  const { ancho } = medidas(logo.isotipo.viewBox);
+  const centro = ancho / 2;
+  const { manoContorno, letra } = logo.isotipo.capas;
+  const numeros = `${manoContorno} ${letra}`
+    .replace(/[A-Za-z]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .map(Number);
+  let radio = 0;
+  for (let i = 0; i + 1 < numeros.length; i += 2) {
+    radio = Math.max(
+      radio,
+      Math.hypot(numeros[i] - centro, numeros[i + 1] - centro),
+    );
+  }
+  return (RADIO_SEGURO / radio) * ancho;
+}
+const LADO_ADAPTATIVO = ladoAdaptativo();
+
 const png = async (svgTexto, opaco = false) => {
   let imagen = sharp(Buffer.from(svgTexto));
   if (opaco) {
@@ -63,35 +85,38 @@ const png = async (svgTexto, opaco = false) => {
   return imagen.png({ compressionLevel: 9 }).toBuffer();
 };
 
-/** Logo centrado en un lado `lado`, ocupando `proporcion` del lado. */
-function logoCentrado(lado, proporcion, colores = COLORES_LOGO) {
-  const tamano = lado * proporcion;
-  const inicio = (lado - tamano) / 2;
-  return grupoLogo(logo, { x: inicio, y: inicio, tamano, colores });
-}
+/** Isotipo centrado en un lado `lado`, con un lado propio de `ladoIsotipo`. */
+const isotipoCentrado = (lado, ladoIsotipo, opciones = {}) =>
+  grupoIsotipo(logo, {
+    x: (lado - ladoIsotipo) / 2,
+    y: (lado - ladoIsotipo) / 2,
+    lado: ladoIsotipo,
+    ...opciones,
+  });
 
-/** Ícono cuadrado: `forma` = 'cuadrado' (sin redondeo), 'redondeado' o 'circulo'. */
+/** Ícono: 'cuadrado' (iOS y Play, sin redondeo), 'redondeado' (legacy) o 'circulo' (redondo). */
 function svgIcono(lado, forma) {
-  let fondo;
   if (forma === 'circulo') {
-    fondo = `<circle cx="${lado / 2}" cy="${lado / 2}" r="${
-      lado / 2
-    }" fill="${FONDO}"/>`;
-  } else {
-    const rx = forma === 'redondeado' ? lado * 0.18 : 0;
-    fondo = `<rect width="${lado}" height="${lado}" rx="${rx}" fill="${FONDO}"/>`;
+    return svg(lado, lado, isotipoCentrado(lado, lado));
   }
-  return svg(lado, lado, fondo + logoCentrado(lado, PROPORCION_LOGO));
-}
-
-function svgAdaptativo(lado, monocromo) {
-  const colores = monocromo
-    ? { burbuja: '#FFFFFF', letra: null } // silueta blanca con la «S» calada (evenodd)
-    : COLORES_LOGO;
+  const rx = forma === 'redondeado' ? lado * 0.18 : 0;
   return svg(
     lado,
     lado,
-    logoCentrado(lado, LOGO_ADAPTATIVO / LIENZO_ADAPTATIVO, colores),
+    `<rect width="${lado}" height="${lado}" rx="${rx}" fill="${FONDO}"/>` +
+      isotipoCentrado(lado, lado * PROPORCION_CUADRADO),
+  );
+}
+
+function svgAdaptativo(escala, monocromo) {
+  const lado = LIENZO_ADAPTATIVO * escala;
+  return svg(
+    lado,
+    lado,
+    isotipoCentrado(lado, LADO_ADAPTATIVO * escala, {
+      sinCirculo: true,
+      monocromo,
+    }),
   );
 }
 
@@ -110,7 +135,6 @@ console.log('Íconos (Android, iOS y Play):');
 for (const { sufijo, escala } of DENSIDADES) {
   const dir = path.join(res, `mipmap-${sufijo}`);
   const lado = Math.round(48 * escala);
-  const ladoAdaptativo = Math.round(LIENZO_ADAPTATIVO * escala);
   escribirSiCambia(
     path.join(dir, 'ic_launcher.png'),
     await png(svgIcono(lado, 'redondeado')),
@@ -121,11 +145,11 @@ for (const { sufijo, escala } of DENSIDADES) {
   );
   escribirSiCambia(
     path.join(dir, 'ic_launcher_foreground.png'),
-    await png(svgAdaptativo(ladoAdaptativo, false)),
+    await png(svgAdaptativo(escala, false)),
   );
   escribirSiCambia(
     path.join(dir, 'ic_launcher_monochrome.png'),
-    await png(svgAdaptativo(ladoAdaptativo, true)),
+    await png(svgAdaptativo(escala, true)),
   );
 }
 for (const nombre of ['ic_launcher.xml', 'ic_launcher_round.xml']) {

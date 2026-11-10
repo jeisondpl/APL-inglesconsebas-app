@@ -1,5 +1,7 @@
-// Genera los recursos del splash nativo en sus dos variantes, clara y oscura, a partir de
-// assets/marca/logo.json (lámina A-M0 claro y oscuro).
+// Genera los recursos del splash nativo en sus dos variantes a partir de assets/marca/logo.json,
+// con el logo principal oficial (manual de marca, pp. 3 y 4):
+//   oscuro: logo claro (blanco y gris) sobre negro #000000;
+//   claro:  logo gris sobre blanco #FFFFFF.
 //
 // Sustituye al CLI `react-native-bootsplash generate`: su modo oscuro (--dark-*) exige una licencia
 // de pago (decisión P2 del plan de F1-01b). La librería se usa solo en ejecución (BootTheme,
@@ -8,14 +10,14 @@
 // Android (android/app/src/main/res):
 //   drawable-<densidad>/bootsplash_logo.png        variante clara
 //   drawable-night-<densidad>/bootsplash_logo.png  variante oscura
-//   values/colors.xml        bootsplash_background = Niebla #F0F4F0
-//   values-night/colors.xml  bootsplash_background = Noche #05070B
+//   values/colors.xml        bootsplash_background = #FFFFFF
+//   values-night/colors.xml  bootsplash_background = #000000
 //   Como hace el CLI, el PNG es un lienzo de 288 dp (tamaño del ícono del splash de Android 12+)
-//   con el logo de 120 dp centrado. El cuadrado redondeado cabe en el círculo de 192 dp de la
-//   máscara de Android 12+.
+//   con el logo de 160 dp de ancho centrado: sus esquinas quedan a unos 90 dp del centro, dentro
+//   del círculo de 192 dp de la máscara de Android 12+.
 // iOS (ios/InglesConSebas):
-//   Colors.xcassets/BootSplashBackground.colorset   apariencias Any (Niebla) y Dark (Noche)
-//   Images.xcassets/BootSplashLogo.imageset         120 pt @1x, @2x y @3x, Any y Dark
+//   Colors.xcassets/BootSplashBackground.colorset   apariencias Any (blanco) y Dark (negro)
+//   Images.xcassets/BootSplashLogo.imageset         160 pt de ancho, @1x a @3x, Any y Dark
 //   BootSplash.storyboard                           logo centrado sobre BootSplashBackground
 //
 // Android e iOS eligen la variante según el modo del sistema, sin código.
@@ -27,11 +29,13 @@ import {
   RAIZ,
   aJson,
   escribirSiCambia,
+  altoLogo,
+  grupoLogo,
   leerLogo,
-  svgSplash,
+  svg,
 } from './marca-svg.mjs';
 
-const LADO_LOGO = 120; // dp / pt (lámina A-M0)
+const ANCHO_LOGO = 160; // dp / pt
 const LIENZO_ANDROID = 288; // dp, como el CLI de bootsplash
 
 const DENSIDADES = [
@@ -45,17 +49,30 @@ const DENSIDADES = [
 const logo = leerLogo();
 const res = path.join(RAIZ, 'android', 'app', 'src', 'main', 'res');
 const ios = path.join(RAIZ, 'ios', 'InglesConSebas');
+const ALTO_LOGO = Math.round(altoLogo(logo, ANCHO_LOGO));
+
+/** SVG del logo principal de la variante a `escala` (ANCHO_LOGO × ALTO_LOGO por la escala). */
+const svgSplash = (variante, escala) =>
+  svg(
+    ANCHO_LOGO * escala,
+    ALTO_LOGO * escala,
+    grupoLogo(logo, variante, {
+      ancho: ANCHO_LOGO * escala,
+      y: ((ALTO_LOGO - altoLogo(logo, ANCHO_LOGO)) * escala) / 2,
+    }),
+  );
 
 /** PNG del logo del splash a `escala`, opcionalmente centrado en un lienzo transparente. */
 async function pngSplash(variante, escala, lienzo) {
-  const logoPng = await sharp(Buffer.from(svgSplash(logo, variante, escala)))
+  const logoPng = await sharp(Buffer.from(svgSplash(variante, escala)))
     .png()
     .toBuffer();
   if (!lienzo) {
     return sharp(logoPng).png({ compressionLevel: 9 }).toBuffer();
   }
   const lado = Math.round(lienzo * escala);
-  const desplazamiento = Math.round((lado - LADO_LOGO * escala) / 2);
+  const izquierda = Math.round((lado - ANCHO_LOGO * escala) / 2);
+  const arriba = Math.round((lado - ALTO_LOGO * escala) / 2);
   return sharp({
     create: {
       width: lado,
@@ -64,7 +81,7 @@ async function pngSplash(variante, escala, lienzo) {
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   })
-    .composite([{ input: logoPng, left: desplazamiento, top: desplazamiento }])
+    .composite([{ input: logoPng, left: izquierda, top: arriba }])
     .png({ compressionLevel: 9 })
     .toBuffer();
 }
@@ -89,8 +106,8 @@ const infoXcode = { author: 'xcode', version: 1 };
 function storyboard() {
   const ancho = 375;
   const alto = 667;
-  const x = (ancho - LADO_LOGO) / 2;
-  const y = (alto - LADO_LOGO) / 2;
+  const x = (ancho - ANCHO_LOGO) / 2;
+  const y = (alto - ALTO_LOGO) / 2;
   // Valor de diseño del storyboard; en ejecución manda el color del asset catalog (Any/Dark).
   const fondo = componentes(logo.colores.claro.fondo);
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -114,7 +131,7 @@ function storyboard() {
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView autoresizesSubviews="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="BootSplashLogo" translatesAutoresizingMaskIntoConstraints="NO" id="3lX-Ut-9ad">
-                                <rect key="frame" x="${x}" y="${y}" width="${LADO_LOGO}" height="${LADO_LOGO}"/>
+                                <rect key="frame" x="${x}" y="${y}" width="${ANCHO_LOGO}" height="${ALTO_LOGO}"/>
                                 <accessibility key="accessibilityConfiguration">
                                     <accessibilityTraits key="traits" image="YES" notEnabled="YES"/>
                                 </accessibility>
@@ -134,7 +151,7 @@ function storyboard() {
         </scene>
     </scenes>
     <resources>
-        <image name="BootSplashLogo" width="${LADO_LOGO}" height="${LADO_LOGO}"/>
+        <image name="BootSplashLogo" width="${ANCHO_LOGO}" height="${ALTO_LOGO}"/>
         <namedColor name="BootSplashBackground">
             <color red="${fondo.red}" green="${fondo.green}" blue="${fondo.blue}" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
