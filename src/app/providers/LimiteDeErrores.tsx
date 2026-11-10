@@ -61,19 +61,25 @@ function FallbackDeError({ alReintentar }: { alReintentar: () => void }) {
   // Fuera del NavigationContainer: se toman los mismos colores del tema de navegación.
   const { colors } = temaNavegacion(useColorScheme());
   return (
-    <View
-      accessibilityRole="alert"
-      style={[estilos.fallback, { backgroundColor: colors.background }]}
-    >
-      <Text
-        accessibilityRole="header"
-        style={[estilos.titulo, { color: colors.text }]}
+    <View style={[estilos.fallback, { backgroundColor: colors.background }]}>
+      {/* El anuncio agrupa solo título y mensaje: `accessible` en el contenedor raíz ocultaría
+          el botón a TalkBack/VoiceOver. La región viva hace que Android lo lea al aparecer. */}
+      <View
+        accessible
+        accessibilityRole="alert"
+        accessibilityLiveRegion="assertive"
+        style={estilos.anuncio}
       >
-        {textos.titulo}
-      </Text>
-      <Text style={[estilos.mensaje, { color: colors.text }]}>
-        {textos.mensaje}
-      </Text>
+        <Text
+          accessibilityRole="header"
+          style={[estilos.titulo, { color: colors.text }]}
+        >
+          {textos.titulo}
+        </Text>
+        <Text style={[estilos.mensaje, { color: colors.text }]}>
+          {textos.mensaje}
+        </Text>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={textos.reintentar}
@@ -101,6 +107,7 @@ const estilos = StyleSheet.create({
     padding: 24,
     gap: 16,
   },
+  anuncio: { alignItems: 'center', gap: 16 },
   titulo: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
   mensaje: { fontSize: 15, textAlign: 'center' },
   boton: {

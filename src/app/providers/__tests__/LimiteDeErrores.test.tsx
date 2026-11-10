@@ -133,7 +133,7 @@ describe('LimiteDeErrores (CA16)', () => {
           <PantallaFalsa />
         </LimiteDeErrores>,
       );
-      expect(screen.getByRole('header').parent).toHaveStyle({
+      expect(screen.getByRole('alert').parent).toHaveStyle({
         backgroundColor: tema.colors.background,
       });
       expect(screen.getByRole('header')).toHaveStyle({
