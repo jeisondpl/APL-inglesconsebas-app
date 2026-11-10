@@ -1,9 +1,11 @@
 // CA18: NavegadorRaiz usa el tema oscuro con `dark` (o null) y el claro con `light`. La ruta
 // inicial es la pantalla de inicio provisional.
-// F1-01b: aserciones ajustadas por el constructor al migrar de DarkTheme/DefaultTheme a los tokens.
+// F1-01b: aserciones ajustadas por el constructor al migrar de DarkTheme/DefaultTheme a los tokens;
+// el montaje añade DependenciasProvider porque NavegadorRaiz oculta el splash con useNative.
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DependenciasProvider } from '@/app/di';
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
 import { TemaProvider, temaClaro, temaOscuro } from '@/shared/theme';
 
@@ -20,7 +22,9 @@ const montar = () =>
   render(
     <SafeAreaProvider>
       <TemaProvider>
-        <NavegadorRaiz />
+        <DependenciasProvider>
+          <NavegadorRaiz />
+        </DependenciasProvider>
       </TemaProvider>
     </SafeAreaProvider>,
   );

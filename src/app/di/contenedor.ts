@@ -1,3 +1,5 @@
+import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import type { SplashPort } from '@/native/ports/SplashPort';
 import { crearClienteApi, type ClienteApi } from '@/shared/lib/api';
 import { entorno } from '@/shared/lib/entorno';
 
@@ -7,11 +9,10 @@ import { entorno } from '@/shared/lib/entorno';
  */
 export interface IRepositorios {}
 
-/**
- * Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. Vacío hasta el primer
- * SDK (el splash se aplazó a la feature de sistema de diseño).
- */
-export interface INativos {}
+/** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
+export interface INativos {
+  splash: SplashPort;
+}
 
 export interface IDependencias {
   repositorios: IRepositorios;
@@ -29,5 +30,9 @@ export function crearDependencias(): IDependencias {
     obtenerToken: () => Promise.resolve(null),
     alNoAutorizado: () => {},
   });
-  return { repositorios: {}, nativos: {}, api };
+  return {
+    repositorios: {},
+    nativos: { splash: crearBootSplashAdapter() },
+    api,
+  };
 }

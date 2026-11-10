@@ -83,18 +83,21 @@ describe('useNative (CA11)', () => {
     ).rejects.toThrow(/useNative se usó fuera de <DependenciasProvider>/);
   });
 
-  it('con el contenedor real (sin valor) no hay nativos registrados todavía', async () => {
-    await expect(
-      renderHook(() => useNative('splash' as never), { wrapper: conValor() }),
-    ).rejects.toThrow(/«splash»/);
+  // F1-01b: el contenedor real ya registra el splash (ajuste del constructor).
+  it('con el contenedor real (sin valor) el splash está registrado', async () => {
+    const { result } = await renderHook(() => useNative('splash'), {
+      wrapper: conValor(),
+    });
+    expect(typeof result.current.ocultar).toBe('function');
   });
 });
 
 describe('crearDependencias (CA11)', () => {
-  it('crea repositorios y nativos vacíos y un cliente API con get y post', () => {
+  // F1-01b: nativos ya no está vacío: registra el splash (ajuste del constructor).
+  it('crea repositorios vacíos, el splash y un cliente API con get y post', () => {
     const dependencias = crearDependencias();
     expect(dependencias.repositorios).toEqual({});
-    expect(dependencias.nativos).toEqual({});
+    expect(Object.keys(dependencias.nativos)).toEqual(['splash']);
     expect(typeof dependencias.api.get).toBe('function');
     expect(typeof dependencias.api.post).toBe('function');
   });
