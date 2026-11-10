@@ -9,7 +9,7 @@ Cada punto de la app se construye como una **feature**, en su propia rama, con e
 | Constructor | Subagente `constructor` | Código de `src/`, nativo y configuración | Commits por capa |
 | Tester | Subagente `tester` | Solo tests (`__tests__/`, `*.test.ts(x)`) | Tests y `pruebas.md` |
 | Aprobador | Subagente `aprobador` | No, solo lectura | Veredicto en `aprobacion.md` |
-| Desplegador | Subagente `desplegador` | Git (merge, tag, push con OK) y tablero | `main` actualizado, APK y PR |
+| Desplegador | Subagente `desplegador` | Git (merge, tag, push con OK) y tablero | `develop` actualizada, APK y PR |
 
 La regla de oro es que **quien construye no aprueba**. El tester prueba contra los criterios del plan, no contra el código. El aprobador no puede modificar lo que juzga.
 
@@ -78,9 +78,10 @@ Si el tester o el aprobador rechazan, el orquestador devuelve al constructor **l
 
 ## Commits y ramas
 
-- Las ramas salen de `main`: `feat/<CÓDIGO>-<slug>`, `fix/…`, `chore/…`, `docs/…` o `refactor/…`.
+- `main` es producción y `develop` es desarrollo. `main` solo recibe `develop` en cada entrega de fase, con el acta de aceptación firmada por Sebastián.
+- Las ramas salen de `develop`: `feat/<CÓDIGO>-<slug>`, `fix/…`, `chore/…`, `docs/…` o `refactor/…`.
 - Los commits siguen **Conventional Commits en español** (`feat(sesion): login con usuario y PIN`). commitlint los valida.
-- Hay un commit por cada cambio coherente. Nunca hay push directo ni force-push a `main`. El push y el PR van siempre con el OK del usuario.
+- Hay un commit por cada cambio coherente. Nunca hay push directo ni force-push a `main` ni a `develop`: todo entra por PR con el CI en verde. El push y el PR van siempre con el OK del usuario.
 
 ## Trazabilidad
 
