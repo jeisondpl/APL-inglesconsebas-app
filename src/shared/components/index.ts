@@ -18,3 +18,7 @@ export { Marca, type IPropsMarca } from './Marca';
 export { Pantalla, type IPropsPantalla } from './Pantalla';
 export { Tarjeta, type IPropsTarjeta } from './Tarjeta';
 export { Texto, type IPropsTexto } from './Texto';
+export {
+  configuracionNotificaciones,
+  HostNotificaciones,
+} from './HostNotificaciones';

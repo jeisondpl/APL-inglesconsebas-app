@@ -3,7 +3,7 @@ import Toast from 'react-native-toast-message';
 import { textosComunes } from './textos';
 import { mensajeDeError } from './utils';
 
-/** Tipos de aviso. `warning` lo registra el host en src/app (la librería solo trae success, error e info). */
+/** Tipos de aviso. Los cuatro los registra HostNotificaciones (la librería no trae `warning`). */
 export type TipoAviso = 'success' | 'error' | 'warning' | 'info';
 
 type Mostrar = (titulo: string, detalle?: string) => void;
