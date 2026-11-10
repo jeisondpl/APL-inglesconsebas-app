@@ -1,7 +1,28 @@
 # Plan · F1-01b · Sistema de diseño, splash e ícono (Dirección A)
 
 > Redactado por el agente **planificador** el 2026-11-09 en la rama `feat/F1-01b-sistema-diseno-marca`.
-> Estado: **PENDIENTE de aprobación del usuario.**
+> Estado: **APROBADO por el usuario el 2026-11-09, con las decisiones de la sección 0.**
+
+## 0. Decisiones del usuario (prevalecen sobre el resto del documento)
+
+1. **Plan aprobado.**
+2. **P1 · Tema: se sigue al sistema.** `PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'`. Si `useColorScheme()` devuelve `null`, se usa oscuro. CA4 se ajusta a esto: «por defecto sigue al sistema».
+3. **P2 · Splash claro y oscuro, sin licencia de pago.** No se usa la opción `--dark-*` ni `--license-key` del CLI de bootsplash, porque esa parte es de pago. La alternativa gratuita funciona así:
+   - **Ejecución.** Se mantiene `react-native-bootsplash` 7.3.5, que tiene licencia MIT, para mostrar y ocultar el splash (`BootTheme`, `RNBootSplash.init`, `hide`).
+   - **Generación.** Los recursos del splash los crea un script propio, `scripts/generar-splash.mjs`, con sharp y a partir de `logo.json`. Sustituye al script `marca:splash` del CLI y genera las dos variantes que traen los sistemas operativos:
+     - **Android:**
+       - `drawable-*/bootsplash_logo.png`, con el cuadrado Grafito #0D131C, borde #263140 y burbuja #86EF86;
+       - `drawable-night-*/bootsplash_logo.png`, idéntico al anterior;
+       - `values/colors.xml`, con `bootsplash_background` en Niebla #F0F4F0;
+       - `values-night/colors.xml`, con #05070B;
+       - en la variante clara, el logo va en un cuadrado blanco #FFFFFF con borde #DBE5DB y burbuja #1F6B1F.
+
+       Android elige la variante según el modo del sistema, sin código.
+     - **iOS:** `Colors.xcassets` con `BootSplashBackground` (apariencias Any = Niebla, Dark = Noche), la imagen `BootSplashLogo` con sus dos apariencias y el `BootSplash.storyboard` que las referencia.
+   - **CA9 cambia:** el splash se verifica en los dos modos del sistema, con modo oscuro activado y desactivado en el moto g77.
+   - El constructor comprueba en el README de bootsplash qué nombres de recurso y estilos espera en ejecución (`bootsplash_background`, `bootsplash_logo`, `BootTheme`), y los respeta.
+4. **P3.** Se mantiene: la continuación animada del splash queda fuera de alcance.
+5. **P5 · Onboarding.** Se crea una tarjeta pendiente en el tablero, fuera del contrato. No forma parte de esta feature.
 
 ## Definition of Ready: se cumple con tres salvedades
 
