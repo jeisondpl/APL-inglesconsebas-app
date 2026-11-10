@@ -57,11 +57,11 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 
 ## Sistema de diseño y marca (F1-01b)
 
-- **Dirección A · Evolución**, elegida por Sebastián el 2026-11-09. Logo y nombre son provisionales.
+- **Kit de marca oficial** de Sebastián (2026-11-10) en `assets/marca/kit/` (manual, PDF vectoriales y PNG). Sustituye a la exploración «Dirección A». Paleta oficial: #FFFFFF, #000000, #86EF86 y #A5AFA5; títulos en Nohemi Medium y cuerpo en DM Sans.
 - **Tokens** en `src/shared/theme`: `temaOscuro`/`temaClaro` con las mismas claves semánticas; se consumen con `useTema()` y `useEstilos(fabrica)` (fábrica declarada fuera del componente). No se escriben hex en pantallas. `PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'` (sin dato del sistema, oscuro); guardar la preferencia es el ítem 1.14.
 - **Componentes** en `src/shared/components`. Solo `HostNotificaciones` y `notify.ts` importan `react-native-toast-message`. Escaparate en `src/app/escaparate`, abierto desde el inicio provisional (con la sesión, solo en `__DEV__`).
-- **Fuentes** en `assets/fuentes` (OFL, licencias en `assets/licencias` para que `react-native-asset` no las copie): el archivo se llama como su nombre PostScript y `fontFamily` usa ese nombre; nunca `fontWeight`. Se enlazan con `npx react-native-asset` (`react-native.config.js`).
-- **Logo, ícono y splash** salen de `assets/marca/logo.json` con `npm run marca:logo` → `marca:iconos` → `marca:splash` (idempotentes). Su salida se versiona y no se edita a mano (lista en el README).
+- **Fuentes** en `assets/fuentes` (licencias en `assets/licencias` para que `react-native-asset` no las copie; la de Nohemi está copiada del propio archivo porque el kit no la trae): el archivo se llama como su nombre PostScript y `fontFamily` usa ese nombre; nunca `fontWeight`. Se enlazan con `npx react-native-asset` (`react-native.config.js`).
+- **Logo, ícono y splash** salen de `assets/marca/logo.json`, que extrae `python scripts/extraer-logo-kit.py` (PyMuPDF) de los PDF del kit: logo principal (`Marca`) e isotipo (`LogoMarca`). Luego `npm run marca:logo` → `marca:iconos` (isotipo) → `marca:splash` (logo principal), todos idempotentes. Su salida se versiona y no se edita a mano (lista en el README).
 - **Splash**: `react-native-bootsplash` solo en ejecución (`BootTheme`, `RNBootSplash.init`, `initWithStoryboard`, `hide`). Los recursos claro y oscuro los genera `scripts/generar-splash.mjs`, no el CLI (su modo oscuro es de pago). Se oculta con `SplashPort` (`useNative('splash')`) en el `onReady` de la navegación.
 - **Pasos nativos hechos**: Android `BootTheme`, la Activity con `@style/BootTheme` y `RNBootSplash.init` tras `RNScreensFragmentFactory`; iOS `SceneDelegate.customize`, `UILaunchStoryboardName=BootSplash`, `Colors.xcassets` y `BootSplash.storyboard` en el pbxproj y `UIAppFonts`. **Pendiente sin Mac**: `pod install` (bootsplash y svg), compilar iOS y versionar `Podfile.lock`.
 

@@ -27,7 +27,8 @@ Comandos útiles:
 | `npm test` | Solo Jest |
 | `npm run build:android:debug` | APK de debug con Gradle |
 | `node scripts/build-apk.mjs` | APK local de respaldo (ver `docs/DISTRIBUCION.md`) |
-| `npm run marca:logo` · `marca:iconos` · `marca:splash` | Regeneran logo, ícono y splash desde `assets/marca/logo.json` (ver «Sistema de diseño y marca») |
+| `python scripts/extraer-logo-kit.py` | Extrae el logo y el isotipo de los PDF del kit a `assets/marca/logo.json` (solo si cambia el kit) |
+| `npm run marca:logo` · `marca:iconos` · `marca:splash` | Regeneran los SVG del logo, el ícono y el splash desde `assets/marca/logo.json` (ver «Sistema de diseño y marca») |
 
 ## Estructura base (F1-01)
 
@@ -63,27 +64,28 @@ src/
 
 ## Sistema de diseño y marca (F1-01b)
 
-Dirección A · Evolución (lámina «Manual de marca resumido»). Logo y nombre son **provisionales**: todo sale de una sola fuente y se regenera con los scripts.
+Kit de marca **oficial** de Sebastián (2026-11-10), guardado en `assets/marca/kit/`: manual de marca (PDF de 11 páginas), los PDF vectoriales del logo y los PNG de referencia. Todo lo visual sale de una sola fuente y se regenera con los scripts. Sebastián va migrando la marca a «Leap»: si cambia, se reemplaza el kit y se regenera.
 
-- **Tokens** (`src/shared/theme`): `paleta` con los nombres de la lámina y `temaOscuro`/`temaClaro` con las mismas claves semánticas (`fondo`, `superficie`, `texto`, `marca`, `peligro`…). Las pantallas usan `useTema()` y `useEstilos(fabrica)`, nunca hex sueltos. `TemaProvider` sigue al sistema (`PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'`; sin dato, oscuro). La preferencia aún no se guarda (ítem 1.14).
+- **Tokens** (`src/shared/theme`): `paleta` con los cuatro colores oficiales (blanco #FFFFFF, negro #000000, verde #86EF86 y gris #A5AFA5, manual p. 7), el gris del logo sobre blanco (#62696B, p. 4) y los derivados que el kit no define (verde para fondo claro, estados), y `temaOscuro`/`temaClaro` con las mismas claves semánticas (`fondo`, `superficie`, `texto`, `marca`, `peligro`…). Las pantallas usan `useTema()` y `useEstilos(fabrica)`, nunca hex sueltos. `TemaProvider` sigue al sistema (`PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'`; sin dato, oscuro). La preferencia aún no se guarda (ítem 1.14).
 - **Componentes** (`src/shared/components`): `Texto`, `Boton`, `Campo`, `Tarjeta`, `Pantalla`, `Insignia`, `Cargando`, `AvisoEnLinea`, `LogoMarca`, `Marca` y `HostNotificaciones`. El escaparate (`src/app/escaparate`) los muestra todos.
-- **Fuentes** (`assets/fuentes`, OFL; licencias en `assets/licencias`): Sora SemiBold y Bold (títulos y botones) y DM Sans Regular, Medium y SemiBold (cuerpo). **Regla de nombres**: el archivo se llama exactamente como el nombre PostScript de la fuente (`Sora-Bold.ttf` → `fontFamily: 'Sora-Bold'`), porque Android busca por archivo e iOS por PostScript. No se usa `fontWeight`. Una fuente nueva se copia ahí y se enlaza con `npx react-native-asset`.
-- **Logo**: `assets/marca/logo.json` (burbuja + «S» convertida a trazado) es la única fuente de verdad del logo en pantalla, del ícono y del splash.
+- **Fuentes** (`assets/fuentes`; licencias en `assets/licencias`): **Nohemi Medium** en títulos y botones (tipografía complementaria del kit; Thin y ExtraLight no se usan por legibilidad) y DM Sans Regular, Medium y SemiBold (OFL) en el cuerpo. La licencia de Nohemi no venía en el kit: se copió de la tabla «name» del propio archivo (freeware de Rajesh Rajput, uso personal y comercial, sin modificar los archivos). **Regla de nombres**: el archivo se llama exactamente como el nombre PostScript de la fuente (`Nohemi-Medium.otf` → `fontFamily: 'Nohemi-Medium'`), porque Android busca por archivo e iOS por PostScript. No se usa `fontWeight`. Una fuente nueva se copia ahí y se enlaza con `npx react-native-asset`.
+- **Logo**: `assets/marca/logo.json` es la única fuente de verdad del logo en pantalla, del ícono y del splash. Contiene, como trazados vectoriales sacados de los PDF del kit, el **logo principal** (mano «OK» + «Inglés con sebas»; componente `Marca`, claro sobre negro y gris sobre blanco según el tema) y el **isotipo** (la mano en el círculo con la «S»; componente `LogoMarca`, categorías Corporate, Self y Kids). La «l» de «Inglés» y la «S» del isotipo son texto en el PDF y se convierten a trazado: no hay `<text>`.
 
 ### Regenerar logo, ícono y splash
 
 En este orden, y después revisar el diff y compilar:
 
 ```sh
-npm run marca:logo     # logo.json y SVG (vectoriza la «S» con assets/marca/fuentes-origen/Sora-ExtraBold.ttf)
-npm run marca:iconos   # mipmap-* (legacy, adaptativo y monocromo), AppIcon de iOS e icono-play-512.png
-npm run marca:splash   # splash claro y oscuro de Android e iOS
+python scripts/extraer-logo-kit.py   # solo si cambia el kit: PDF de assets/marca/kit → logo.json (PyMuPDF)
+npm run marca:logo     # SVG de referencia: logo-oscuro, logo-claro e isotipo-corporate/self/kids
+npm run marca:iconos   # isotipo: mipmap-* (legacy, adaptativo y monocromo), AppIcon de iOS e icono-play-512.png
+npm run marca:splash   # logo principal: splash claro (gris sobre blanco) y oscuro (claro sobre negro)
 ```
 
-Los tres son idempotentes: si nada cambió, no escriben y `git status` queda limpio. El splash no usa el CLI de react-native-bootsplash (su modo oscuro es de pago): lo genera `scripts/generar-splash.mjs` con los nombres que la librería espera en ejecución.
+Todos son idempotentes: si nada cambió, no escriben y `git status` queda limpio. El splash no usa el CLI de react-native-bootsplash (su modo oscuro es de pago): lo genera `scripts/generar-splash.mjs` con los nombres que la librería espera en ejecución.
 
 **Salida generada, no editar a mano** (el CI no ejecuta los scripts, por eso se versiona):
-- `assets/marca/logo.json`, `logo-*.svg`, `splash-logo*.svg` e `icono-play-512.png`;
+- `assets/marca/logo.json`, `logo-*.svg`, `isotipo-*.svg` e `icono-play-512.png`;
 - Android: `res/mipmap-*/ic_launcher*.png`, `res/mipmap-anydpi-v26/`, `res/values/ic_launcher_background.xml`, `res/drawable-*/bootsplash_logo.png`, `res/drawable-night-*/bootsplash_logo.png`, `res/values/colors.xml` y `res/values-night/colors.xml`;
 - iOS: `Images.xcassets/AppIcon.appiconset/`, `Images.xcassets/BootSplashLogo.imageset/`, `Colors.xcassets/` y `BootSplash.storyboard`.
 
@@ -97,4 +99,4 @@ Los tres son idempotentes: si nada cambió, no escriben y `git status` queda lim
 | `react-native-bootsplash` 7.3.5 (MIT) | Splash nativo; se oculta en el `onReady` de la navegación vía `SplashPort` | Android: `BootTheme` en `styles.xml`, la Activity con `@style/BootTheme` y `RNBootSplash.init` en `MainActivity.kt` (hecho). iOS: `customize` en `SceneDelegate.swift` y `UILaunchStoryboardName=BootSplash` (hecho, sin compilar); `pod install` |
 | `react-native-svg` 15.16.1 | `LogoMarca` | iOS: `pod install` |
 
-Dependencias de desarrollo de los scripts de marca: `sharp` (rasterizar), `opentype.js` (vectorizar la «S») y `react-native-asset` (enlazar fuentes).
+Dependencias de desarrollo de los scripts de marca: `sharp` (rasterizar) y `react-native-asset` (enlazar fuentes). La extracción del kit usa Python con PyMuPDF (`pip install pymupdf`), solo en local.
