@@ -55,11 +55,13 @@ Argumento: el código de una tarjeta del tablero (`F1-03`) o una descripción li
 
 ## 5. Desplegar
 
-1. Lanza el **desplegador** para la etapa A: merge `--no-ff` en `main`, puerta en `main`, APK de debug y tablero.
+1. Lanza el **desplegador** para la etapa A: puerta y APK de debug **en la rama**, y propuesta para el tablero. No se toca `main` en local.
 2. Presenta al usuario el resultado y pregunta con `AskUserQuestion` qué hacer después. Las opciones son:
-   - «Push y PR»;
-   - «Push, PR y distribuir a testers»;
+   - «PR y merge en GitHub», que sube la rama, abre el PR, espera el CI, fusiona y aplica el tablero;
+   - «PR, merge y distribuir a testers»;
    - «Dejarlo local por ahora».
+
+   El merge a `main` siempre lo hace GitHub a través del PR, con el CI en verde.
 3. Si el usuario confirma, vuelve a lanzar el desplegador para la etapa B, **citando la confirmación del usuario** en el brief.
 
 ## Cierre

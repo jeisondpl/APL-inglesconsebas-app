@@ -13,7 +13,8 @@ Cada punto de la app se construye con la skill **`/feature <código de tarjeta>`
 3. **tester**: prueba contra los criterios del plan, solo toca tests, y escribe `pruebas.md`.
 4. **aprobador**: revisión independiente de solo lectura. Escribe `aprobacion.md` con APROBADO o RECHAZADO.
 5. **desplegador**:
-   - con el veredicto APROBADO, hace el merge `--no-ff` a `main`, compila el APK de debug y actualiza el tablero;
+   - con el veredicto APROBADO, verifica la rama (puerta y APK de debug);
+   - con el OK del usuario, abre el PR, espera el CI, fusiona en GitHub (nunca en `main` local) y actualiza el tablero;
    - solo con el OK del usuario hace push, abre el PR o distribuye.
 
 Hay un máximo de 2 vueltas de corrección por feature. Después se consulta al usuario.
