@@ -2,7 +2,18 @@
 
 > Tester · 2026-11-09 · rama `feat/F1-01-base-diseno-marca`
 
-**Veredicto: ROJO, solo por CA2.** Hay 120 tests y todos pasan. La cobertura global es del 100 % y la puerta en local está en verde. CA2 no se pudo comprobar porque no había ningún emulador ni dispositivo conectado. No hay fallos de código.
+> **Actualización 2026-11-09 (orquestador): CA2 verificado en un dispositivo real. El veredicto pasa a VERDE.**
+> - **Dispositivo y build:** moto g77 con Android 16 (API 36). APK de debug con Metro y `adb reverse tcp:8081`.
+> - **Resultado:** la app arranca y muestra «Inglés con Sebas», «Versión 0.1.0», «Entorno: dev» y «Servidor: 10.0.2.2:8080», con el tema oscuro del sistema.
+> - **Sin errores:** el logcat no tiene ningún `FATAL EXCEPTION` ni errores de JS, y el proceso sigue vivo.
+> - **Avisos:** los únicos son de desarrollo, de Fast Refresh o HMR desconectado, y no son defectos.
+> - **Lo que confirma:** Metro resuelve el alias `@/` (completa CA3) y `react-native-screens` 4.30.1 funciona con RN 0.88.1 (riesgo R3).
+> - **Captura:** [`ca2.png`](ca2.png).
+> - **Para las próximas features:** en un teléfono físico `10.0.2.2` no apunta al PC. Hay que poner en `API_URL` la IP del PC en la red o la API de producción.
+>
+> Las observaciones O1 y O2 se corrigieron en la vuelta 1 (`59b60ba` y `b1393b9`).
+
+**Veredicto original: ROJO, solo por CA2.** Hay 120 tests y todos pasan. La cobertura global es del 100 % y la puerta en local está en verde. CA2 no se pudo comprobar porque no había ningún emulador ni dispositivo conectado. No hay fallos de código.
 
 ## 1. Matriz criterio → prueba
 
