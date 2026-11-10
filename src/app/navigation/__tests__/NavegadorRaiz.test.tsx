@@ -56,8 +56,10 @@ describe('NavegadorRaiz (CA18)', () => {
       expect(
         screen.getByRole('header', { name: 'Inglés con Sebas' }),
       ).toBeOnTheScreen();
-      expect(screen.getByText('Inglés con Sebas')).toHaveStyle({
-        color: tema.colores.texto,
+      // F1-01b (marca oficial): el nombre ya no es texto sino el logo vectorial; el color del tema
+      // se comprueba en el subtítulo.
+      expect(screen.getByText(/Base técnica lista/)).toHaveStyle({
+        color: tema.colores.textoSecundario,
       });
     },
   );

@@ -1,56 +1,47 @@
-import { StyleSheet, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { textosComunes } from '@/shared/lib/textos';
 import { useTema } from '@/shared/theme';
 
-import { LogoMarca } from './LogoMarca';
-import { Texto } from './Texto';
+import logo from '../../../assets/marca/logo.json';
 
 export interface IPropsMarca {
-  /** vertical: logo encima (splash A-M0); horizontal: logo a la izquierda (cabeceras). */
-  disposicion?: 'vertical' | 'horizontal';
+  /** Ancho en dp. Por defecto, 220. El alto sale de la proporción del logo. */
+  ancho?: number;
   /** Se anuncia como encabezado de la pantalla. */
   esEncabezado?: boolean;
   testID?: string;
 }
 
-const textos = textosComunes.marca;
+const { capas, viewBox } = logo.logo;
+const [, , anchoVista, altoVista] = viewBox.split(' ').map(Number);
 
-/** Logo y wordmark «Inglés con Sebas», con «Sebas» en el color de marca. Se lee como una unidad. */
+/**
+ * Logo principal oficial: la mano «OK» y «Inglés con sebas», vectorial (assets/marca/logo.json).
+ * En el tema oscuro va claro (manual, p. 3) y en el claro, gris (p. 4). Se lee como una unidad:
+ * «Inglés con Sebas».
+ */
 export function Marca({
-  disposicion = 'vertical',
+  ancho = 220,
   esEncabezado = false,
   testID,
 }: IPropsMarca) {
   const { tema } = useTema();
-  const vertical = disposicion === 'vertical';
+  const colores = logo.colores[tema.modo];
   return (
-    <View
+    <Svg
       testID={testID}
+      width={ancho}
+      height={(ancho * altoVista) / anchoVista}
+      viewBox={viewBox}
       accessible
-      accessibilityRole={esEncabezado ? 'header' : 'text'}
-      accessibilityLabel={textos.nombre}
-      style={vertical ? estilos.vertical : estilos.horizontal}
+      accessibilityRole={esEncabezado ? 'header' : 'image'}
+      accessibilityLabel={textosComunes.marca.nombre}
     >
-      <LogoMarca tamano={vertical ? 86 : 26} />
-      <Texto
-        variante={vertical ? 'h1' : 'subtitulo'}
-        style={[
-          { fontFamily: tema.familias.soraBold },
-          vertical && estilos.centrado,
-        ]}
-      >
-        {textos.inicio}
-        <Texto variante={vertical ? 'h1' : 'subtitulo'} color="marca">
-          {textos.destacado}
-        </Texto>
-      </Texto>
-    </View>
+      <Path d={capas.manoContorno} fill={colores.manoContorno} />
+      <Path d={capas.manoRelleno} fill={colores.manoRelleno} />
+      <Path d={capas.nombre} fill={colores.nombre} />
+      <Path d={capas.con} fill={colores.con} />
+    </Svg>
   );
 }
-
-const estilos = StyleSheet.create({
-  vertical: { alignItems: 'center', gap: 20 },
-  horizontal: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  centrado: { textAlign: 'center' },
-});

@@ -266,11 +266,12 @@ export function SistemaDisenoScreen() {
       <Seccion titulo={textos.secciones.logo}>
         <View style={estilos.fila}>
           <LogoMarca tamano={86} etiqueta={textos.logoEtiqueta} />
-          <LogoMarca tamano={48} />
-          <LogoMarca tamano={26} />
+          <LogoMarca tamano={64} categoria="self" />
+          <LogoMarca tamano={64} categoria="kids" />
+          <LogoMarca tamano={32} />
         </View>
         <Marca />
-        <Marca disposicion="horizontal" />
+        <Marca ancho={140} />
       </Seccion>
 
       <Seccion titulo={textos.secciones.notificaciones}>

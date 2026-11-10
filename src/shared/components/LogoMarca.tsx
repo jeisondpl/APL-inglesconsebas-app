@@ -1,26 +1,33 @@
 import Svg, { Path } from 'react-native-svg';
 
-import { paleta, useTema } from '@/shared/theme';
-
 import logo from '../../../assets/marca/logo.json';
 
+export type CategoriaIsotipo = keyof typeof logo.colores.isotipo;
+
 export interface IPropsLogoMarca {
-  /** Lado en dp. Por defecto, 48 (el viewBox de la lámina). */
+  /** Lado en dp. Por defecto, 48. */
   tamano?: number;
+  /** corporate (círculo negro), self (gris) o kids (verde). Manual de marca, pp. 9–10. */
+  categoria?: CategoriaIsotipo;
   /** Con etiqueta se anuncia como imagen; sin ella es decorativo y queda oculto al lector. */
   etiqueta?: string;
   testID?: string;
 }
 
+const { capas, viewBox } = logo.isotipo;
+
 /**
- * Logo vectorial (burbuja y «S»), dibujado con los trazados de assets/marca/logo.json, que genera
- * `npm run marca:logo`. La burbuja va en `marca`; la «S», en `fondo` en el tema oscuro y en
- * blanco en el claro.
+ * Isotipo oficial (la mano «OK» en el círculo con la «S»), dibujado con los trazados vectoriales
+ * de assets/marca/logo.json, que extrae scripts/extraer-logo-kit.py del kit de marca. Sus colores
+ * son los de la categoría, no los del tema.
  */
-export function LogoMarca({ tamano = 48, etiqueta, testID }: IPropsLogoMarca) {
-  const { tema } = useTema();
-  const colorLetra =
-    tema.modo === 'oscuro' ? tema.colores.fondo : paleta.blanco;
+export function LogoMarca({
+  tamano = 48,
+  categoria = 'corporate',
+  etiqueta,
+  testID,
+}: IPropsLogoMarca) {
+  const colores = logo.colores.isotipo[categoria];
   const accesibilidad = etiqueta
     ? {
         accessible: true,
@@ -37,11 +44,14 @@ export function LogoMarca({ tamano = 48, etiqueta, testID }: IPropsLogoMarca) {
       testID={testID}
       width={tamano}
       height={tamano}
-      viewBox={logo.viewBox}
+      viewBox={viewBox}
       {...accesibilidad}
     >
-      <Path d={logo.burbuja} fill={tema.colores.marca} />
-      <Path d={logo.letra} fill={colorLetra} />
+      <Path d={capas.circulo} fill={colores.circulo} />
+      <Path d={capas.manoContorno} fill={colores.manoContorno} />
+      {/* El relleno de la mano es del color del círculo: solo se ve el contorno blanco. */}
+      <Path d={capas.manoRelleno} fill={colores.circulo} />
+      <Path d={capas.letra} fill={colores.letra} />
     </Svg>
   );
 }

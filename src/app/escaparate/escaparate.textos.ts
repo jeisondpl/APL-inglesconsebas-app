@@ -54,7 +54,7 @@ export const textosEscaparate = {
     infoMensaje: 'Tu ciclo vence en 3 días.',
   },
   carga: 'Cargando clases',
-  logoEtiqueta: 'Logo de Inglés con Sebas',
+  logoEtiqueta: 'Isotipo de Inglés con Sebas',
   notificaciones: {
     success: 'Éxito',
     error: 'Error',
