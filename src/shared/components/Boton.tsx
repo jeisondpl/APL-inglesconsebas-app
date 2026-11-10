@@ -57,7 +57,7 @@ const colorTexto = {
   peligro: 'peligro',
 } as const;
 
-/** Botón del sistema de diseño (lámina: «Reagendar clase», «Cancelar»). */
+/** Botón del sistema de diseño: primario, secundario y peligro. */
 export function Boton({
   titulo,
   onPress,

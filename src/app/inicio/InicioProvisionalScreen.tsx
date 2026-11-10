@@ -16,7 +16,7 @@ function hostDe(url: string): string {
 }
 
 /**
- * Pantalla inicial provisional con el sistema de diseño: la marca, la versión de package.json y el
+ * Pantalla inicial provisional con el sistema de diseño: el logo principal oficial, la versión de package.json y el
  * entorno de react-native-config, y el acceso al escaparate del sistema de diseño. La sustituye la
  * feature de sesión.
  */
@@ -24,7 +24,7 @@ export function InicioProvisionalScreen() {
   const navegacion = useNavigation();
   return (
     <Pantalla style={estilos.contenido}>
-      <Marca esEncabezado />
+      <Marca esEncabezado ancho={240} />
       <Texto color="textoSecundario" style={estilos.centrado}>
         {textos.subtitulo}
       </Texto>

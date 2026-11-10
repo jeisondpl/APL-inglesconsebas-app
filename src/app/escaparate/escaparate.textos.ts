@@ -2,7 +2,7 @@
 export const textosEscaparate = {
   titulo: 'Sistema de diseño',
   introduccion:
-    'Tokens y componentes de la Dirección A. El tema elegido aquí no se guarda.',
+    'Tokens y componentes con el kit de marca oficial. El tema elegido aquí no se guarda.',
   secciones: {
     tema: 'Tema',
     paleta: 'Paleta',
@@ -13,7 +13,7 @@ export const textosEscaparate = {
     insignias: 'Insignias',
     avisos: 'Avisos',
     carga: 'Carga',
-    logo: 'Logo y marca',
+    logo: 'Isotipo y logo principal',
     notificaciones: 'Notificaciones',
   },
   temas: { sistema: 'Sistema', claro: 'Claro', oscuro: 'Oscuro' },
