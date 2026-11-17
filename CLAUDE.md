@@ -49,9 +49,8 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
   - `di/`: `crearDependencias()` es el único sitio donde se instancian el cliente HTTP, los repositorios y los adaptadores. Un módulo nuevo añade su puerto a `IRepositorios`; un SDK nuevo, el suyo a `INativos`. Se consumen con `useRepository` y `useNative`. En los tests, `DependenciasProvider valor={…}` (o `Providers dependencias={…}`) sustituye el contenedor;
   - `providers/`: SafeArea, `TemaProvider`, dependencias y `LimiteDeErrores`, con `HostNotificaciones` como hermano dentro del tema;
   - `navigation/`: native-stack con `temaNavegacion(tema)` desde los tokens y `RaizParamList` tipado globalmente; `onReady` oculta el splash;
-  - `inicio/InicioProvisionalScreen.tsx`: ruta inicial **provisional** (nombre, versión y entorno). La sustituye la feature de sesión.
+  - `inicio/InicioProvisionalScreen.tsx`: inicio **provisional** de los tres roles (saludo, rol, versión, entorno y «Cerrar sesión»). Lo sustituye el inicio real (1.17).
 - **`src/shared/lib/`**: `HttpResponse`, `api.ts` (`crearClienteApi`, nunca lanza), `entorno.ts` (`leerEntorno` puro + `entorno`), `notify.ts` (única puerta a los toasts), `utils.ts` y `textos.ts`.
-- **Sesión pendiente**: el cliente HTTP sale del contenedor con `obtenerToken = () => null` y un `alNoAutorizado` vacío. La feature de sesión solo cambia esas dos funciones.
 - **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context`, `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`) y `react-native-bootsplash` (`hide` resuelve). `react-native-svg` se renderiza sin mock. Lo que use `useTema` se monta dentro de `TemaProvider` (o de `Providers`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
 - **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context` (y los de F1-01b), y versionar `Podfile.lock`.
 
@@ -64,6 +63,18 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - **Logo, ícono y splash** salen de `assets/marca/logo.json`, que extrae `python scripts/extraer-logo-kit.py` (PyMuPDF) de los PDF del kit: logo principal (`Marca`) e isotipo (`LogoMarca`). Luego `npm run marca:logo` → `marca:iconos` (isotipo) → `marca:splash` (logo principal), todos idempotentes. Su salida se versiona y no se edita a mano (lista en el README).
 - **Splash**: `react-native-bootsplash` solo en ejecución (`BootTheme`, `RNBootSplash.init`, `initWithStoryboard`, `hide`). Los recursos claro y oscuro los genera `scripts/generar-splash.mjs`, no el CLI (su modo oscuro es de pago). Se oculta con `SplashPort` (`useNative('splash')`) en el `onReady` de la navegación.
 - **Pasos nativos hechos**: Android `BootTheme`, la Activity con `@style/BootTheme` y `RNBootSplash.init` tras `RNScreensFragmentFactory`; iOS `SceneDelegate.customize`, `UILaunchStoryboardName=BootSplash`, `Colors.xcassets` y `BootSplash.storyboard` en el pbxproj y `UIAppFonts`. **Pendiente sin Mac**: `pod install` (bootsplash y svg), compilar iOS y versionar `Podfile.lock`.
+
+## Sesión (F1-03)
+
+- **Módulo `src/modules/sesion`**: login en dos pasos (usuario y teclado de PIN 3×4, envío al 4.º dígito), sesión persistente y cierre de sesión contra `auth.php`. Usa la rama F1-02 del backend. En producción todavía no existe, y el login da el error «El servidor todavía no admite la sesión de la App».
+- **`sesionActiva`** (`IDependencias.sesionActiva`, hook `useSesionActiva`) es el estado en memoria: `restaurando` → `sinSesion` (motivo `cerrada` o `vencida`) o `autenticado`. El cliente HTTP lee de ahí el token. Su `alNoAutorizado` llama a `invalidarSesionUseCase`, que solo actúa con sesión: el 401 del login no la toca.
+- **Almacén**: `SecureStoragePort` (`useNative('almacenSeguro')`) con `react-native-keychain` 11.0.0 y el servicio `com.inglesconsebas.app.<clave>`. La sesión va en la clave `sesion` como JSON `{version:1, token, expiraEn, renovarDesde, usuario}`. Nunca se usa AsyncStorage ni se guarda el PIN. `EnlacesPort` (`useNative('enlaces')`) abre WhatsApp con `Linking`.
+- **Arranque**: `useArranqueSesion()` en `NavegadorRaiz` ejecuta `arrancarSesionUseCase` una vez: restaurar → publicar → `me` → `renew` si toca. Con `restaurando`, el navegador devuelve `null` y el splash sigue. Los flujos se eligen por estado, sin `navigate` imperativo:
+  - Auth, con `rutaInicialAuth()` (punto de enganche de EXT-01);
+  - App, con `rutaInicioPorRol(rol)`.
+- **Tests**: `crearDependenciasDePrueba()` (`src/app/di/dependenciasDePrueba.ts`) da un contenedor sin red ni nativos: `crearMemoriaSesionRepository` (usuarios del seed; `tokenMemoria('ana')` sirve para sesiones guardadas), un almacén en memoria y splash y enlaces falsos. `jest.setup.ts` mockea `react-native-keychain` con un `Map`.
+- **Fuera de alcance** (F1-03b): biometría (1.13), perfil, cambio de PIN y guardar el tema (1.14), sin conexión (1.15), abrir en la web (1.16) y validar al volver a primer plano.
+- **Probar en el teléfono por USB**: `.env.dispositivo` + `adb reverse tcp:8080 tcp:8080` (pasos en el README). **Pendiente sin Mac**: `pod install` de `react-native-keychain`.
 
 ## Contexto
 

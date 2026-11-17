@@ -34,18 +34,20 @@ Comandos útiles:
 
 ```
 index.js                      # AppRegistry → src/app/App
-jest.setup.ts                 # mocks globales: react-native-config, safe-area-context, toast-message, bootsplash
+jest.setup.ts                 # mocks globales: react-native-config, safe-area-context, toast-message, bootsplash, keychain
 src/
 ├── app/                      # composición: solo aquí se conecta todo
 │   ├── App.tsx               # Providers + navegación raíz
-│   ├── di/                   # contenedor: crearDependencias, DependenciasProvider, useRepository, useNative
+│   ├── di/                   # contenedor: crearDependencias, DependenciasProvider, useRepository, useNative, useSesionActiva
 │   ├── providers/            # SafeArea, tema, dependencias, LimiteDeErrores y host de toasts
-│   ├── navigation/           # NavegadorRaiz (native-stack), RaizParamList, tema de navegación
-│   ├── inicio/               # InicioProvisionalScreen (temporal)
+│   ├── navigation/           # NavegadorRaiz: flujos Auth y App según la sesión, rutaInicioPorRol
+│   ├── inicio/               # InicioProvisionalScreen de los tres roles (temporal)
 │   └── escaparate/           # SistemaDisenoScreen: escaparate del sistema de diseño (F1-01b)
 ├── native/
-│   ├── ports/                # SplashPort
-│   └── adapters/             # BootSplashAdapter (react-native-bootsplash)
+│   ├── ports/                # SplashPort, SecureStoragePort, EnlacesPort
+│   └── adapters/             # BootSplash, KeychainSecureStorage (react-native-keychain), LinkingEnlaces
+├── modules/
+│   └── sesion/               # login, sesión persistente y cierre de sesión (F1-03)
 └── shared/
     ├── lib/                  # HttpResponse, api (cliente HTTP), entorno, notify, utils, textos
     ├── theme/                # paleta, temas claro/oscuro, tipografía, TemaProvider, useEstilos
@@ -53,14 +55,14 @@ src/
 ```
 
 - **Alias `@/` → `src/`.** Está en `tsconfig.json` (`paths`, sin `baseUrl`), `babel.config.js` (`babel-plugin-module-resolver`, para Metro) y `jest.config.js` (`moduleNameMapper`). ESLint lo resuelve con `eslint-import-resolver-typescript`, así que `eslint-plugin-boundaries` sigue aplicando la regla de capas a los imports con alias. Si se cambia el alias, hay que tocar los tres archivos.
-- **Cliente HTTP** (`src/shared/lib/api.ts`). `crearClienteApi` habla con la API de Leap (solo GET y POST, rutas `?endpoint=&action=`), añade `Authorization: Bearer` si `obtenerToken` devuelve un token, llama a `alNoAutorizado` ante un 401 y **nunca lanza**: todo sale como `HttpResponse`. Los fallos de red y el tiempo agotado (15 s) devuelven `code: 0`. El contenedor (`src/app/di/contenedor.ts`) lo crea sin sesión; la feature de sesión solo cambiará esas dos funciones.
+- **Cliente HTTP** (`src/shared/lib/api.ts`). `crearClienteApi` habla con la API de Leap (solo GET y POST, rutas `?endpoint=&action=`), añade `Authorization: Bearer` si `obtenerToken` devuelve un token, llama a `alNoAutorizado` ante un 401 y **nunca lanza**: todo sale como `HttpResponse`. Los fallos de red y el tiempo agotado (15 s) devuelven `code: 0`. El contenedor (`src/app/di/contenedor.ts`) le pasa el token de `sesionActiva` y, ante un 401 con sesión, la invalida (F1-03).
 - **Entorno** (`src/shared/lib/entorno.ts`). `leerEntorno(config)` valida `API_URL` y `APP_ENV` (`dev`, `staging` o `prod`) y la constante `entorno` lo lee de `react-native-config`.
 - **Toasts**: siempre con `notify` (`success`, `error`, `warning`, `info`, `fromError`). Por debajo está `react-native-toast-message`; su host es `HostNotificaciones` (`src/shared/components`), con los colores del tema, dentro de `Providers`.
 - **Navegación**: `@react-navigation/native-stack` sobre `react-native-screens`, con `temaNavegacion(tema)` construido desde los tokens.
 
 ### Pantalla de inicio provisional
 
-`src/app/inicio/InicioProvisionalScreen.tsx` es la ruta inicial mientras no exista la feature de sesión. Con el sistema de diseño (`Pantalla`, `Marca`, `Texto`), muestra la marca, la versión (`package.json`) y el entorno (`APP_ENV` y el host de `API_URL`), y el botón «Ver sistema de diseño», que abre el escaparate. Sirve para comprobar en un build de testers qué versión y qué servidor llevan. La sustituye la feature de sesión.
+`src/app/inicio/InicioProvisionalScreen.tsx` es el inicio de los tres roles (`InicioEstudiante`, `InicioProfe` e `InicioAdmin`) hasta que llegue el inicio real (ítem 1.17). Saluda por el nombre, muestra el rol, la versión (`package.json`), el entorno (`APP_ENV` y el host de `API_URL`) y el botón «Cerrar sesión». «Ver sistema de diseño» solo aparece en desarrollo (`__DEV__`).
 
 ## Sistema de diseño y marca (F1-01b)
 
@@ -89,6 +91,30 @@ Todos son idempotentes: si nada cambió, no escriben y `git status` queda limpio
 - Android: `res/mipmap-*/ic_launcher*.png`, `res/mipmap-anydpi-v26/`, `res/values/ic_launcher_background.xml`, `res/drawable-*/bootsplash_logo.png`, `res/drawable-night-*/bootsplash_logo.png`, `res/values/colors.xml` y `res/values-night/colors.xml`;
 - iOS: `Images.xcassets/AppIcon.appiconset/`, `Images.xcassets/BootSplashLogo.imageset/`, `Colors.xcassets/` y `BootSplash.storyboard`.
 
+## Sesión (F1-03)
+
+Login con usuario y PIN de 4 dígitos en dos pasos, sesión persistente y cierre de sesión, contra `auth.php` de Leap con la sesión por token de **F1-02**. Hasta que F1-02 esté desplegada, **solo funciona contra el Docker local**: el `auth.php` de producción responde sin token y la App muestra «El servidor todavía no admite la sesión de la App».
+
+- El token se guarda con `SecureStoragePort` (Keychain en iOS, Keystore en Android) en la clave `sesion`. El PIN nunca se guarda.
+- Al arrancar, la sesión guardada y vigente entra sin PIN (también sin red); en segundo plano se valida con `me` y, si toca, se renueva con `renew`. Un 401 la borra y vuelve al login con el aviso «Tu sesión venció».
+- «Cerrar sesión» avisa al servidor (`logout`, espera como mucho 3 s) y borra la sesión, también sin red.
+
+Usuarios de prueba del Docker (`../docker/db/02-seed.sql`): `yggodguz`/`2905` (admin), `meli`/`1111` y `caro`/`2222` (profes), y `ana`, `luis` y `sofia` con `1234` (estudiantes).
+
+### Probar en un teléfono por USB
+
+1. Levantar Leap en `../`: `docker compose up -d --build`. El árbol de `../app` debe estar en la rama `feat/F1-02-seguridad-api` (o en `main` cuando F1-02 se fusione). Comprobación: `curl -X POST localhost:8080/api/auth.php -d '{"username":"ana","pin":"1234","client":"app"}'` devuelve `token`.
+2. Conectar el teléfono con la depuración USB activada y ejecutar `adb devices` y luego `adb reverse tcp:8080 tcp:8080`. El `reverse` se repite cada vez que se reconecta el cable.
+3. Crear `.env.dispositivo` (lo ignora `.env.*` en `.gitignore`) con `API_URL=http://localhost:8080/api` y `APP_ENV=dev`.
+4. Compilar con ese archivo:
+   - PowerShell: `$env:ENVFILE='.env.dispositivo'; npm run android`;
+   - Git Bash: `ENVFILE=.env.dispositivo npm run android`.
+
+   `react-native-config` lo incrusta en el build: cambiar de archivo exige recompilar el nativo. HTTP en claro solo se permite en debug.
+5. El emulador sigue con `.env` (`10.0.2.2`). Con `adb reverse`, `localhost` también funciona en el emulador.
+6. Detrás de `adb reverse` todas las pruebas comparten IP y, por tanto, el límite de 30 fallos por IP en 15 min. Para desbloquear, en Adminer (:8081): `DELETE FROM auth_login_attempts;`.
+7. Para revocar una sesión y ver el aviso de sesión vencida: `UPDATE auth_sessions SET revoked_at=NOW() WHERE client='app';` y reabrir la app.
+
 ## Dependencias nativas
 
 | Paquete | Por qué | Pasos manuales |
@@ -98,5 +124,6 @@ Todos son idempotentes: si nada cambió, no escriben y `git status` queda limpio
 | `react-native-screens` | Pantallas nativas de native-stack | Android: `RNScreensFragmentFactory` en `MainActivity.kt` (hecho). iOS: `pod install` |
 | `react-native-bootsplash` 7.3.5 (MIT) | Splash nativo; se oculta en el `onReady` de la navegación vía `SplashPort` | Android: `BootTheme` en `styles.xml`, la Activity con `@style/BootTheme` y `RNBootSplash.init` en `MainActivity.kt` (hecho). iOS: `customize` en `SceneDelegate.swift` y `UILaunchStoryboardName=BootSplash` (hecho, sin compilar); `pod install` |
 | `react-native-svg` 15.16.1 | `LogoMarca` | iOS: `pod install` |
+| `react-native-keychain` 11.0.0 (MIT) | Guarda el token de sesión en Keychain (iOS) y Android Keystore detrás de `SecureStoragePort`. Sin permisos | Android: ninguno (autolinking; `allowBackup="false"` ya está). iOS: `pod install` (pendiente sin Mac). En iOS el Keychain sobrevive a la desinstalación |
 
 Dependencias de desarrollo de los scripts de marca: `sharp` (rasterizar) y `react-native-asset` (enlazar fuentes). La extracción del kit usa Python con PyMuPDF (`pip install pymupdf`), solo en local.

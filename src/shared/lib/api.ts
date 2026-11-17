@@ -12,8 +12,11 @@ export interface IOpcionesClienteApi {
   urlBase: string;
   /** Token para la cabecera `Authorization: Bearer`. Sin token (null) la petición va sin cabecera. */
   obtenerToken?: () => Promise<string | null>;
-  /** Se llama una vez por cada respuesta 401 (sesión caducada o inválida). */
-  alNoAutorizado?: () => void;
+  /**
+   * Se llama una vez por cada respuesta 401 (sesión caducada o inválida), con el token con el que
+   * salió la petición (o null): así un 401 tardío de una sesión anterior no invalida la actual.
+   */
+  alNoAutorizado?: (tokenPeticion: string | null) => void;
   /** Tiempo máximo de espera por petición. 15 000 ms por defecto. */
   tiempoLimiteMs?: number;
   /** Implementación de fetch. Se inyecta en los tests. */
@@ -142,7 +145,7 @@ export function crearClienteApi(opciones: IOpcionesClienteApi): ClienteApi {
 
       const estado = respuesta.status;
       if (estado === 401) {
-        alNoAutorizado();
+        alNoAutorizado(bearer);
       }
 
       let datos: unknown;

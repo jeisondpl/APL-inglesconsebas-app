@@ -8,4 +8,6 @@ export {
   DependenciasProvider,
   useNative,
   useRepository,
+  useSesionActiva,
 } from './DependenciasProvider';
+export { etiquetaDispositivo } from './etiquetaDispositivo';

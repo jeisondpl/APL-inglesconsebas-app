@@ -94,15 +94,23 @@ describe('useNative (CA11)', () => {
 
 describe('crearDependencias (CA11)', () => {
   // F1-01b: nativos ya no está vacío: registra el splash (ajuste del constructor).
-  it('crea repositorios vacíos, el splash y un cliente API con get y post', () => {
+  // F1-03: registra el repositorio de sesión, el almacén seguro, los enlaces y sesionActiva.
+  it('crea el repositorio de sesión, los nativos y un cliente API con get y post', () => {
     const dependencias = crearDependencias();
-    expect(dependencias.repositorios).toEqual({});
-    expect(Object.keys(dependencias.nativos)).toEqual(['splash']);
+    expect(Object.keys(dependencias.repositorios)).toEqual(['sesion']);
+    expect(Object.keys(dependencias.nativos)).toEqual([
+      'splash',
+      'almacenSeguro',
+      'enlaces',
+    ]);
+    expect(dependencias.sesionActiva.obtener()).toEqual({
+      tipo: 'restaurando',
+    });
     expect(typeof dependencias.api.get).toBe('function');
     expect(typeof dependencias.api.post).toBe('function');
   });
 
-  it('el cliente real apunta a API_URL y sale sin Bearer hasta la feature de sesión', async () => {
+  it('el cliente real apunta a API_URL y sale sin Bearer mientras no hay sesión', async () => {
     const original = globalThis.fetch;
     const fetchFalso = jest.fn(() =>
       Promise.resolve({
@@ -126,7 +134,7 @@ describe('crearDependencias (CA11)', () => {
     }
   });
 
-  it('un 401 del cliente real no lanza (alNoAutorizado vacío)', async () => {
+  it('un 401 del cliente real sin sesión no lanza ni cambia el estado', async () => {
     const original = globalThis.fetch;
     globalThis.fetch = jest.fn(() =>
       Promise.resolve({
@@ -136,8 +144,109 @@ describe('crearDependencias (CA11)', () => {
       }),
     ) as unknown as typeof fetch;
     try {
-      const r = await crearDependencias().api.post('api.php');
+      const dependencias = crearDependencias();
+      const r = await dependencias.api.post('api.php');
       expect(r).toMatchObject({ error: true, code: 401 });
+      expect(dependencias.sesionActiva.obtener()).toEqual({
+        tipo: 'restaurando',
+      });
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  // F1-03 (constructor): con sesión, el cliente manda el Bearer y un 401 la invalida (CA9).
+  it('con sesión manda el Bearer y un 401 la invalida y borra el almacén', async () => {
+    const original = globalThis.fetch;
+    const fetchFalso = jest.fn(() =>
+      Promise.resolve({
+        status: 401,
+        ok: false,
+        text: () => Promise.resolve(''),
+      }),
+    );
+    globalThis.fetch = fetchFalso as unknown as typeof fetch;
+    try {
+      const dependencias = crearDependencias();
+      const { almacenSeguro } = dependencias.nativos;
+      await almacenSeguro.guardar('sesion', '{}');
+      dependencias.sesionActiva.establecer({
+        tipo: 'autenticado',
+        sesion: {
+          token: 'abc',
+          expiraEn: '2099-01-01T00:00:00Z',
+          renovarDesde: null,
+          usuario: {
+            id: 's1',
+            nombre: 'Ana',
+            usuario: 'ana',
+            rol: 'estudiante',
+          },
+        },
+      });
+      await dependencias.api.get('auth.php', { action: 'me' });
+      const [, init] = fetchFalso.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
+      expect(init.headers).toHaveProperty('Authorization', 'Bearer abc');
+      expect(dependencias.sesionActiva.obtener()).toEqual({
+        tipo: 'sinSesion',
+        motivo: 'vencida',
+      });
+      await expect(almacenSeguro.leer('sesion')).resolves.toBeNull();
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  // F1-03 vuelta 1 (M1): el 401 tardío de una petición con el token anterior no invalida la
+  // sesión que entró después.
+  it('un 401 que llega con el token de una sesión anterior no invalida la actual', async () => {
+    const original = globalThis.fetch;
+    let responder!: () => void;
+    globalThis.fetch = jest.fn(
+      () =>
+        new Promise(res => {
+          responder = () =>
+            res({ status: 401, ok: false, text: () => Promise.resolve('') });
+        }),
+    ) as unknown as typeof fetch;
+    const usuario = {
+      id: 's1',
+      nombre: 'Ana',
+      usuario: 'ana',
+      rol: 'estudiante' as const,
+    };
+    try {
+      const dependencias = crearDependencias();
+      dependencias.sesionActiva.establecer({
+        tipo: 'autenticado',
+        sesion: {
+          token: 'anterior',
+          expiraEn: '2099-01-01T00:00:00Z',
+          renovarDesde: null,
+          usuario,
+        },
+      });
+      const peticion = dependencias.api.get('auth.php', { action: 'me' });
+      await new Promise(r => setImmediate(r));
+      const actual = {
+        token: 'actual',
+        expiraEn: '2099-01-01T00:00:00Z',
+        renovarDesde: null,
+        usuario,
+      };
+      dependencias.sesionActiva.establecer({
+        tipo: 'autenticado',
+        sesion: actual,
+      });
+      responder();
+      await peticion;
+      expect(dependencias.sesionActiva.obtener()).toEqual({
+        tipo: 'autenticado',
+        sesion: actual,
+      });
     } finally {
       globalThis.fetch = original;
     }

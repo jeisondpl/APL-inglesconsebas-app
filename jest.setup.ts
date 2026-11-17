@@ -37,3 +37,37 @@ jest.mock('react-native-bootsplash', () => {
   };
   return { __esModule: true, default: BootSplash, ...BootSplash };
 });
+
+// react-native-keychain: almacén en memoria por servicio (el Keychain/Keystore no existe en Jest).
+jest.mock('react-native-keychain', () => {
+  const almacen = new Map<string, { username: string; password: string }>();
+  const servicio = (opciones?: { service?: string }) =>
+    opciones?.service ?? 'por-defecto';
+  const Keychain = {
+    ACCESSIBLE: {
+      AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
+        'AccessibleAfterFirstUnlockThisDeviceOnly',
+    },
+    setGenericPassword: jest.fn(
+      (username: string, password: string, opciones?: { service?: string }) => {
+        almacen.set(servicio(opciones), { username, password });
+        return Promise.resolve({
+          service: servicio(opciones),
+          storage: 'mock',
+        });
+      },
+    ),
+    getGenericPassword: jest.fn((opciones?: { service?: string }) => {
+      const valor = almacen.get(servicio(opciones));
+      return Promise.resolve(
+        valor
+          ? { ...valor, service: servicio(opciones), storage: 'mock' }
+          : false,
+      );
+    }),
+    resetGenericPassword: jest.fn((opciones?: { service?: string }) =>
+      Promise.resolve(almacen.delete(servicio(opciones))),
+    ),
+  };
+  return { __esModule: true, default: Keychain, ...Keychain };
+});
