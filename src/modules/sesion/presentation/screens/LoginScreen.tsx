@@ -66,9 +66,9 @@ const crearEstilos = (tema: ITema) =>
       paddingHorizontal: tema.espaciado.l,
       paddingBottom: tema.espaciado.s,
     },
-    // Tarjeta anclada abajo, al estilo del login de Livic.
+    // Tarjeta anclada abajo, al estilo del login de Livic (radio `heroe` de la marca).
     tarjeta: {
-      borderRadius: 28,
+      borderRadius: tema.radios.heroe,
       borderWidth: 1.5,
       borderColor: tema.colores.bordeMarca,
       backgroundColor: tema.colores.superficie,
@@ -81,7 +81,7 @@ const crearEstilos = (tema: ITema) =>
       alignSelf: 'center',
       width: 44,
       height: 4,
-      borderRadius: 2,
+      borderRadius: tema.radios.pildora,
       backgroundColor: tema.colores.bordeMarca,
       marginBottom: tema.espaciado.l,
     },
