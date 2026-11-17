@@ -10,7 +10,14 @@ import type {
   IResponseTarea,
 } from '../entities/Inicio.entities';
 import {
-  DESFASE_BOGOTA_MS,
+  hoyBogota,
+  instanteBogota,
+  partesFecha,
+  partesHora,
+  type IPartesFecha,
+} from '@/shared/lib/fechas';
+
+import {
   ESTADOS_SIN_IMPACTO,
   HORAS_AVISO,
   HORAS_AVISO_FLEX,
@@ -24,59 +31,9 @@ const MINUTO = 60 * 1000;
 const HORA = 60 * MINUTO;
 const DIA = 24 * HORA;
 
-const FECHA = /^(\d{4})-(\d{2})-(\d{2})/;
-const HORA_TEXTO = /^(\d{1,2}):(\d{2})/;
-
-/** Partes de una fecha `Y-m-d`. `diaSemana` ISO: 1 = lunes … 7 = domingo. */
-export interface IPartesFecha {
-  anio: number;
-  mes: number;
-  dia: number;
-  diaSemana: number;
-}
-
-/** Partes de una fecha `Y-m-d`, o `null` si no lo es. */
-export function partesFecha(
-  fecha: string | null | undefined,
-): IPartesFecha | null {
-  const m = FECHA.exec(fecha ?? '');
-  if (!m) {
-    return null;
-  }
-  const [anio, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  const domingoCero = new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay();
-  return { anio, mes, dia, diaSemana: domingoCero === 0 ? 7 : domingoCero };
-}
-
-/** Horas y minutos de `HH:mm` (o `HH:mm:ss`), o `null`. */
-export function partesHora(
-  hora: string | null | undefined,
-): { horas: number; minutos: number } | null {
-  const m = HORA_TEXTO.exec(hora ?? '');
-  if (!m) {
-    return null;
-  }
-  const horas = Number(m[1]);
-  const minutos = Number(m[2]);
-  return horas < 24 && minutos < 60 ? { horas, minutos } : null;
-}
-
-/** Instante (ms UTC) de una fecha y hora de Bogotá, o `null` si no son válidas. */
-export function instanteBogota(fecha: string, hora: string): number | null {
-  const f = partesFecha(fecha);
-  const h = partesHora(hora);
-  if (!f || !h) {
-    return null;
-  }
-  return (
-    Date.UTC(f.anio, f.mes - 1, f.dia, h.horas, h.minutos) - DESFASE_BOGOTA_MS
-  );
-}
-
-/** Fecha `Y-m-d` de hoy en Bogotá. */
-export function hoyBogota(ahoraMs: number): string {
-  return new Date(ahoraMs + DESFASE_BOGOTA_MS).toISOString().slice(0, 10);
-}
+// Las fechas de Bogotá viven en shared/lib/fechas; se re-exportan para el resto del módulo.
+export { hoyBogota, instanteBogota, partesFecha, partesHora };
+export type { IPartesFecha };
 
 /** `HH:mm` normalizada (sin segundos, con dos dígitos). */
 function horaCorta(hora: string): string {

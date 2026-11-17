@@ -1,3 +1,11 @@
+import {
+  fechaConDia,
+  fechaCorta,
+  hora12,
+  nombreDia,
+  nombreMes,
+} from '@/shared/lib/fechas';
+
 import type {
   CuentaAtras,
   ICancelaciones,
@@ -9,48 +17,10 @@ import {
   etiquetaDia,
   hoyBogota,
   partesFecha,
-  partesHora,
   type EtiquetaDia,
 } from '../domain/validations/inicio.validations';
 
-const DIAS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'] as const;
-const MESES = [
-  'ene',
-  'feb',
-  'mar',
-  'abr',
-  'may',
-  'jun',
-  'jul',
-  'ago',
-  'sep',
-  'oct',
-  'nov',
-  'dic',
-] as const;
-
-/** «6:00 p. m.» a partir de `HH:mm`. Si no es una hora, la devuelve tal cual. */
-export function hora12(hora: string): string {
-  const h = partesHora(hora);
-  if (!h) {
-    return hora;
-  }
-  const sufijo = h.horas >= 12 ? 'p. m.' : 'a. m.';
-  const doce = h.horas % 12 || 12;
-  return `${doce}:${String(h.minutos).padStart(2, '0')} ${sufijo}`;
-}
-
-/** «15 nov». */
-export function fechaCorta(fecha: string): string {
-  const p = partesFecha(fecha);
-  return p ? `${p.dia} ${MESES[p.mes - 1]}` : fecha;
-}
-
-/** «mar 29 sep». */
-export function fechaConDia(fecha: string): string {
-  const p = partesFecha(fecha);
-  return p ? `${DIAS[p.diaSemana - 1]} ${p.dia} ${MESES[p.mes - 1]}` : fecha;
-}
+export { fechaConDia, fechaCorta, hora12 };
 
 function textoDia(etiqueta: EtiquetaDia): string {
   if (etiqueta.tipo === 'hoy') {
@@ -59,9 +29,9 @@ function textoDia(etiqueta: EtiquetaDia): string {
   if (etiqueta.tipo === 'manana') {
     return 'Mañana';
   }
-  return `${DIAS[etiqueta.diaSemana - 1]} ${etiqueta.dia} ${
-    MESES[etiqueta.mes - 1]
-  }`;
+  return `${nombreDia(etiqueta.diaSemana)} ${etiqueta.dia} ${nombreMes(
+    etiqueta.mes,
+  )}`;
 }
 
 /** Textos de la pantalla de inicio del estudiante (F1-05). */

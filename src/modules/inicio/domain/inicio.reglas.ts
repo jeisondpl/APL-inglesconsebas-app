@@ -44,8 +44,7 @@ export const HORAS_AVISO = 12;
 /** La web acompaña la clase hasta el minuto 50: hasta entonces sigue siendo «la próxima». */
 export const MINUTOS_CLASE_EN_CURSO = 50;
 
-/** Colombia está en UTC−5 todo el año (sin horario de verano). */
-export const DESFASE_BOGOTA_MS = -5 * 60 * 60 * 1000;
+export { DESFASE_BOGOTA_MS } from '@/shared/lib/fechas';
 
 /** Máximo de tareas pendientes que se listan en el inicio. */
 export const MAX_TAREAS_INICIO = 3;
