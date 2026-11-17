@@ -2,6 +2,7 @@
 // sesión, un login nuevo y un 401 tardío. Se usan los controllers reales (useArranqueSesion y
 // useSesionController) y respuestas diferidas que el test resuelve en el orden que quiere.
 // CA7, CA9, CA10, CA11 y B1 de aprobacion.md.
+// EXT-01 (constructor): el contenedor armado a mano añade la bandera de la bienvenida en `visto`.
 import { act, renderHook } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
@@ -14,6 +15,7 @@ import {
   useArranqueSesion,
   useSesionController,
 } from '@/modules/sesion/aplications/controllers/Sesion.controller';
+import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type {
@@ -389,6 +391,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
     },
     api,
     sesionActiva,
+    banderaOnboarding: crearBanderaOnboarding({ tipo: 'visto' }),
   };
   return { dependencias, pendientes, almacen };
 }

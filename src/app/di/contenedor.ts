@@ -1,3 +1,5 @@
+import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
+import type { BanderaOnboarding } from '@/modules/onboarding/domain/models/BanderaOnboarding';
 import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
@@ -32,6 +34,8 @@ export interface IDependencias {
   api: ClienteApi;
   /** Estado de la sesión en memoria, compartido por el cliente HTTP y React. */
   sesionActiva: SesionActiva;
+  /** Bandera `hasSeenOnboarding` en memoria (EXT-01), compartida por el navegador y la bienvenida. */
+  banderaOnboarding: BanderaOnboarding;
 }
 
 /**
@@ -62,5 +66,7 @@ export function crearDependencias(): IDependencias {
     },
     api,
     sesionActiva,
+    // Empieza en `cargando`: el navegador raíz la lee del almacén al arrancar.
+    banderaOnboarding: crearBanderaOnboarding(),
   };
 }
