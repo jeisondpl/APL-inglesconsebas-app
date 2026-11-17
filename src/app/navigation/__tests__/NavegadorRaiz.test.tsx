@@ -5,6 +5,10 @@
 // prueba (sesión en memoria) y, donde se mira el inicio, una sesión guardada de «ana».
 // EXT-01 (constructor): contenedorConApi arma IDependencias a mano; añade la bandera de la
 // bienvenida en `visto` para que el arranque siga yendo al login.
+// F1-05 (constructor): el estudiante ya no ve el inicio provisional sino sus pestañas (A-M2):
+// «Cerrar sesión» y «Ver sistema de diseño» están en la hoja del avatar (botonDeCuenta) y las
+// aserciones de colores y rol del inicio de «ana» pasan al saludo y a la estructura de pestañas.
+// Profe y admin no cambian. contenedorConApi recibe el repositorio del inicio en memoria.
 import {
   fireEvent,
   render,
@@ -97,6 +101,30 @@ async function montarConSesion(preferencia?: PreferenciaTema) {
   return { ...contexto, ...resultado };
 }
 
+/**
+ * F1-05: el inicio del estudiante pasa un `<RefreshControl>` como prop del ScrollView y el
+ * elemento tiene referencias circulares; para buscar texto en el árbol se omite esa prop.
+ */
+const sinRefreshControl = (clave: string, valor: unknown) =>
+  clave === 'refreshControl' ? undefined : valor;
+
+/**
+ * F1-05: el estudiante cierra sesión (y abre el escaparate) desde la hoja del avatar de su inicio;
+ * profe y admin siguen con los botones del inicio provisional. Devuelve el botón ya visible.
+ */
+async function botonDeCuenta(nombre: string) {
+  await screen.findAllByRole('button', {
+    name: new RegExp(`^(Abrir el menú de tu cuenta|${nombre})$`),
+  });
+  const avatar = screen.queryByRole('button', {
+    name: 'Abrir el menú de tu cuenta',
+  });
+  if (avatar) {
+    await fireEvent.press(avatar);
+  }
+  return screen.findByRole('button', { name: nombre });
+}
+
 describe('temaNavegacion (CA18)', () => {
   it('con el tema oscuro es dark y usa sus colores', () => {
     const tema = temaNavegacion(temaOscuro);
@@ -122,10 +150,10 @@ describe('NavegadorRaiz (CA18)', () => {
       useColorScheme.mockReturnValue(esquema);
       await montarConSesion();
       expect(
-        screen.getByRole('header', { name: 'Inglés con Sebas' }),
-      ).toBeOnTheScreen();
-      expect(screen.getByText(/Inicio provisional/)).toHaveStyle({
-        color: tema.colores.textoSecundario,
+        screen.getByRole('header', { name: 'Hola, Ana Torres' }),
+      ).toHaveStyle({ color: tema.colores.texto });
+      expect(screen.getByTestId('inicio-estudiante')).toHaveStyle({
+        backgroundColor: tema.colores.fondo,
       });
     },
   );
@@ -133,8 +161,13 @@ describe('NavegadorRaiz (CA18)', () => {
   it('con sesión, la ruta inicial es el inicio del rol, sin cabecera', async () => {
     useColorScheme.mockReturnValue('light');
     await montarConSesion();
-    expect(screen.getByText('Rol: Estudiante')).toBeOnTheScreen();
-    expect(screen.getAllByRole('header')).toHaveLength(1);
+    expect(screen.getByTestId('pestanas-estudiante')).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
+    expect(screen.queryByText('Rol: Estudiante')).toBeNull();
+    // Sin cabecera nativa: la configuración de la cabecera de la ruta va oculta.
+    expect(JSON.stringify(screen.toJSON(), sinRefreshControl)).toMatch(
+      /"hidden":true,[^}]*"title":"InicioEstudiante"/,
+    );
   });
 });
 
@@ -203,9 +236,7 @@ describe('NavegadorRaiz: splash (CA9)', () => {
     const { splash, dependencias, rerender } = await montarConSesion();
     useColorScheme.mockReturnValue('light');
     await rerender(arbol(dependencias));
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Ver sistema de diseño' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Ver sistema de diseño'));
     expect(splash.ocultar).toHaveBeenCalledTimes(1);
   });
 
@@ -233,12 +264,14 @@ describe('NavegadorRaiz: escaparate (CA12)', () => {
   it('«Ver sistema de diseño» abre el escaparate al primer toque, con cabecera', async () => {
     useColorScheme.mockReturnValue('dark');
     await montarConSesion();
-    expect(JSON.stringify(screen.toJSON())).not.toMatch(/Sistema de diseño/);
-    const boton = screen.getByRole('button', { name: 'Ver sistema de diseño' });
+    expect(JSON.stringify(screen.toJSON(), sinRefreshControl)).not.toMatch(
+      /Sistema de diseño/,
+    );
+    const boton = await botonDeCuenta('Ver sistema de diseño');
     await fireEvent.press(boton);
     expect(await screen.findByText(/Tokens y componentes/)).toBeOnTheScreen();
     // La cabecera nativa de react-native-screens recibe el título como prop.
-    expect(JSON.stringify(screen.toJSON())).toMatch(
+    expect(JSON.stringify(screen.toJSON(), sinRefreshControl)).toMatch(
       /"title":"Sistema de diseño"/,
     );
   });
@@ -285,7 +318,8 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
   });
 
   it.each([
-    ['ana', '1234', 'Hola, Ana Torres', 'Rol: Estudiante'],
+    // F1-05: el estudiante entra a sus pestañas, sin el rol del inicio provisional.
+    ['ana', '1234', 'Hola, Ana Torres', null],
     ['meli', '1111', 'Hola, Meli', 'Rol: Profe'],
     ['yggodguz', '2905', 'Hola, Admin', 'Rol: Admin'],
   ])('el login de %s lleva a su inicio', async (usuario, pin, saludo, rol) => {
@@ -294,7 +328,11 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
     await screen.findByText('Inicia sesión');
     await iniciarSesion(usuario, pin);
     expect(await screen.findByText(saludo)).toBeOnTheScreen();
-    expect(screen.getByText(rol)).toBeOnTheScreen();
+    if (rol) {
+      expect(screen.getByText(rol)).toBeOnTheScreen();
+    } else {
+      expect(screen.getByTestId('pestanas-estudiante')).toBeOnTheScreen();
+    }
     await expect(
       dependencias.nativos.almacenSeguro.leer('sesion'),
     ).resolves.toMatch(/"token"/);
@@ -302,9 +340,7 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
 
   it('«Cerrar sesión» vuelve al login con el paso usuario vacío', async () => {
     const { dependencias } = await montarConSesion();
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(screen.getByLabelText('Usuario')).toHaveDisplayValue('');
     await expect(
@@ -480,7 +516,9 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
     await screen.findByText('Hola, Ana Torres');
     expect(screen.queryByText('Inicia sesión')).toBeNull();
     expect(screen.queryByLabelText('Dígito 1')).toBeNull();
-    expect(JSON.stringify(screen.toJSON())).not.toMatch(/PIN para/);
+    expect(JSON.stringify(screen.toJSON(), sinRefreshControl)).not.toMatch(
+      /PIN para/,
+    );
   });
 
   it('CA6: el PIN no queda en el almacén tras el login', async () => {
@@ -625,9 +663,7 @@ describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
     });
     expect(almacen.datos.get('sesion')).toContain(TOKEN_API);
 
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     const logout = fetchImpl.mock.calls.find(([u]) =>
       String(u).endsWith('action=logout'),
@@ -652,9 +688,7 @@ describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
     await iniciarSesion('ana', '1234');
     await screen.findByText('Hola, Ana Torres');
     conRed = false;
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(almacen.datos.has('sesion')).toBe(false);
   });

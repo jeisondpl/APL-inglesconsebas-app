@@ -1,3 +1,4 @@
+// F1-05 (constructor): el estudiante cierra sesión desde la hoja del avatar (botonDeCuenta).
 // Constructor (EXT-01): el arranque muestra la bienvenida solo la primera vez. CA1, CA2, CA3, CA4,
 // CA8, CA10 y CA11 con el contenedor de prueba y la lectura real de la bandera (`cargando`).
 // El tester amplía los casos.
@@ -59,7 +60,31 @@ const montar = (dependencias: IDependencias) =>
     </SafeAreaProvider>,
   );
 
-const textoDelArbol = () => JSON.stringify(screen.toJSON());
+/**
+ * F1-05: el inicio del estudiante pasa un `<RefreshControl>` como prop del ScrollView y el
+ * elemento tiene referencias circulares; para buscar texto en el árbol se omite esa prop.
+ */
+const sinRefreshControl = (clave: string, valor: unknown) =>
+  clave === 'refreshControl' ? undefined : valor;
+
+const textoDelArbol = () => JSON.stringify(screen.toJSON(), sinRefreshControl);
+
+/**
+ * F1-05: el estudiante cierra sesión (y abre el escaparate) desde la hoja del avatar de su inicio;
+ * profe y admin siguen con los botones del inicio provisional. Devuelve el botón ya visible.
+ */
+async function botonDeCuenta(nombre: string) {
+  await screen.findAllByRole('button', {
+    name: new RegExp(`^(Abrir el menú de tu cuenta|${nombre})$`),
+  });
+  const avatar = screen.queryByRole('button', {
+    name: 'Abrir el menú de tu cuenta',
+  });
+  if (avatar) {
+    await fireEvent.press(avatar);
+  }
+  return screen.findByRole('button', { name: nombre });
+}
 
 describe('NavegadorRaiz: bienvenida (EXT-01)', () => {
   it('CA1: sin bandera ni sesión arranca en O1 y no monta el login', async () => {
@@ -92,9 +117,7 @@ describe('NavegadorRaiz: bienvenida (EXT-01)', () => {
     await waitFor(() =>
       expect(almacen.datos.get('hasSeenOnboarding')).toBe('1'),
     );
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(textoDelArbol()).not.toContain(TITULO_O1);
   });

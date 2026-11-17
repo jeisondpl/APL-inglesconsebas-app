@@ -97,7 +97,11 @@ describe('crearDependencias (CA11)', () => {
   // F1-03: registra el repositorio de sesión, el almacén seguro, los enlaces y sesionActiva.
   it('crea el repositorio de sesión, los nativos y un cliente API con get y post', () => {
     const dependencias = crearDependencias();
-    expect(Object.keys(dependencias.repositorios)).toEqual(['sesion']);
+    // F1-05: el inicio del estudiante registra su repositorio.
+    expect(Object.keys(dependencias.repositorios)).toEqual([
+      'sesion',
+      'inicio',
+    ]);
     expect(Object.keys(dependencias.nativos)).toEqual([
       'splash',
       'almacenSeguro',

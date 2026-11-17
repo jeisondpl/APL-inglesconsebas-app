@@ -1,3 +1,4 @@
+// F1-05 (constructor): el estudiante cierra sesión desde la hoja del avatar (botonDeCuenta).
 // Tester (EXT-01): el arranque y la salida de la bienvenida contra CA1–CA4, CA8–CA11.
 // - CA2: se cuenta cada render de OnboardingScreen (no se muestrea el árbol): con la bandera
 //   guardada no debe pintarse nunca.
@@ -114,11 +115,35 @@ function almacenDiferido(
 const guardadosDeBandera = (guardar: jest.SpyInstance) =>
   guardar.mock.calls.filter(([clave]) => clave === CLAVE).length;
 
-const textoDelArbol = () => JSON.stringify(screen.toJSON());
+/**
+ * F1-05: el inicio del estudiante pasa un `<RefreshControl>` como prop del ScrollView y el
+ * elemento tiene referencias circulares; para buscar texto en el árbol se omite esa prop.
+ */
+const sinRefreshControl = (clave: string, valor: unknown) =>
+  clave === 'refreshControl' ? undefined : valor;
+
+const textoDelArbol = () => JSON.stringify(screen.toJSON(), sinRefreshControl);
 
 beforeEach(() => {
   mockRendersBienvenida.n = 0;
 });
+
+/**
+ * F1-05: el estudiante cierra sesión (y abre el escaparate) desde la hoja del avatar de su inicio;
+ * profe y admin siguen con los botones del inicio provisional. Devuelve el botón ya visible.
+ */
+async function botonDeCuenta(nombre: string) {
+  await screen.findAllByRole('button', {
+    name: new RegExp(`^(Abrir el menú de tu cuenta|${nombre})$`),
+  });
+  const avatar = screen.queryByRole('button', {
+    name: 'Abrir el menú de tu cuenta',
+  });
+  if (avatar) {
+    await fireEvent.press(avatar);
+  }
+  return screen.findByRole('button', { name: nombre });
+}
 
 describe('NavegadorRaiz · CA1 y CA2: primera vez y siguientes', () => {
   it.each([[''], ['true'], ['0'], ['visto']])(
@@ -241,9 +266,7 @@ describe('NavegadorRaiz · CA11: el splash espera a las dos lecturas', () => {
       crearAlmacenEnMemoria({ sesion: sesionDe('ana') }),
     );
     await montar(dependencias);
-    await fireEvent.press(
-      await screen.findByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(splash.ocultar).toHaveBeenCalledTimes(1);
   });
@@ -286,9 +309,7 @@ describe('NavegadorRaiz · CA3 y CA4: con sesión guardada', () => {
     const almacen = crearAlmacenEnMemoria({ sesion: sesionDe('ana') });
     const primero = contenedor(almacen);
     const { unmount } = await montar(primero.dependencias);
-    await fireEvent.press(
-      await screen.findByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(almacen.datos.has('sesion')).toBe(false);
     await unmount();
@@ -309,9 +330,7 @@ describe('NavegadorRaiz · CA3 y CA4: con sesión guardada', () => {
     };
     const { dependencias } = contenedor(almacen);
     await montar(dependencias);
-    await fireEvent.press(
-      await screen.findByRole('button', { name: 'Cerrar sesión' }),
-    );
+    await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(mockRendersBienvenida.n).toBe(0);
     expect(base.datos.has(CLAVE)).toBe(false);

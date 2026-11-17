@@ -13,6 +13,7 @@ import { useArranqueSesion } from '@/modules/sesion/aplications/controllers/Sesi
 import { pantallasAuth } from '@/modules/sesion/presentation/navigation';
 import { useTema } from '@/shared/theme';
 
+import { PestanasEstudiante } from './PestanasEstudiante';
 import { rutaInicialRaiz } from './rutaInicialRaiz';
 import { rutaInicioPorRol } from './rutaInicioPorRol';
 import { temaNavegacion } from './temaNavegacion';
@@ -23,7 +24,8 @@ const Pila = createNativeStackNavigator<RaizParamList>();
 /**
  * Navegador raíz (docs/ARQUITECTURA.md § 7). Mientras se restauran la sesión y la bandera de la
  * bienvenida no pinta nada y el splash nativo sigue visible (las dos lecturas corren en paralelo).
- * Después elige el flujo por estado: App (inicio por rol) si hay sesión, la bienvenida (EXT-01) si
+ * Después elige el flujo por estado: App (inicio por rol: las pestañas del estudiante, F1-05, o el
+ * inicio provisional de profe y admin) si hay sesión, la bienvenida (EXT-01) si
  * toca y, si no, Auth (login). Cambiar de flujo es cambiar de estado, sin `navigate` imperativo,
  * así que el botón atrás no vuelve del inicio al login ni del login a la bienvenida.
  */
@@ -60,9 +62,14 @@ export function NavegadorRaiz() {
       >
         {rutaInicio ? (
           <Pila.Group>
+            {/* F1-05: el estudiante entra a sus pestañas; profe y admin, al inicio provisional. */}
             <Pila.Screen
               name={rutaInicio}
-              component={InicioProvisionalScreen}
+              component={
+                rutaInicio === 'InicioEstudiante'
+                  ? PestanasEstudiante
+                  : InicioProvisionalScreen
+              }
             />
             {__DEV__ ? (
               <Pila.Screen
