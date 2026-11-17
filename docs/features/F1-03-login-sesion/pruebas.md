@@ -164,3 +164,60 @@ Los tests de la vuelta 0 (CA1–CA16) siguen en verde con el código nuevo.
 - toques rápidos.
 
 La verificación manual en el moto g77 sigue pendiente (teléfono desconectado).
+
+---
+
+## Vuelta 2
+
+> Tester, 2026-11-17. Vuelvo a probar sobre `40c776e`, con la corrección de V1-F1 (`1be83b4`, `40c776e`). El teléfono sigue desconectado, así que no hay prueba manual.
+
+Commit de tests de esta vuelta: `e735d45 test(sesion): cierre con la marca cerrando y el cliente HTTP real (vuelta 2)`.
+
+### V2.1 Revisión de la corrección (sin fiarse del resumen)
+
+**Cambios en el código:**
+- `SesionActiva` tiene ahora `iniciarCierre()` y `esVigente(token)`.
+- `_cerrarSesion` llama a `iniciarCierre()` antes del primer `await` (`Sesion.controller.ts`).
+- `arrancarSesion` usa `esVigente(guardada.token)`.
+- `establecer` borra la marca.
+- `token()` no cambia, así que el logout sigue saliendo con su Bearer.
+
+**El caso (a) de la vuelta 1:** el constructor solo cambió `it.failing` por `it`. El cuerpo del test es **idéntico** al mío; lo comprobé con `git diff abeb0e8 HEAD`. Además actualicé el comentario, que todavía hablaba del fallo.
+
+**Prueba de mutación (temporal, sin commit):** con `iniciarCierre` anulado (el comportamiento de la vuelta 1) fallan 3 casos: (a) Keychain, el Bearer durante el cierre y «me 200 durante el logout». Con la corrección pasan los tres. El test distingue de verdad los dos comportamientos.
+
+### V2.2 Pruebas nuevas (`carrerasSesion.test.tsx`, cliente HTTP real con fetch diferido)
+
+| Caso | CA | Resultado |
+|---|---|---|
+| El logout sale con `Bearer token-ana` aunque `esVigente('token-ana')` ya sea false | CA11 | ✔ |
+| `me` 200 durante el logout: no cambia el nombre publicado, no se guarda, y al terminar queda `sinSesion/cerrada` con el almacén vacío | CA7, CA11 | ✔ |
+| Logout con 401 (sesión ya revocada): termina como `cerrada`, no como `vencida`, y borra | CA9, CA11 | ✔ |
+| `me` 401 con el token activo durante el cierre: el estado final es `cerrada` y el almacén queda vacío | CA9, CA11 | ✔ |
+| Tras cerrar, el login de meli es vigente y su sesión se guarda: la marca no se queda pegada | CA1, CA7 | ✔ |
+
+Además, al final de cada test se contestan las peticiones pendientes. Antes, el temporizador de 15 s del cliente dejaba Jest abierto («Jest did not exit»).
+
+**Siguen en verde, sin cambios:**
+- los 10 casos de carrera de la vuelta 1 (logout o login de otro usuario durante `me`/`renew`, y 401 tardío con token viejo);
+- los de NavegadorRaiz de la vuelta 0 (logout con Bearer, CA9 de punta a punta y CA11 sin red);
+- los unitarios del constructor para `iniciarCierre`/`esVigente` (`casosDeUso.test.ts`).
+
+### V2.3 Puerta automática
+
+`npm run calidad` → exit 0:
+- `tsc`, `eslint` y `prettier` sin errores;
+- **29 suites, 566 tests**, sin `console.error` ni «did not exit»;
+- cobertura global de 99,05 % en statements y 96,41 % en branches;
+- `sesion/domain` y `sesion/aplications` al 100 %, y `controllers` al 98,91 %;
+- no queda ningún `it.failing`, `it.skip` ni `xit` en `src`.
+
+### V2.4 Fallos
+
+Ninguno. V1-F1 está corregido y verificado.
+
+Observación sin bloqueo: un doble toque en «Cerrar sesión» lanzaría dos cierres. Lo evita la interfaz, porque el `Boton` se deshabilita con `cargando` (`Boton.tsx:74`) y la pantalla se desmonta al cambiar el estado.
+
+### V2.5 Veredicto (vuelta 2)
+
+**VERDE.** La puerta pasa, CA1–CA17 están cubiertos por tests automáticos y los casos de carrera de B1 y V1-F1 pasan. La verificación manual en el moto g77 (sección 5) sigue pendiente porque el teléfono está desconectado.
