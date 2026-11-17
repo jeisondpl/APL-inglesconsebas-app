@@ -1,6 +1,7 @@
 export { relacionContraste } from './contraste';
 export { paleta, type NombreColorPaleta } from './paleta';
 export {
+  OPACIDAD_VELO,
   PREFERENCIA_TEMA_POR_DEFECTO,
   temaClaro,
   temaOscuro,

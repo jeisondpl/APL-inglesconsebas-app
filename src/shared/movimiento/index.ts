@@ -1,5 +1,15 @@
 // Kit de movimiento compartido (F1-04). Solo depende de `shared`; lo usan las pantallas de los
 // módulos y la composición de `src/app`. Todo respeta `useReducedMotion()`.
+export {
+  direccionDesplazamiento,
+  ESPACIO_BARRA_PESTANAS,
+  ProveedorBarraPestanas,
+  UMBRAL_DIRECCION,
+  useEstadoBarraPestanas,
+  useOcultarBarraAlDesplazar,
+  type DireccionDesplazamiento,
+  type IEstadoBarraPestanas,
+} from './barraPestanas';
 export { FondoMarca, type IPropsFondoMarca } from './FondoMarca';
 export {
   DESPLAZAMIENTO_ENTRADA,

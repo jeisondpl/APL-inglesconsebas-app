@@ -54,7 +54,15 @@ export interface IColoresTema {
    * opacidad baja (gradiente radial), así que no compite con el texto.
    */
   halo: string;
+  /**
+   * Velo bajo una hoja inferior o un modal (F1-05): negro en los dos temas, pintado al 60 % de
+   * opacidad (`OPACIDAD_VELO`), como pide el patrón «Modal / bottom sheet» de la skill de marca.
+   */
+  velo: string;
 }
+
+/** Opacidad del velo bajo una hoja inferior (patrón de la skill de marca: negro al 60 %). */
+export const OPACIDAD_VELO = 0.6;
 
 export interface ITema {
   modo: ModoTema;
@@ -102,6 +110,7 @@ const coloresOscuros: IColoresTema = {
   confirmar: paleta.verde,
   sobreConfirmar: paleta.negro,
   halo: paleta.verde,
+  velo: paleta.negro, // derivado: velo de hoja inferior, al 60 %
 };
 
 /**
@@ -142,6 +151,7 @@ const coloresClaros: IColoresTema = {
   confirmar: paleta.verde,
   sobreConfirmar: paleta.negro,
   halo: paleta.verde,
+  velo: paleta.negro, // derivado: velo de hoja inferior, al 60 %
 };
 
 const base: Omit<ITema, 'modo' | 'colores'> = {
