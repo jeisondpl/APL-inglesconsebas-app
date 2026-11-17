@@ -1,5 +1,10 @@
 /** Textos de la pantalla de login. Los mensajes de dominio están en domain/sesion.mensajes.ts. */
 export const textosSesion = {
+  /** Cabecera del login rediseñado (F1-04). */
+  hero: {
+    saludo: 'Hola de nuevo',
+    subtitulo: 'Tus clases, tareas y mensajes te esperan.',
+  },
   usuario: {
     titulo: 'Inicia sesión',
     subtitulo: 'Escribe tu usuario para continuar.',

@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 import { Texto } from '@/shared/components';
+import { usePresionEscala } from '@/shared/movimiento';
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
 import { textosSesion } from '../sesion.textos';
@@ -46,8 +52,19 @@ const crearEstilos = (tema: ITema) =>
       borderColor: tema.colores.confirmar,
     },
     inactiva: { opacity: 0.45 },
-    pulsada: { opacity: 0.7 },
+    // Capa de la escala: ocupa el hueco de la tecla en la fila. Los estilos que leen los tests
+    // (alto mínimo, colores) siguen en el Pressable.
+    hueco: { flex: 1 },
+    destello: {
+      ...StyleSheet.absoluteFill,
+      borderRadius: tema.radios.boton,
+      backgroundColor: tema.colores.marca,
+    },
+    destelloConfirmar: { backgroundColor: tema.colores.sobreConfirmar },
   });
+
+/** Opacidad máxima del destello al pulsar una tecla. */
+const OPACIDAD_DESTELLO = 0.22;
 
 interface IPropsTecla {
   etiqueta: string;
@@ -65,26 +82,49 @@ function Tecla({
   children,
 }: IPropsTecla) {
   const estilos = useEstilos(crearEstilos);
+  const { estiloEscala, alPresionar, alSoltar } = usePresionEscala(0.94);
+  const destello = useSharedValue(0);
+  const estiloDestello = useAnimatedStyle(() => ({ opacity: destello.value }));
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={etiqueta}
-      accessibilityState={{ disabled: deshabilitada }}
-      disabled={deshabilitada}
-      onPress={deshabilitada ? undefined : onPress}
-      style={({ pressed }) => [
-        estilos.tecla,
-        confirmar && estilos.confirmar,
-        deshabilitada && estilos.inactiva,
-        pressed && estilos.pulsada,
-      ]}
-    >
-      {children}
-    </Pressable>
+    <Animated.View style={[estilos.hueco, estiloEscala]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={etiqueta}
+        accessibilityState={{ disabled: deshabilitada }}
+        disabled={deshabilitada}
+        onPress={deshabilitada ? undefined : onPress}
+        onPressIn={() => {
+          alPresionar();
+          destello.value = withTiming(OPACIDAD_DESTELLO, { duration: 60 });
+        }}
+        onPressOut={() => {
+          alSoltar();
+          destello.value = withTiming(0, { duration: 220 });
+        }}
+        style={[
+          estilos.tecla,
+          confirmar && estilos.confirmar,
+          deshabilitada && estilos.inactiva,
+        ]}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            estilos.destello,
+            confirmar && estilos.destelloConfirmar,
+            estiloDestello,
+          ]}
+        />
+        {children}
+      </Pressable>
+    </Animated.View>
   );
 }
 
-/** Teclado 3×4 del lienzo: 1–9, borrar, 0 y confirmar. */
+/**
+ * Teclado 3×4 del lienzo: 1–9, borrar, 0 y confirmar. Cada tecla escala al pulsarla y destella
+ * (F1-04); la escala va en una capa externa para no tocar los estilos del Pressable.
+ */
 export function TecladoPin({
   alPulsarDigito,
   alBorrar,

@@ -1,7 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Boton, Texto } from '@/shared/components';
-import { useEstilos, useTema, type ITema } from '@/shared/theme';
+import { useEstilos, type ITema } from '@/shared/theme';
 
 import { textosSesion } from '../sesion.textos';
 import { PuntosPin } from './PuntosPin';
@@ -39,7 +39,10 @@ const crearEstilos = (tema: ITema) =>
     enlaceTexto: { textAlign: 'center', textDecorationLine: 'underline' },
   });
 
-/** Paso 2 del login: «PIN para <usuario>», puntos, teclado, volver y ayuda por WhatsApp. */
+/**
+ * Paso 2 del login: «PIN para <usuario>», puntos, teclado, volver y ayuda por WhatsApp. Un error
+ * nuevo sacude los puntos (F1-04).
+ */
 export function PasoPin({
   usuario,
   escritos,
@@ -52,7 +55,6 @@ export function PasoPin({
   alVolver,
   alAyuda,
 }: IPropsPasoPin) {
-  const { tema } = useTema();
   const estilos = useEstilos(crearEstilos);
   return (
     <View style={estilos.paso}>
@@ -62,14 +64,14 @@ export function PasoPin({
         </Texto>
         <Texto color="textoSecundario">{textos.subtitulo}</Texto>
       </View>
-      <PuntosPin escritos={escritos} total={total} />
+      <PuntosPin
+        escritos={escritos}
+        total={total}
+        conError={Boolean(error) && !cargando}
+      />
+      {/* Mientras se verifica, la carga la pinta LoginScreen encima de la tarjeta (PulsoCarga). */}
       <View style={estilos.estado}>
-        {cargando ? (
-          <ActivityIndicator
-            color={tema.colores.marca}
-            accessibilityLabel={textos.verificando}
-          />
-        ) : error ? (
+        {error && !cargando ? (
           <Texto
             variante="detalle"
             color="peligro"
