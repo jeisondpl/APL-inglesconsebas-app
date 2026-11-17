@@ -120,6 +120,24 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
   `inicio` para dar datos. Un contenedor armado a mano debe incluir `repositorios.inicio`. Al
   serializar el árbol con `JSON.stringify`, omite la prop `refreshControl` (es circular).
 
+## Acceso con Google y código por correo (F1-06)
+
+- **Doble factor**: tras usuario + PIN, si la persona (estudiante o profe) tiene correo, Leap
+  responde `requiresCode` con un `challenge` y envía un código de 6 dígitos. El paso `codigo` de
+  `Login.controller` reutiliza `PuntosPin`/`TecladoPin`; `verify_code` crea la sesión. Sin correo
+  entra como antes. Un 410 (desafío vencido, agotado o usado) vuelve al paso del usuario.
+- **Google**: `GoogleSignInPort` (`useNative('google')`) con `@react-native-google-signin` 16,
+  igual que Livic. `auth.php?action=google` valida el ID token y entra con la persona de ese correo,
+  sin código. `GOOGLE_WEB_CLIENT_ID` vacío en `.env` = botón oculto (en CI, variable del repo).
+  Cerrar sesión también olvida la cuenta de Google.
+- **Botón** `BotonGoogle` (`src/shared/components`) con los colores de Google en
+  `theme/marcasTerceros.ts` (marca de terceros, no de Inglés con Sebas).
+- **Backend**: `app/api/acceso-app.php` y `correo.php` (SMTP por entorno) en
+  `APL-inglesconsebas-leap`; tabla `auth_codigos` y `teachers.email`.
+- **Tests**: `crearMemoriaSesionRepository` pide código a los usuarios con `correo` (acepta
+  `CODIGO_MEMORIA`) y reconoce `tokenGoogleMemoria(usuario)`. El seed no trae correos.
+  `crearDependenciasDePrueba` usa `crearGoogleNoDisponible()` salvo que se pase `google`.
+
 ## Contexto
 
 - **Backend**: la API PHP de Leap, en `../app/api/`. Para el dominio (ciclos, tokens, `class_sessions.status`) hay que leer `../app/CLAUDE.md`. La app no duplica la lógica de negocio, solo la consume.
