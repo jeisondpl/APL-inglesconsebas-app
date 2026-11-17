@@ -46,6 +46,9 @@ export interface IColoresTema {
   avisoSuave: string;
   sobreAvisoSuave: string;
   info: string;
+  /** Botón confirmar del teclado de PIN: verde oficial en los dos temas (F1-03, P8). */
+  confirmar: string;
+  sobreConfirmar: string;
 }
 
 export interface ITema {
@@ -91,6 +94,8 @@ const coloresOscuros: IColoresTema = {
   sobreAvisoSuave: paleta.ambar,
   // Provisional: el azul de `.btn-blue` de Leap. El kit no define un azul.
   info: '#60A5FA',
+  confirmar: paleta.verde,
+  sobreConfirmar: paleta.negro,
 };
 
 /**
@@ -127,6 +132,9 @@ const coloresClaros: IColoresTema = {
   sobreAvisoSuave: '#7A5200', // derivado
   // Provisional: el azul de `.btn-blue` de Leap.
   info: '#2563EB',
+  // El verde oficial con check negro también en claro (lienzo del login, P8).
+  confirmar: paleta.verde,
+  sobreConfirmar: paleta.negro,
 };
 
 const base: Omit<ITema, 'modo' | 'colores'> = {
