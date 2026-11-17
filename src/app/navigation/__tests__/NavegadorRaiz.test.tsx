@@ -22,6 +22,7 @@ import { DependenciasProvider, type IDependencias } from '@/app/di';
 import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
+  crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
@@ -375,6 +376,9 @@ function repoEspia(obtenerToken: () => string | null) {
     obtenerUsuarioActual: jest.fn(base.obtenerUsuarioActual),
     renovar: jest.fn(base.renovar),
     cerrarSesion: jest.fn(base.cerrarSesion),
+    verificarCodigo: jest.fn(base.verificarCodigo),
+    reenviarCodigo: jest.fn(base.reenviarCodigo),
+    iniciarConGoogle: jest.fn(base.iniciarConGoogle),
   };
 }
 
@@ -442,6 +446,9 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
       obtenerUsuarioActual: jest.fn(sinRed),
       renovar: jest.fn(sinRed),
       cerrarSesion: jest.fn(sinRed),
+      verificarCodigo: jest.fn(sinRed),
+      reenviarCodigo: jest.fn(sinRed),
+      iniciarConGoogle: jest.fn(sinRed),
     };
     const texto = sesionGuardada();
     const dependencias = crearDependenciasDePrueba({
@@ -578,6 +585,7 @@ function contenedorConApi(
       splash: { ocultar: () => Promise.resolve() },
       almacenSeguro: almacen,
       enlaces: { abrir: () => Promise.resolve(true) },
+      google: crearGoogleNoDisponible(),
     },
     api,
     sesionActiva,

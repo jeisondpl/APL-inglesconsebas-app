@@ -8,6 +8,9 @@ export const mensajesSesion = {
   /** La sesión se cerró o cambió mientras se validaba o renovaba: el resultado se descarta. */
   sesionCambio: 'La sesión cambió mientras se validaba',
   noSeAbrioWhatsApp: 'No se pudo abrir WhatsApp',
+  codigoInvalido: 'El código tiene 6 dígitos',
+  codigoReenviado: 'Te enviamos un código nuevo',
+  desafioInvalido: 'El servidor pidió un código pero no envió el desafío',
   /** Mensaje del enlace de ayuda del PIN: el mismo de la web (P5). */
   ayudaPinWhatsApp:
     "Hi Inglés con Sebas's Team! I've forgotten my PIN, could you pls help me with that?",

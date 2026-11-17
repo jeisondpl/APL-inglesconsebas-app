@@ -15,7 +15,19 @@ import { normalizarUsuario } from '../domain/validations/sesion.validations';
 /** Usuario del repositorio en memoria: el del dominio más su PIN. */
 export interface IUsuarioMemoria extends IResponseUsuario {
   pin: string;
+  /**
+   * Correo registrado (F1-06). Con correo, el login con PIN pide el código `CODIGO_MEMORIA` y
+   * Google entra con el ID token `tokenGoogleMemoria(usuario)`. El seed no lo trae: los tests de
+   * F1-03 siguen entrando solo con el PIN.
+   */
+  correo?: string;
 }
+
+/** Código por correo que acepta el repositorio en memoria. */
+export const CODIGO_MEMORIA = '123456';
+
+/** ID token de Google que el repositorio en memoria reconoce para ese usuario (si tiene correo). */
+export const tokenGoogleMemoria = (usuario: string) => `google-${usuario}`;
 
 /** Usuarios de prueba de ../docker/db/02-seed.sql (y el admin fijo de auth.php). */
 export const USUARIOS_SEED: readonly IUsuarioMemoria[] = [
@@ -78,6 +90,9 @@ const RENOVAR_MS = DIA_MS;
 
 const NO_AUTORIZADO = textosComunes.errores.noAutorizado;
 const CREDENCIALES = 'Usuario o PIN incorrecto';
+const CODIGO_MAL = 'Código incorrecto.';
+const DESAFIO_VENCIDO = 'El código venció. Vuelve a iniciar sesión.';
+const GOOGLE_SIN_CUENTA = 'Tu correo no está registrado en la academia.';
 
 /** Token conocido de antemano para cada usuario: `memoria-<usuario>`. Sirve para sesiones guardadas. */
 export const tokenMemoria = (usuario: string) => `memoria-${usuario}`;
@@ -95,7 +110,13 @@ export function crearMemoriaSesionRepository(
   let ultimo: string | null = null;
   let emitidos = 0;
 
-  const sinPin = ({ pin: _pin, ...usuario }: IUsuarioMemoria) => usuario;
+  // Solo los datos del dominio: nunca el PIN ni el correo.
+  const sinPin = ({ id, nombre, usuario, rol }: IUsuarioMemoria) => ({
+    id,
+    nombre,
+    usuario,
+    rol,
+  });
   for (const u of usuarios) {
     tokens.set(tokenMemoria(u.usuario), sinPin(u));
   }
@@ -121,6 +142,13 @@ export function crearMemoriaSesionRepository(
   };
   const noAutorizado = <T>(): HttpResponse<T> =>
     respuestaError<T>(NO_AUTORIZADO, 401);
+  const sesionPara = (usuario: IResponseUsuario): IResponseSesion => ({
+    token: emitir(usuario),
+    ...fechas(),
+    usuario,
+  });
+  /** Desafíos pendientes de código: desafío → usuario. */
+  const desafios = new Map<string, IResponseUsuario>();
 
   return {
     async iniciarSesion(args) {
@@ -132,12 +160,53 @@ export function crearMemoriaSesionRepository(
         return respuestaError(CREDENCIALES, 401);
       }
       const usuario = sinPin(encontrado);
-      const sesion: IResponseSesion = {
-        token: emitir(usuario),
-        ...fechas(),
-        usuario,
-      };
-      return respuestaOk(sesion, 200);
+      const { correo } = encontrado;
+      if (correo) {
+        const desafio = `desafio-${usuario.usuario}-${desafios.size + 1}`;
+        desafios.set(desafio, usuario);
+        return respuestaOk(
+          {
+            requiereCodigo: true as const,
+            desafio,
+            correoEnmascarado: `${correo.slice(0, 2)}***@${
+              correo.split('@')[1]
+            }`,
+            longitud: CODIGO_MEMORIA.length,
+            reenviarEnSeg: 60,
+          },
+          200,
+        );
+      }
+      return respuestaOk(sesionPara(usuario), 200);
+    },
+
+    async verificarCodigo({ desafio, codigo }) {
+      const usuario = desafios.get(desafio);
+      if (!usuario) {
+        return respuestaError(DESAFIO_VENCIDO, 410);
+      }
+      if (codigo !== CODIGO_MEMORIA) {
+        return respuestaError(CODIGO_MAL, 401);
+      }
+      desafios.delete(desafio);
+      return respuestaOk(sesionPara(usuario), 200);
+    },
+
+    async reenviarCodigo(desafio) {
+      return desafios.has(desafio)
+        ? respuestaOk({ correoEnmascarado: '', reenviarEnSeg: 60 }, 200)
+        : respuestaError(DESAFIO_VENCIDO, 410);
+    },
+
+    async iniciarConGoogle(idToken) {
+      const encontrado = usuarios.find(
+        u => u.correo && tokenGoogleMemoria(u.usuario) === idToken,
+      );
+      if (!encontrado) {
+        return respuestaError(GOOGLE_SIN_CUENTA, 404);
+      }
+      const usuario = sinPin(encontrado);
+      return respuestaOk(sesionPara(usuario), 200);
     },
 
     async obtenerUsuarioActual() {

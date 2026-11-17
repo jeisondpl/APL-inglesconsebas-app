@@ -26,6 +26,34 @@ export interface IResponseSesion {
   usuario: IResponseUsuario;
 }
 
+/**
+ * El servidor pide el código enviado por correo antes de crear la sesión (doble factor, F1-06).
+ * `desafio` es opaco y solo vive en memoria mientras se escribe el código.
+ */
+export interface IDesafioCodigo {
+  requiereCodigo: true;
+  desafio: string;
+  /** Correo enmascarado (an***@gmail.com) para que la persona sepa dónde mirar. */
+  correoEnmascarado: string;
+  longitud: number;
+  /** Segundos hasta poder pedir otro código. */
+  reenviarEnSeg: number;
+}
+
+/** Respuesta del login con PIN: la sesión, o el desafío del código por correo. */
+export type ResultadoLogin = IResponseSesion | IDesafioCodigo;
+
+export interface IArgsVerificarCodigo {
+  desafio: string;
+  codigo: string;
+}
+
+/** Respuesta de reenviar el código. */
+export interface IResponseReenvio {
+  correoEnmascarado: string;
+  reenviarEnSeg: number;
+}
+
 /** Lo que se guarda en el almacén seguro (JSON). Nunca el PIN. */
 export interface ISesionGuardada extends IResponseSesion {
   version: 1;

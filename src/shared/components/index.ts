@@ -9,6 +9,7 @@ export {
   type IPropsBoton,
   type VarianteBoton,
 } from './Boton';
+export { BotonGoogle, type IPropsBotonGoogle } from './BotonGoogle';
 export { Campo, type IPropsCampo } from './Campo';
 export { Cargando, type IPropsCargando } from './Cargando';
 export { textosComponentes } from './componentes.textos';

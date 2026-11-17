@@ -10,6 +10,7 @@ import { DependenciasProvider, type IDependencias } from '@/app/di';
 import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
+  crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
 import {
   useArranqueSesion,
@@ -29,7 +30,11 @@ import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/me
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import { crearClienteApi } from '@/shared/lib/api';
-import { respuestaOk, type HttpResponse } from '@/shared/lib/HttpResponse';
+import {
+  respuestaError,
+  respuestaOk,
+  type HttpResponse,
+} from '@/shared/lib/HttpResponse';
 
 const DIA = 24 * 60 * 60 * 1000;
 
@@ -85,6 +90,15 @@ function repoControlado() {
     obtenerUsuarioActual: jest.fn(() => me.promesa),
     renovar: jest.fn(() => renew.promesa),
     cerrarSesion: jest.fn(() => Promise.resolve(respuestaOk<void>(undefined))),
+    verificarCodigo: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin desafío', 410)),
+    ),
+    reenviarCodigo: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin desafío', 410)),
+    ),
+    iniciarConGoogle: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin Google', 503)),
+    ),
   } satisfies SesionRepository;
   return { repo, me, renew };
 }
@@ -391,6 +405,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       splash: { ocultar: () => Promise.resolve() },
       almacenSeguro: almacen,
       enlaces: { abrir: () => Promise.resolve(true) },
+      google: crearGoogleNoDisponible(),
     },
     api,
     sesionActiva,

@@ -1,4 +1,5 @@
 export { relacionContraste } from './contraste';
+export { coloresGoogle, coloresLogoGoogle } from './marcasTerceros';
 export { paleta, type NombreColorPaleta } from './paleta';
 export {
   OPACIDAD_VELO,

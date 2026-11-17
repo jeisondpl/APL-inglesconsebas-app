@@ -1,11 +1,15 @@
 import type {
+  IDesafioCodigo,
   IResponseSesion,
   ISesionGuardada,
+  ResultadoLogin,
   RolUsuario,
 } from '../entities/Sesion.entities';
 import { mensajesSesion } from '../sesion.mensajes';
 
 export const LONGITUD_PIN = 4;
+/** Dígitos del código por correo (doble factor, F1-06). Igual que CODIGO_LONGITUD de Leap. */
+export const LONGITUD_CODIGO = 6;
 /** Clave del almacén seguro donde se guarda la sesión. */
 export const CLAVE_SESION = 'sesion';
 /** Espera máxima por el logout del servidor antes de cerrar en local. */
@@ -30,9 +34,27 @@ export function validarPin(pin: string): string | null {
   return /^\d{4}$/.test(pin) ? null : mensajesSesion.pinInvalido;
 }
 
-/** Añade un dígito al PIN sin pasar de 4. Lo que no sea un dígito se ignora. */
-export function agregarDigito(pin: string, digito: string): string {
-  if (pin.length >= LONGITUD_PIN || !/^\d$/.test(digito)) {
+/** Mensaje de error si el código no son exactamente 6 dígitos; `null` si es válido. */
+export function validarCodigo(codigo: string): string | null {
+  return /^\d+$/.test(codigo) && codigo.length === LONGITUD_CODIGO
+    ? null
+    : mensajesSesion.codigoInvalido;
+}
+
+/** ¿El login pidió el código por correo en vez de dar la sesión? */
+export function esDesafio(
+  resultado: ResultadoLogin,
+): resultado is IDesafioCodigo {
+  return 'requiereCodigo' in resultado && resultado.requiereCodigo === true;
+}
+
+/** Añade un dígito sin pasar de `maximo` (el PIN por defecto). Lo que no sea un dígito se ignora. */
+export function agregarDigito(
+  pin: string,
+  digito: string,
+  maximo: number = LONGITUD_PIN,
+): string {
+  if (pin.length >= maximo || !/^\d$/.test(digito)) {
     return pin;
   }
   return pin + digito;

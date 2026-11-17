@@ -32,8 +32,8 @@ import { FondoMarca, PulsoCarga, Revelar } from '@/shared/movimiento';
 import { useEstilos, type ITema } from '@/shared/theme';
 
 import { useLoginController } from '../../aplications/controllers/Login.controller';
-import { LONGITUD_PIN } from '../../domain/validations/sesion.validations';
 import { BotonTema } from '../components/BotonTema';
+import { PasoCodigo } from '../components/PasoCodigo';
 import { PasoPin } from '../components/PasoPin';
 import { PasoUsuario } from '../components/PasoUsuario';
 import { textosSesion } from '../sesion.textos';
@@ -117,10 +117,10 @@ export function LoginScreen() {
   const { paso, _volverAlUsuario } = login;
   const insets = useSafeAreaInsets();
 
-  // En el paso PIN, el botón atrás de Android vuelve al usuario en vez de salir de la app.
+  // En los pasos PIN y código, el botón atrás de Android vuelve al usuario en vez de salir de la app.
   useFocusEffect(
     useCallback(() => {
-      if (paso !== 'pin') {
+      if (paso === 'usuario') {
         return undefined;
       }
       const suscripcion = BackHandler.addEventListener(
@@ -220,7 +220,7 @@ export function LoginScreen() {
     };
   });
 
-  const entradaPaso = (paso === 'pin' ? FadeInRight : FadeInLeft).duration(
+  const entradaPaso = (paso === 'usuario' ? FadeInLeft : FadeInRight).duration(
     CAMBIO_PASO_MS,
   );
 
@@ -275,12 +275,32 @@ export function LoginScreen() {
                     error={login.error}
                     alCambiar={login._cambiarUsuario}
                     alContinuar={login._continuar}
+                    alContinuarConGoogle={
+                      login.googleDisponible
+                        ? login._continuarConGoogle
+                        : undefined
+                    }
+                    cargandoGoogle={login.cargandoGoogle}
+                  />
+                ) : paso === 'codigo' && login.codigoEnviado ? (
+                  <PasoCodigo
+                    correoEnmascarado={login.codigoEnviado.correoEnmascarado}
+                    escritos={login.pin.length}
+                    total={login.longitud}
+                    reenviarEn={login.codigoEnviado.reenviarEn}
+                    error={login.error}
+                    cargando={login.cargando}
+                    alPulsarDigito={login._pulsarDigito}
+                    alBorrar={login._borrar}
+                    alConfirmar={login._confirmar}
+                    alReenviar={login._reenviarCodigo}
+                    alVolver={login._volverAlUsuario}
                   />
                 ) : (
                   <PasoPin
                     usuario={login.usuarioNormalizado}
                     escritos={login.pin.length}
-                    total={LONGITUD_PIN}
+                    total={login.longitud}
                     error={login.error}
                     cargando={login.cargando}
                     alPulsarDigito={login._pulsarDigito}
@@ -296,7 +316,13 @@ export function LoginScreen() {
                   entering={FadeIn.duration(200)}
                   style={StyleSheet.absoluteFill}
                 >
-                  <PulsoCarga etiqueta={textosSesion.pin.verificando} />
+                  <PulsoCarga
+                    etiqueta={
+                      paso === 'codigo'
+                        ? textosSesion.codigo.verificando
+                        : textosSesion.pin.verificando
+                    }
+                  />
                 </Animated.View>
               ) : null}
             </View>

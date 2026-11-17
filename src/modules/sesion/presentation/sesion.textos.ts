@@ -11,6 +11,27 @@ export const textosSesion = {
     etiqueta: 'Usuario',
     marcador: 'tu usuario',
     continuar: 'Continuar',
+    /** Separador entre el usuario y «Continuar con Google» (F1-06). */
+    o: 'o',
+  },
+  /** Doble factor: el código que llega por correo (F1-06). */
+  codigo: {
+    titulo: 'Revisa tu correo',
+    subtitulo: (correo: string) =>
+      correo
+        ? `Te enviamos un código de 6 dígitos a ${correo}.`
+        : 'Te enviamos un código de 6 dígitos a tu correo.',
+    puntos: (escritos: number, total: number) =>
+      `Código: ${escritos} de ${total} dígitos`,
+    confirmar: 'Confirmar código',
+    verificando: 'Verificando tu código',
+    reenviar: 'Reenviar código',
+    reenviarEn: (segundos: number) => `Reenviar código en ${segundos} s`,
+    volver: 'Volver al usuario',
+    pista: 'Si no lo ves, revisa la carpeta de spam.',
+  },
+  google: {
+    verificando: 'Conectando con Google',
   },
   pin: {
     titulo: (usuario: string) => `PIN para ${usuario}`,

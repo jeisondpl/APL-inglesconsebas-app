@@ -17,6 +17,8 @@ import { textosSesion } from '../sesion.textos';
 export interface IPropsPuntosPin {
   escritos: number;
   total: number;
+  /** Lectura para lectores de pantalla. Por defecto, «PIN: n de 4 dígitos». */
+  etiqueta?: string;
   /**
    * `true` mientras se muestra un error del login. Al pasar de `false` a `true` los puntos se
    * sacuden y se ven en rojo 300 ms (F1-04).
@@ -109,6 +111,7 @@ export function PuntosPin({
   escritos,
   total,
   conError = false,
+  etiqueta,
 }: IPropsPuntosPin) {
   const estilos = useEstilos(crearEstilos);
   const { estiloSacudida, sacudir } = useSacudida();
@@ -148,7 +151,7 @@ export function PuntosPin({
     <Animated.View
       accessible
       accessibilityRole="text"
-      accessibilityLabel={textosSesion.pin.puntos(escritos, total)}
+      accessibilityLabel={etiqueta ?? textosSesion.pin.puntos(escritos, total)}
       style={[estilos.fila, estiloSacudida]}
     >
       {Array.from({ length: total }, (_, i) => (

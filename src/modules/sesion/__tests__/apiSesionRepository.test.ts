@@ -1,6 +1,7 @@
 // Tester (F1-03): adaptador de auth.php con el cliente HTTP real y un fetch falso.
 // CA1 (cuerpo del login, normalización, 3 roles), CA5 (sin token o rol desconocido → error legible),
 // CA4 (401/429/red propagan msg y code) y rutas de me, renew y logout con su Bearer (CA7, CA10, CA11).
+import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
 import { mensajesSesion } from '@/modules/sesion/domain/sesion.mensajes';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearClienteApi } from '@/shared/lib/api';
@@ -127,7 +128,7 @@ describe('apiSesionRepository · login (CA1)', () => {
       }),
     });
     const r = await repo.iniciarSesion({ usuario: 'meli', pin: '1111' });
-    expect(r.response?.usuario).toEqual({
+    expect((r.response as IResponseSesion | undefined)?.usuario).toEqual({
       id: '7',
       nombre: 'Meli',
       usuario: 'meli',
@@ -138,7 +139,7 @@ describe('apiSesionRepository · login (CA1)', () => {
   it('admin: el login solo trae role y se usa {id:admin, nombre:Admin} con el usuario enviado', async () => {
     const { repo } = montar({ cuerpo: loginOk({ role: 'admin' }) });
     const r = await repo.iniciarSesion({ usuario: ' YGGODGUZ', pin: '2905' });
-    expect(r.response?.usuario).toEqual({
+    expect((r.response as IResponseSesion | undefined)?.usuario).toEqual({
       id: 'admin',
       nombre: 'Admin',
       usuario: 'yggodguz',
@@ -155,8 +156,12 @@ describe('apiSesionRepository · login (CA1)', () => {
       }),
     });
     const r = await repo.iniciarSesion({ usuario: 'Ana', pin: '1234' });
-    expect(r.response?.usuario.usuario).toBe('ana');
-    expect(r.response?.renovarDesde).toBeNull();
+    expect((r.response as IResponseSesion | undefined)?.usuario.usuario).toBe(
+      'ana',
+    );
+    expect(
+      (r.response as IResponseSesion | undefined)?.renovarDesde,
+    ).toBeNull();
   });
 });
 
@@ -309,7 +314,7 @@ describe('apiSesionRepository · me (CA7)', () => {
       },
     });
     const r = await repo.obtenerUsuarioActual();
-    expect(r.response?.usuario).toEqual({
+    expect((r.response as IResponseSesion | undefined)?.usuario).toEqual({
       id: 'admin',
       nombre: 'Admin',
       usuario: 'yggodguz',

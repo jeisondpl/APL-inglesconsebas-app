@@ -44,6 +44,15 @@ function repoFalso(parcial: Partial<SesionRepository> = {}) {
       ),
     ),
     cerrarSesion: jest.fn(() => Promise.resolve(respuestaOk<void>(undefined))),
+    verificarCodigo: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin desafío', 410)),
+    ),
+    reenviarCodigo: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin desafío', 410)),
+    ),
+    iniciarConGoogle: jest.fn(() =>
+      Promise.resolve(respuestaError<never>('sin Google', 503)),
+    ),
     ...parcial,
   };
 }

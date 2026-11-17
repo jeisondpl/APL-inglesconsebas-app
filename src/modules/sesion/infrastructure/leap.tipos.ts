@@ -22,6 +22,23 @@ export interface ILeapLogin {
   renewAfter?: string | null;
 }
 
+/** POST auth.php (login App) cuando la persona tiene correo: pide el código (F1-06). */
+export interface ILeapDesafio {
+  requiresCode: true;
+  challenge?: string;
+  emailMasked?: string;
+  codeLength?: number;
+  expiresIn?: number;
+  resendAfter?: number;
+}
+
+/** POST auth.php?action=resend_code. */
+export interface ILeapReenvio {
+  ok?: boolean;
+  emailMasked?: string;
+  resendAfter?: number;
+}
+
 /** GET auth.php?action=me. */
 export interface ILeapMe {
   role: RolLeap;
