@@ -162,6 +162,9 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    // Los módulos nativos de npm entran por autolinking con la versión fijada en package.json.
+    // react-native-keychain 11.0.0 (F1-03): guarda el token de sesión en el Android Keystore.
+
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
