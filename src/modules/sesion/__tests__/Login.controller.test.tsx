@@ -10,6 +10,8 @@ import { useLoginController } from '@/modules/sesion/aplications/controllers/Log
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { mensajesSesion } from '@/modules/sesion/domain/sesion.mensajes';
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
+import { respuestaError } from '@/shared/lib/HttpResponse';
+import { textosComunes } from '@/shared/lib/textos';
 
 const envoltorio =
   (dependencias: IDependencias) =>
@@ -109,6 +111,86 @@ describe('useLoginController', () => {
     await act(async () => result.current._continuar());
     await pulsar(result, '1234');
     expect(dependencias.sesionActiva.obtener().tipo).toBe('autenticado');
+    expect(result.current.pin).toBe('');
+  });
+
+  // Tester (F1-03): errores del login (CA4) y PIN fuera del estado (CA6).
+  it.each([
+    ['429', 'Demasiados intentos. Intenta de nuevo en 15 minutos.', 429],
+    ['sin red', textosComunes.errores.red, 0],
+    ['tiempo agotado', textosComunes.errores.tiempoAgotado, 0],
+  ])(
+    '%s: muestra el mensaje, vacía el PIN y sigue en el paso 2',
+    async (_caso, msg, code) => {
+      const repo: SesionRepository = {
+        ...crearMemoriaSesionRepository(),
+        iniciarSesion: jest.fn(() =>
+          Promise.resolve(respuestaError(msg, code)),
+        ),
+      };
+      const { result, dependencias } = await montar(
+        crearDependenciasDePrueba({ repo }),
+      );
+      await act(async () => result.current._cambiarUsuario('ana'));
+      await act(async () => result.current._continuar());
+      await pulsar(result, '1234');
+      expect(result.current).toMatchObject({
+        paso: 'pin',
+        pin: '',
+        cargando: false,
+        error: msg,
+      });
+      expect(dependencias.sesionActiva.obtener().tipo).not.toBe('autenticado');
+      // Tras el error se puede volver a intentar.
+      await pulsar(result, '1');
+      expect(result.current.pin).toBe('1');
+      expect(result.current.error).toBeNull();
+    },
+  );
+
+  it('si el almacén seguro no guarda (P9), muestra el error y no entra', async () => {
+    const almacen = {
+      leer: () => Promise.resolve(null),
+      guardar: () => Promise.resolve(false),
+      borrar: () => Promise.resolve(),
+    };
+    const { result, dependencias } = await montar(
+      crearDependenciasDePrueba({ almacen }),
+    );
+    await act(async () => result.current._cambiarUsuario('ana'));
+    await act(async () => result.current._continuar());
+    await pulsar(result, '1234');
+    expect(result.current.error).toBe(mensajesSesion.noSeGuardo);
+    expect(dependencias.sesionActiva.obtener().tipo).not.toBe('autenticado');
+  });
+
+  it('con el usuario solo de espacios no avanza', async () => {
+    const { result } = await montar();
+    await act(async () => result.current._cambiarUsuario('   '));
+    await act(async () => result.current._continuar());
+    expect(result.current.paso).toBe('usuario');
+    expect(result.current.error).toBe(mensajesSesion.usuarioVacio);
+  });
+
+  it('Confirmar con 4 dígitos envía si el envío automático no ocurrió', async () => {
+    const repo: SesionRepository = {
+      ...crearMemoriaSesionRepository(),
+      iniciarSesion: jest.fn(() => new Promise(() => {})),
+    };
+    const { result } = await montar(crearDependenciasDePrueba({ repo }));
+    await act(async () => result.current._cambiarUsuario('ana'));
+    await act(async () => result.current._continuar());
+    await pulsar(result, '1234');
+    await act(async () => result.current._confirmar());
+    // El guard evita el segundo envío aunque se pulse Confirmar.
+    expect(repo.iniciarSesion).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignora lo que no es un dígito', async () => {
+    const { result } = await montar();
+    await act(async () => result.current._cambiarUsuario('ana'));
+    await act(async () => result.current._continuar());
+    await pulsar(result, 'a');
     expect(result.current.pin).toBe('');
   });
 

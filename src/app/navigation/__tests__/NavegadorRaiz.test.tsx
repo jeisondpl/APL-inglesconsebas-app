@@ -3,15 +3,33 @@
 // el montaje añade DependenciasProvider porque NavegadorRaiz oculta el splash con useNative.
 // F1-03 (constructor): la ruta inicial depende de la sesión. Los montajes usan el contenedor de
 // prueba (sesión en memoria) y, donde se mira el inicio, una sesión guardada de «ana».
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DependenciasProvider, type IDependencias } from '@/app/di';
-import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
+import {
+  crearAlmacenEnMemoria,
+  crearDependenciasDePrueba,
+} from '@/app/di/dependenciasDePrueba';
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
+import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
+import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
+import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
+import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
-import { tokenMemoria } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
+import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
+import {
+  crearMemoriaSesionRepository,
+  tokenMemoria,
+} from '@/modules/sesion/infrastructure/memoriaSesionRepository';
+import { crearClienteApi } from '@/shared/lib/api';
+import { respuestaError, respuestaOk } from '@/shared/lib/HttpResponse';
 import {
   TemaProvider,
   temaClaro,
@@ -288,5 +306,349 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
     await expect(
       dependencias.nativos.almacenSeguro.leer('sesion'),
     ).resolves.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Tester (F1-03): arranque con sesión guardada (CA7, CA8, CA10), 401 de punta a punta con el
+// cliente HTTP real (CA9), cierre con Bearer (CA11) y el inicio sin vuelta atrás al login (CA12).
+
+const sesionGuardada = (cambios: Partial<IResponseSesion> = {}) =>
+  serializarSesion({
+    token: tokenMemoria('ana'),
+    expiraEn: new Date(Date.now() + 10 * DIA).toISOString(),
+    renovarDesde: new Date(Date.now() + DIA).toISOString(),
+    usuario: {
+      id: 's0000000000000a1',
+      nombre: 'Ana Torres',
+      usuario: 'ana',
+      rol: 'estudiante',
+    },
+    ...cambios,
+  });
+
+/** Repositorio en memoria con espías en cada método. */
+function repoEspia(obtenerToken: () => string | null) {
+  const base = crearMemoriaSesionRepository({ obtenerToken });
+  return {
+    iniciarSesion: jest.fn(base.iniciarSesion),
+    obtenerUsuarioActual: jest.fn(base.obtenerUsuarioActual),
+    renovar: jest.fn(base.renovar),
+    cerrarSesion: jest.fn(base.cerrarSesion),
+  };
+}
+
+describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
+  beforeEach(() => useColorScheme.mockReturnValue('dark'));
+
+  it('CA7: entra al inicio sin pedir PIN y valida con un solo me', async () => {
+    let token: () => string | null = () => null;
+    const repo = repoEspia(() => token());
+    const dependencias = crearDependenciasDePrueba({
+      repo,
+      almacenInicial: { sesion: sesionGuardada() },
+    });
+    token = () => dependencias.sesionActiva.token();
+    await montarCon(dependencias);
+    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(screen.queryByText('Inicia sesión')).toBeNull();
+    expect(screen.queryByLabelText('Usuario')).toBeNull();
+    await waitFor(() =>
+      expect(repo.obtenerUsuarioActual).toHaveBeenCalledTimes(1),
+    );
+    expect(repo.iniciarSesion).not.toHaveBeenCalled();
+    expect(repo.renovar).not.toHaveBeenCalled();
+  });
+
+  it('CA7: la respuesta de me actualiza el nombre y expiraEn guardados', async () => {
+    const nuevaExpira = new Date(Date.now() + 30 * DIA).toISOString();
+    const repo: SesionRepository = {
+      ...crearMemoriaSesionRepository(),
+      obtenerUsuarioActual: jest.fn(() =>
+        Promise.resolve(
+          respuestaOk(
+            {
+              usuario: {
+                id: 's0000000000000a1',
+                nombre: 'Ana María Torres',
+                usuario: 'ana',
+                rol: 'estudiante' as const,
+              },
+              expiraEn: nuevaExpira,
+            },
+            200,
+          ),
+        ),
+      ),
+    };
+    const dependencias = crearDependenciasDePrueba({
+      repo,
+      almacenInicial: { sesion: sesionGuardada() },
+    });
+    await montarCon(dependencias);
+    expect(await screen.findByText('Hola, Ana María Torres')).toBeOnTheScreen();
+    const guardada = JSON.parse(
+      (await dependencias.nativos.almacenSeguro.leer('sesion')) ?? '{}',
+    );
+    expect(guardada.usuario.nombre).toBe('Ana María Torres');
+    expect(guardada.expiraEn).toBe(nuevaExpira);
+    expect(guardada).not.toHaveProperty('pin');
+  });
+
+  it('CA8: sin red y con la sesión vigente entra con los datos guardados', async () => {
+    const sinRed = () => Promise.resolve(respuestaError<never>('sin red', 0));
+    const repo: SesionRepository = {
+      iniciarSesion: jest.fn(sinRed),
+      obtenerUsuarioActual: jest.fn(sinRed),
+      renovar: jest.fn(sinRed),
+      cerrarSesion: jest.fn(sinRed),
+    };
+    const texto = sesionGuardada();
+    const dependencias = crearDependenciasDePrueba({
+      repo,
+      almacenInicial: { sesion: texto },
+    });
+    await montarCon(dependencias);
+    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    await expect(
+      dependencias.nativos.almacenSeguro.leer('sesion'),
+    ).resolves.toBe(texto);
+  });
+
+  it.each([
+    [
+      'vencida',
+      sesionGuardada({ expiraEn: new Date(Date.now() - DIA).toISOString() }),
+    ],
+    ['corrupta', '{"version":1,"token":'],
+    ['de otra versión', sesionGuardada().replace('"version":1', '"version":2')],
+  ])(
+    'CA8: con la sesión %s borra el almacén y va al login sin red',
+    async (_caso, texto) => {
+      const repo = repoEspia(() => null);
+      const dependencias = crearDependenciasDePrueba({
+        repo,
+        almacenInicial: { sesion: texto },
+      });
+      await montarCon(dependencias);
+      expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
+      expect(screen.queryByText(/Tu sesión venció/)).toBeNull();
+      await expect(
+        dependencias.nativos.almacenSeguro.leer('sesion'),
+      ).resolves.toBeNull();
+      expect(repo.obtenerUsuarioActual).not.toHaveBeenCalled();
+      expect(repo.renovar).not.toHaveBeenCalled();
+    },
+  );
+
+  it('CA10: con renovarDesde pasado renueva una vez y guarda el token nuevo', async () => {
+    let token: () => string | null = () => null;
+    const repo = repoEspia(() => token());
+    const dependencias = crearDependenciasDePrueba({
+      repo,
+      almacenInicial: {
+        sesion: sesionGuardada({
+          renovarDesde: new Date(Date.now() - 60000).toISOString(),
+        }),
+      },
+    });
+    token = () => dependencias.sesionActiva.token();
+    await montarCon(dependencias);
+    await screen.findByText('Hola, Ana Torres');
+    await waitFor(() =>
+      expect(dependencias.sesionActiva.token()).not.toBe(tokenMemoria('ana')),
+    );
+    expect(repo.renovar).toHaveBeenCalledTimes(1);
+    const guardada = JSON.parse(
+      (await dependencias.nativos.almacenSeguro.leer('sesion')) ?? '{}',
+    );
+    expect(guardada.token).toBe(dependencias.sesionActiva.token());
+    expect(new Date(guardada.renovarDesde).getTime()).toBeGreaterThan(
+      Date.now(),
+    );
+  });
+
+  it('CA12: tras el login el flujo Auth desaparece (atrás no puede volver al login)', async () => {
+    const { dependencias } = contenedorConSplash();
+    await montarCon(dependencias);
+    await screen.findByText('Inicia sesión');
+    await iniciarSesion('ana', '1234');
+    await screen.findByText('Hola, Ana Torres');
+    expect(screen.queryByText('Inicia sesión')).toBeNull();
+    expect(screen.queryByLabelText('Dígito 1')).toBeNull();
+    expect(JSON.stringify(screen.toJSON())).not.toMatch(/PIN para/);
+  });
+
+  it('CA6: el PIN no queda en el almacén tras el login', async () => {
+    const { dependencias } = contenedorConSplash();
+    await montarCon(dependencias);
+    await screen.findByText('Inicia sesión');
+    await iniciarSesion('meli', '1111');
+    await screen.findByText('Hola, Meli');
+    const texto =
+      (await dependencias.nativos.almacenSeguro.leer('sesion')) ?? '';
+    expect(Object.keys(JSON.parse(texto)).sort()).toEqual(
+      ['expiraEn', 'renovarDesde', 'token', 'usuario', 'version'].sort(),
+    );
+    expect(texto).not.toMatch(/1111|"pin"/);
+  });
+});
+
+interface IRespuestaApi {
+  status: number;
+  cuerpo?: unknown;
+}
+
+/**
+ * Contenedor con el cliente HTTP real (fetch falso) y el adaptador de auth.php: el 401 pasa por
+ * `alNoAutorizado` → invalidarSesion, como en la app.
+ */
+function contenedorConApi(
+  responder: (url: string, init: RequestInit) => IRespuestaApi,
+  almacenInicial?: Record<string, string>,
+) {
+  const almacen = crearAlmacenEnMemoria(almacenInicial);
+  const sesionActiva = crearSesionActiva();
+  const fetchImpl = jest.fn(async (url: string, init: RequestInit) => {
+    const { status, cuerpo } = responder(url, init);
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      text: () =>
+        Promise.resolve(cuerpo === undefined ? '' : JSON.stringify(cuerpo)),
+    } as unknown as Response;
+  });
+  const api = crearClienteApi({
+    urlBase: 'http://localhost:8080/api',
+    fetchImpl: fetchImpl as unknown as typeof fetch,
+    obtenerToken: () => Promise.resolve(sesionActiva.token()),
+    alNoAutorizado: () => {
+      invalidarSesionUseCase(almacen, sesionActiva);
+    },
+  });
+  const dependencias: IDependencias = {
+    repositorios: {
+      sesion: crearApiSesionRepository(api, { etiquetaDispositivo: 'test' }),
+    },
+    nativos: {
+      splash: { ocultar: () => Promise.resolve() },
+      almacenSeguro: almacen,
+      enlaces: { abrir: () => Promise.resolve(true) },
+    },
+    api,
+    sesionActiva,
+  };
+  return { dependencias, fetchImpl, almacen };
+}
+
+const TOKEN_API = 'f'.repeat(64);
+const loginDeAna = {
+  role: 'student',
+  student: { id: 's0000000000000a1', name: 'Ana Torres', username: 'ana' },
+  token: TOKEN_API,
+  expiresAt: new Date(Date.now() + 30 * DIA).toISOString(),
+  renewAfter: new Date(Date.now() + DIA).toISOString(),
+};
+
+const cabeceras = (init: RequestInit | undefined) =>
+  (init?.headers ?? {}) as Record<string, string>;
+
+describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
+  beforeEach(() => useColorScheme.mockReturnValue('dark'));
+
+  it('CA9: si me da 401 con sesión guardada, borra el almacén y el login avisa que venció', async () => {
+    const { dependencias, almacen, fetchImpl } = contenedorConApi(
+      () => ({
+        status: 401,
+        cuerpo: { error: 'Sesión revocada', code: 'session_revoked' },
+      }),
+      { sesion: sesionGuardada({ token: TOKEN_API }) },
+    );
+    await montarCon(dependencias);
+    expect(
+      await screen.findByText('Tu sesión venció. Vuelve a iniciar sesión.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Inicia sesión')).toBeOnTheScreen();
+    expect(almacen.datos.has('sesion')).toBe(false);
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe('http://localhost:8080/api/auth.php?action=me');
+    expect(cabeceras(init).Authorization).toBe(`Bearer ${TOKEN_API}`);
+  });
+
+  it('CA9: el 401 del propio login (credenciales) no muestra el aviso ni limpia nada', async () => {
+    const { dependencias } = contenedorConApi(() => ({
+      status: 401,
+      cuerpo: {
+        error: 'Usuario o PIN incorrecto',
+        code: 'invalid_credentials',
+      },
+    }));
+    await montarCon(dependencias);
+    await screen.findByText('Inicia sesión');
+    await iniciarSesion('ana', '0000');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Usuario o PIN incorrecto',
+    );
+    expect(screen.queryByText(/Tu sesión venció/)).toBeNull();
+    expect(dependencias.sesionActiva.obtener()).toEqual({ tipo: 'sinSesion' });
+  });
+
+  it('CA1 + CA11: login real lleva al inicio y Cerrar sesión hace logout con Bearer y borra', async () => {
+    const { dependencias, fetchImpl, almacen } = contenedorConApi(
+      (url, init) => {
+        if (url.endsWith('action=logout')) {
+          return { status: 200, cuerpo: { ok: true } };
+        }
+        if (init.method === 'POST') {
+          return { status: 200, cuerpo: loginDeAna };
+        }
+        return { status: 500 };
+      },
+    );
+    await montarCon(dependencias);
+    await screen.findByText('Inicia sesión');
+    await iniciarSesion('  ANA ', '1234');
+    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    const cuerpoLogin = JSON.parse(String(fetchImpl.mock.calls[0][1].body));
+    expect(cuerpoLogin).toEqual({
+      username: 'ana',
+      pin: '1234',
+      client: 'app',
+      deviceLabel: 'test',
+    });
+    expect(almacen.datos.get('sesion')).toContain(TOKEN_API);
+
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Cerrar sesión' }),
+    );
+    expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
+    const logout = fetchImpl.mock.calls.find(([u]) =>
+      String(u).endsWith('action=logout'),
+    );
+    expect(logout).toBeDefined();
+    expect(cabeceras(logout?.[1]).Authorization).toBe(`Bearer ${TOKEN_API}`);
+    expect(almacen.datos.has('sesion')).toBe(false);
+    // Cerrar no es «vencida»: sin aviso.
+    expect(screen.queryByText(/Tu sesión venció/)).toBeNull();
+  });
+
+  it('CA11: sin red, Cerrar sesión también vuelve al login y borra', async () => {
+    let conRed = true;
+    const { dependencias, almacen } = contenedorConApi(() => {
+      if (!conRed) {
+        throw new TypeError('Network request failed');
+      }
+      return { status: 200, cuerpo: loginDeAna };
+    });
+    await montarCon(dependencias);
+    await screen.findByText('Inicia sesión');
+    await iniciarSesion('ana', '1234');
+    await screen.findByText('Hola, Ana Torres');
+    conRed = false;
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Cerrar sesión' }),
+    );
+    expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
+    expect(almacen.datos.has('sesion')).toBe(false);
   });
 });
