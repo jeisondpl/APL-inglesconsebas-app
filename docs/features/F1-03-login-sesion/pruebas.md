@@ -96,3 +96,71 @@ Con el teléfono conectado: `adb reverse tcp:8081 tcp:8081`, `adb reverse tcp:80
 ## 6. Veredicto
 
 **VERDE** en lo automatizable: la puerta pasa, la cobertura supera los umbrales, cada criterio CA1–CA17 tiene al menos una prueba automática que pasa, y no hay fallos bloqueantes. Lo que el plan pedía comprobar a mano en el moto g77 (sección 5) **sigue pendiente** porque el teléfono no está conectado al PC. Conviene hacerlo antes de la demo del hito H-S2.
+
+---
+
+## Vuelta 1
+
+> Tester, 2026-11-17. Vuelvo a probar sobre `d15840d`, con las correcciones del constructor `360ca03..d15840d`: B1, M1 (401 por token), M2 (título normalizado), M3 (toques rápidos) y tokens de espaciado. El teléfono sigue desconectado, así que no hay prueba manual.
+
+Commits de tests de esta vuelta:
+- `4e9871e test(sesion): carreras del arranque con logout, otro login y 401 tardío (vuelta 1)`;
+- `0e2ff9f test(sesion): quita el toque rápido de pantalla que solapaba act (cubierto en el controller)`.
+
+### V1.1 Pruebas nuevas
+
+Archivo `src/modules/sesion/__tests__/carrerasSesion.test.tsx`. Usa los controllers reales (`useArranqueSesion` + `useSesionController`), con `me` y `renew` diferidos que el test resuelve en el orden que quiere.
+
+| Caso | CA | Resultado |
+|---|---|---|
+| (a) Logout completo mientras `me` está en vuelo → al llegar `me` el almacén sigue vacío y el estado en `sinSesion` | CA7, CA11 | ✔ |
+| (a) Logout mientras `renew` está en vuelo → el token renovado no vuelve al almacén | CA10, CA11 | ✔ |
+| (a) `me` llega durante un borrado lento que se aplica **al terminar** | CA11 | ✔ |
+| (a) `me` llega durante el borrado del Keychain, que se aplica **al empezar** (orden nativo real) | CA11 | **✘ FALLO V1-F1** (marcado `it.failing`) |
+| (b) Logout + login de meli mientras está en vuelo el `me` de ana → almacén y estado siguen siendo de meli | CA7, B1 | ✔ |
+| (b) Lo mismo con un `renew` tardío de ana | CA10, B1 | ✔ |
+| `me` tardío pero vigente → sí actualiza el nombre en el almacén y en el estado | CA7 | ✔ |
+| 401 tardío del `me` con `token-ana` cuando ya está autenticada meli (cliente HTTP real) → meli sigue y su almacén está intacto | CA9 | ✔ |
+| 401 con el token activo → `sinSesion/vencida` y almacén borrado | CA9 | ✔ |
+| `invalidarSesionUseCase`: con un token distinto o `null` no hace nada; con el token activo invalida | CA9 | ✔ |
+
+Archivo `LoginScreen.test.tsx`: con «  ANA » el título es «PIN para ana», y al volver se conserva «  ANA » (CA2, M2) ✔.
+
+Toques rápidos (CA3, M3): ya están cubiertos en `Login.controller.test.tsx` por el constructor, con 2 y con 4 toques en el mismo ciclo. Revisado ✔. Mi variante de pantalla generaba avisos de `act()` solapados y la quité.
+
+Los tests de la vuelta 0 (CA1–CA16) siguen en verde con el código nuevo.
+
+### V1.2 Puerta automática
+
+`npm run calidad` → exit 0:
+- `tsc`, `eslint` y `prettier` sin errores;
+- **29 suites, 558 tests**, sin `console.error` en la salida;
+- cobertura global de 99,04 % en statements y 96,16 % en branches;
+- `sesion/domain` y `sesion/aplications` al 100 %, y `controllers` al 98,9 %.
+
+### V1.3 Fallo
+
+**V1-F1 · bloqueante (resto de B1): un `me` o `renew` que llega mientras se borra el almacén del logout vuelve a escribir la sesión cerrada.**
+
+- **Dónde:** `src/modules/sesion/aplications/controllers/Sesion.controller.ts:59-60` (`await cerrarSesionUseCase(...)` y, solo después, `establecer({tipo:'sinSesion'})`), junto con `arrancarSesion.ts:38` (`sigueVigente` solo compara el token).
+- **Por qué pasa:** durante todo el cierre (logout de hasta 3 s y luego `almacen.borrar`) la sesión sigue `autenticado` con el mismo token. Por eso `sigueVigente()` es `true` y `validarSesion.ts:44` (o `renovarSesion`) llama a `guardar`.
+  - Si `guardar` llega **antes** de `borrar`, no hay problema: el borrado lo limpia.
+  - Si llega **mientras** `borrar` está en curso, el `resetGenericPassword` del Keychain ya se aplicó en el hilo nativo y el `setGenericPassword` posterior vuelve a escribir la sesión de ana.
+- **Qué se espera:** tras «Cerrar sesión», el almacén queda vacío (CA11, y el caso (a) pedido en esta vuelta).
+- **Qué ocurre:** el estado queda en `sinSesion/cerrada`, pero el almacén conserva la sesión de ana. En el siguiente arranque se restaura una sesión revocada: con red sale «Tu sesión venció»; sin red se **entra** con una sesión cerrada.
+- **Reproducción:** `carrerasSesion.test.tsx`, caso «(a) me llega mientras el Keychain borra…». Hoy es `it.failing` para no romper la puerta; cuando se corrija, fallará, y hay que cambiarlo a `it`.
+- **Alcance:** la ventana es corta (lo que tarda la llamada nativa de borrado), pero es real, y es justo la carrera que B1 pedía cerrar.
+- **Corrección posible (decide el constructor):** que el cierre deje de ser «vigente» antes de borrar. Por ejemplo:
+  - capturar el token, pasar a `sinSesion/cerrada` (o marcar «cerrando») y luego hacer logout y borrar;
+  - o que `sigueVigente` también compruebe una marca de cierre.
+
+### V1.4 Veredicto (vuelta 1)
+
+**ROJO.** Hay un bloqueante: **V1-F1**. El resto de correcciones está verificado con tests propios:
+- logout durante `me`/`renew` con el borrado ya terminado;
+- login de otro usuario durante `me`/`renew` de la sesión anterior;
+- 401 tardío con token viejo;
+- título normalizado;
+- toques rápidos.
+
+La verificación manual en el moto g77 sigue pendiente (teléfono desconectado).
