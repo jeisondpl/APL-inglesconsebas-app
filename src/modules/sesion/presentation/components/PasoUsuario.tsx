@@ -1,12 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Boton, Campo, Texto } from '@/shared/components';
+import { useEstilos, type ITema } from '@/shared/theme';
 
 import { textosSesion } from '../sesion.textos';
 
 const textos = textosSesion.usuario;
 
-const estilos = StyleSheet.create({ paso: { gap: 16 } });
+const crearEstilos = (tema: ITema) =>
+  StyleSheet.create({ paso: { gap: tema.espaciado.l } });
 
 export interface IPropsPasoUsuario {
   usuario: string;
@@ -22,6 +24,7 @@ export function PasoUsuario({
   alCambiar,
   alContinuar,
 }: IPropsPasoUsuario) {
+  const estilos = useEstilos(crearEstilos);
   return (
     <View style={estilos.paso}>
       <View>

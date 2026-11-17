@@ -26,7 +26,7 @@ const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
     paso: { gap: tema.espaciado.l },
     estado: {
-      minHeight: 24,
+      minHeight: tema.espaciado.xxl,
       alignItems: 'center',
       justifyContent: 'center',
     },
