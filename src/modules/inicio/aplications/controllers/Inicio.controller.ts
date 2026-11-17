@@ -22,6 +22,8 @@ export type EstadoInicio =
 
 export interface IInicioController {
   estado: EstadoInicio;
+  /** Instante con el que se calculó la vista (se actualiza cada minuto). */
+  ahoraMs: number;
   /** Pull-to-refresh en curso (los datos anteriores siguen en pantalla). */
   refrescando: boolean;
   /** Primera carga o «Reintentar»: vuelve a `cargando`. */
@@ -153,6 +155,7 @@ export function useInicioController({
 
   return {
     estado,
+    ahoraMs,
     refrescando,
     _cargar,
     _refrescar,
