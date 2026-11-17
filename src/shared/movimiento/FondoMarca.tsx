@@ -35,10 +35,11 @@ export interface IPropsFondoMarca {
   /** Altura del centro del halo como fracción del alto de la ventana. Por defecto, 0.36. */
   alturaHalo?: number;
   /**
-   * Dibuja el isotipo grande de fondo. Por defecto, sí. Se apaga donde el contenido ya es el logo
-   * (el login): dos manos superpuestas no se entienden.
+   * Dónde va el isotipo grande de fondo. `centro` (por defecto): centrado detrás del contenido.
+   * `lateral`: medio fuera por la derecha, para pantallas cuyo hero ya es el logo con la mano
+   * (el login), donde dos manos superpuestas no se entienden.
    */
-  conIsotipo?: boolean;
+  posicionIsotipo?: 'centro' | 'lateral';
   testID?: string;
 }
 
@@ -61,7 +62,7 @@ export function FondoMarca({
   progreso,
   total = 1,
   alturaHalo = 0.36,
-  conIsotipo = true,
+  posicionIsotipo = 'centro',
   testID,
 }: IPropsFondoMarca) {
   const { tema } = useTema();
@@ -159,27 +160,29 @@ export function FondoMarca({
           <Rect width={ladoHalo} height={ladoHalo} fill="url(#haloMarca)" />
         </Svg>
       </Animated.View>
-      {conIsotipo ? (
-        <Animated.View
-          style={[
-            estilos.capa,
-            {
-              width: ladoIsotipo,
-              height: ladoIsotipo,
-              // Centrado en horizontal y a la altura del halo, detrás del contenido principal.
-              left: (ancho - ladoIsotipo) / 2,
-              top: alto * alturaHalo - ladoIsotipo / 2,
-              opacity: OPACIDAD_ISOTIPO,
-            },
-            estiloIsotipo,
-          ]}
-        >
-          <Svg width={ladoIsotipo} height={ladoIsotipo} viewBox={viewBox}>
-            <Path d={capas.manoContorno} fill={c.marca} />
-            <Path d={capas.letra} fill={c.marca} />
-          </Svg>
-        </Animated.View>
-      ) : null}
+      <Animated.View
+        style={[
+          estilos.capa,
+          {
+            width: ladoIsotipo,
+            height: ladoIsotipo,
+            opacity: OPACIDAD_ISOTIPO,
+          },
+          posicionIsotipo === 'lateral'
+            ? { right: -ladoIsotipo * 0.38, top: alto * 0.06 }
+            : // Centrado en horizontal y a la altura del halo, detrás del contenido principal.
+              {
+                left: (ancho - ladoIsotipo) / 2,
+                top: alto * alturaHalo - ladoIsotipo / 2,
+              },
+          estiloIsotipo,
+        ]}
+      >
+        <Svg width={ladoIsotipo} height={ladoIsotipo} viewBox={viewBox}>
+          <Path d={capas.manoContorno} fill={c.marca} />
+          <Path d={capas.letra} fill={c.marca} />
+        </Svg>
+      </Animated.View>
       <Svg width={ancho} height={alto} style={StyleSheet.absoluteFill}>
         <Defs>
           <LinearGradient id="fundidoFondo" x1="0" y1="0" x2="0" y2="1">
