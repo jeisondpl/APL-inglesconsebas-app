@@ -25,6 +25,7 @@ import type {
 } from '@/modules/sesion/domain/entities/Sesion.entities';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
+import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import { crearClienteApi } from '@/shared/lib/api';
@@ -383,6 +384,8 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
   const dependencias: IDependencias = {
     repositorios: {
       sesion: crearApiSesionRepository(api, { etiquetaDispositivo: 't' }),
+      // F1-05: IRepositorios exige el inicio; en memoria para no añadir peticiones al fetch falso.
+      inicio: crearMemoriaInicioRepository(),
     },
     nativos: {
       splash: { ocultar: () => Promise.resolve() },

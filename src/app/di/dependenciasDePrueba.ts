@@ -1,3 +1,5 @@
+import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import type { EstadoOnboarding } from '@/modules/onboarding/domain/entities/Onboarding.entities';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
@@ -40,6 +42,8 @@ export interface IOpcionesDependenciasDePrueba {
   /** Estado inicial de la sesión. Por defecto `restaurando`, como en la app. */
   estadoInicial?: EstadoSesion;
   repo?: SesionRepository;
+  /** Repositorio del inicio. Por defecto, en memoria y vacío (estados vacíos, sin red). */
+  inicio?: InicioRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   almacen?: SecureStoragePort;
@@ -69,6 +73,7 @@ export function crearDependenciasDePrueba(
         crearMemoriaSesionRepository({
           obtenerToken: () => sesionActiva.token(),
         }),
+      inicio: opciones.inicio ?? crearMemoriaInicioRepository(),
     },
     nativos: {
       splash: opciones.splash ?? { ocultar: () => Promise.resolve() },

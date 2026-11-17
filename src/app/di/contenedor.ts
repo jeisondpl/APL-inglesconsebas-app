@@ -1,3 +1,5 @@
+import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import type { BanderaOnboarding } from '@/modules/onboarding/domain/models/BanderaOnboarding';
 import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
@@ -19,6 +21,8 @@ import { etiquetaDispositivo } from './etiquetaDispositivo';
 /** Repositorios de los módulos de negocio. Cada módulo añade aquí su puerto cuando se construye. */
 export interface IRepositorios {
   sesion: SesionRepository;
+  /** Inicio del estudiante (F1-05). */
+  inicio: InicioRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -58,6 +62,7 @@ export function crearDependencias(): IDependencias {
       sesion: crearApiSesionRepository(api, {
         etiquetaDispositivo: etiquetaDispositivo(),
       }),
+      inicio: crearApiInicioRepository(api),
     },
     nativos: {
       splash: crearBootSplashAdapter(),
