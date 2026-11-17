@@ -34,7 +34,9 @@ import {
   crearGoogleSignInAdapter,
   MENSAJES_GOOGLE,
 } from '@/native/adapters/GoogleSignInAdapter';
+import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
+import { leerEntorno } from '@/shared/lib/entorno';
 import { crearClienteApi } from '@/shared/lib/api';
 
 const CON_CORREO = USUARIOS_SEED.map(u =>
@@ -436,5 +438,30 @@ describe('GoogleSignInAdapter', () => {
       throw new Error('boom');
     });
     await expect(g.cerrarSesion()).resolves.toBeUndefined();
+  });
+});
+
+describe('Google simulado (mientras no hay client ID)', () => {
+  it('siempre disponible y manda «simulado:<correo>» a Leap', async () => {
+    const g = crearGoogleSimuladoAdapter('ana@example.com');
+    expect(g.disponible).toBe(true);
+    expect(await g.obtenerIdToken()).toEqual({
+      tipo: 'ok',
+      idToken: 'simulado:ana@example.com',
+    });
+    await expect(g.cerrarSesion()).resolves.toBeUndefined();
+  });
+
+  it('el entorno lee GOOGLE_SIMULADO_CORREO y lo trata vacío como sin simulación', () => {
+    expect(
+      leerEntorno({
+        API_URL: 'http://h',
+        GOOGLE_SIMULADO_CORREO: ' ana@example.com ',
+      }).googleSimuladoCorreo,
+    ).toBe('ana@example.com');
+    expect(
+      leerEntorno({ API_URL: 'http://h', GOOGLE_SIMULADO_CORREO: '' })
+        .googleSimuladoCorreo,
+    ).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepo
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
 import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
+import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
 import { crearKeychainSecureStorageAdapter } from '@/native/adapters/KeychainSecureStorageAdapter';
 import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
@@ -72,10 +73,14 @@ export function crearDependencias(): IDependencias {
       splash: crearBootSplashAdapter(),
       almacenSeguro,
       enlaces: crearLinkingEnlacesAdapter(),
-      google: crearGoogleSignInAdapter({
-        webClientId: entorno.googleWebClientId,
-        iosClientId: entorno.googleIosClientId,
-      }),
+      // Con client ID real, Google de verdad; sin él, el simulado si el build lo pide (F1-06).
+      google:
+        !entorno.googleWebClientId && entorno.googleSimuladoCorreo
+          ? crearGoogleSimuladoAdapter(entorno.googleSimuladoCorreo)
+          : crearGoogleSignInAdapter({
+              webClientId: entorno.googleWebClientId,
+              iosClientId: entorno.googleIosClientId,
+            }),
     },
     api,
     sesionActiva,

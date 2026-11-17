@@ -12,6 +12,7 @@ describe('leerEntorno', () => {
       appEnv: 'prod',
       googleWebClientId: null,
       googleIosClientId: null,
+      googleSimuladoCorreo: null,
     });
   });
 
@@ -23,6 +24,7 @@ describe('leerEntorno', () => {
       appEnv: 'staging',
       googleWebClientId: null,
       googleIosClientId: null,
+      googleSimuladoCorreo: null,
     });
   });
 
@@ -61,6 +63,7 @@ describe('entorno', () => {
       appEnv: 'dev',
       googleWebClientId: null,
       googleIosClientId: null,
+      googleSimuladoCorreo: null,
     });
   });
 
