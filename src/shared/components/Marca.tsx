@@ -16,6 +16,9 @@ export interface IPropsMarca {
 const { capas, viewBox } = logo.logo;
 const [, , anchoVista, altoVista] = viewBox.split(' ').map(Number);
 
+/** Alto del logo por cada dp de ancho. */
+export const PROPORCION_MARCA = altoVista / anchoVista;
+
 /**
  * Logo principal oficial: la mano «OK» y «Inglés con sebas», vectorial (assets/marca/logo.json).
  * En el tema oscuro va claro (manual, p. 3) y en el claro, gris (p. 4). Se lee como una unidad:
