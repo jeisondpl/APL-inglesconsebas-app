@@ -70,7 +70,7 @@ export function LoginScreen() {
           />
         ) : (
           <PasoPin
-            usuario={login.usuario.trim()}
+            usuario={login.usuarioNormalizado}
             escritos={login.pin.length}
             total={LONGITUD_PIN}
             error={login.error}

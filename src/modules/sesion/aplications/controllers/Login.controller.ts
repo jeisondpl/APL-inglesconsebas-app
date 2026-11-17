@@ -8,6 +8,7 @@ import { mensajesSesion } from '../../domain/sesion.mensajes';
 import {
   agregarDigito,
   LONGITUD_PIN,
+  normalizarUsuario,
   quitarDigito,
   urlAyudaPin,
   validarUsuario,
@@ -19,6 +20,8 @@ export type PasoLogin = 'usuario' | 'pin';
 export interface ILoginController {
   paso: PasoLogin;
   usuario: string;
+  /** Usuario tal como se envía (sin espacios y en minúsculas), para el título del paso PIN. */
+  usuarioNormalizado: string;
   /** Dígitos escritos. Se vacía tras cada intento: nunca se guarda. */
   pin: string;
   /** Error del paso activo: validación del usuario o respuesta del login. */
@@ -48,6 +51,12 @@ export function useLoginController(): ILoginController {
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const enviando = useRef(false);
+  // El PIN vive también en una ref: dos toques seguidos antes de re-renderizar no pierden dígitos.
+  const pinActual = useRef('');
+  const cambiarPin = useCallback((nuevo: string) => {
+    pinActual.current = nuevo;
+    setPin(nuevo);
+  }, []);
 
   const enviar = useCallback(
     async (pinCompleto: string) => {
@@ -63,12 +72,12 @@ export function useLoginController(): ILoginController {
           setError(r.msg ?? null);
         }
       } finally {
-        setPin('');
+        cambiarPin('');
         setCargando(false);
         enviando.current = false;
       }
     },
-    [_iniciarSesion, usuario],
+    [_iniciarSesion, usuario, cambiarPin],
   );
 
   const _cambiarUsuario = useCallback((texto: string) => {
@@ -83,48 +92,48 @@ export function useLoginController(): ILoginController {
       return;
     }
     setError(null);
-    setPin('');
+    cambiarPin('');
     setPaso('pin');
-  }, [usuario]);
+  }, [usuario, cambiarPin]);
 
   const _volverAlUsuario = useCallback(() => {
     if (enviando.current) {
       return;
     }
-    setPin('');
+    cambiarPin('');
     setError(null);
     setPaso('usuario');
-  }, []);
+  }, [cambiarPin]);
 
   const _pulsarDigito = useCallback(
     (digito: string) => {
       if (enviando.current) {
         return;
       }
-      const nuevo = agregarDigito(pin, digito);
-      if (nuevo === pin) {
+      const nuevo = agregarDigito(pinActual.current, digito);
+      if (nuevo === pinActual.current) {
         return;
       }
-      setPin(nuevo);
+      cambiarPin(nuevo);
       setError(null);
       if (nuevo.length === LONGITUD_PIN) {
         enviar(nuevo);
       }
     },
-    [pin, enviar],
+    [enviar, cambiarPin],
   );
 
   const _borrar = useCallback(() => {
     if (!enviando.current) {
-      setPin(actual => quitarDigito(actual));
+      cambiarPin(quitarDigito(pinActual.current));
     }
-  }, []);
+  }, [cambiarPin]);
 
   const _confirmar = useCallback(() => {
-    if (pin.length === LONGITUD_PIN) {
-      enviar(pin);
+    if (pinActual.current.length === LONGITUD_PIN) {
+      enviar(pinActual.current);
     }
-  }, [pin, enviar]);
+  }, [enviar]);
 
   const _abrirAyudaPin = useCallback(async () => {
     const abierto = await enlaces.abrir(urlAyudaPin());
@@ -136,6 +145,7 @@ export function useLoginController(): ILoginController {
   return {
     paso,
     usuario,
+    usuarioNormalizado: normalizarUsuario(usuario),
     pin,
     error,
     cargando,

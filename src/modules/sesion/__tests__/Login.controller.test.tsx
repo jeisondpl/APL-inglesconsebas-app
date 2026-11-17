@@ -218,4 +218,47 @@ describe('useLoginController', () => {
       expect(Toast.show).toHaveBeenCalledTimes(toasts);
     },
   );
+
+  // Vuelta 1 (M3): toques seguidos sin re-render entre medias no pierden dígitos.
+  it('dos toques en el mismo ciclo suman los dos dígitos', async () => {
+    const { result } = await montar();
+    await act(async () => result.current._cambiarUsuario('ana'));
+    await act(async () => result.current._continuar());
+    await act(async () => {
+      const { _pulsarDigito } = result.current;
+      _pulsarDigito('1');
+      _pulsarDigito('2');
+    });
+    expect(result.current.pin).toBe('12');
+  });
+
+  it('cuatro toques en el mismo ciclo envían el PIN completo una vez', async () => {
+    const iniciarSesion = jest.fn(() => new Promise<never>(() => {}));
+    const repo: SesionRepository = {
+      ...crearMemoriaSesionRepository(),
+      iniciarSesion,
+    };
+    const { result } = await montar(crearDependenciasDePrueba({ repo }));
+    await act(async () => result.current._cambiarUsuario('ana'));
+    await act(async () => result.current._continuar());
+    await act(async () => {
+      const { _pulsarDigito, _borrar } = result.current;
+      _pulsarDigito('1');
+      _pulsarDigito('9');
+      _borrar();
+      _pulsarDigito('2');
+      _pulsarDigito('3');
+      _pulsarDigito('4');
+    });
+    expect(iniciarSesion).toHaveBeenCalledTimes(1);
+    expect(iniciarSesion).toHaveBeenCalledWith({ usuario: 'ana', pin: '1234' });
+  });
+
+  // Vuelta 1 (M2): el título del paso PIN usa el usuario normalizado.
+  it('expone el usuario normalizado', async () => {
+    const { result } = await montar();
+    await act(async () => result.current._cambiarUsuario('  ANA '));
+    expect(result.current.usuarioNormalizado).toBe('ana');
+    expect(result.current.usuario).toBe('  ANA ');
+  });
 });
