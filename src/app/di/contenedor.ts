@@ -1,3 +1,4 @@
+import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
@@ -42,8 +43,11 @@ export function crearDependencias(): IDependencias {
   const sesionActiva = crearSesionActiva();
   const api = crearClienteApi({
     urlBase: entorno.apiUrl,
-    obtenerToken: () => Promise.resolve(null),
-    alNoAutorizado: () => {},
+    // El token sale de la sesión activa; un 401 con sesión la limpia y vuelve al login (CA9).
+    obtenerToken: () => Promise.resolve(sesionActiva.token()),
+    alNoAutorizado: () => {
+      invalidarSesionUseCase(almacenSeguro, sesionActiva);
+    },
   });
   return {
     repositorios: {
