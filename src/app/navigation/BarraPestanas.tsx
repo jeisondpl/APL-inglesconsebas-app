@@ -72,6 +72,8 @@ const RESORTE = { damping: 15, stiffness: 160, mass: 0.9 };
 const RESORTE_POP = { damping: 12, stiffness: 260 };
 
 const TrazoAnimado = Animated.createAnimatedComponent(Path);
+/** Margen del trazo dentro del lienzo SVG: así el borde no se recorta en los extremos. */
+const MARGEN_TRAZO = 1;
 
 type Medida = { x: number; width: number };
 
@@ -343,7 +345,11 @@ export function BarraPestanas<Id extends string>({
   ]);
 
   const propsTrazo = useAnimatedProps(() => ({
-    d: trazoBarra(anchoSv.value, ALTO_BARRA, centroHendidura.value),
+    d: trazoBarra(
+      anchoSv.value - MARGEN_TRAZO * 2,
+      ALTO_BARRA - MARGEN_TRAZO * 2,
+      centroHendidura.value - MARGEN_TRAZO,
+    ),
   }));
 
   const estiloCirculo = useAnimatedStyle(() => ({
@@ -375,6 +381,8 @@ export function BarraPestanas<Id extends string>({
         {anchoBarra > 0 ? (
           <Svg width={anchoBarra} height={ALTO_BARRA} style={estilos.svg}>
             <TrazoAnimado
+              x={MARGEN_TRAZO}
+              y={MARGEN_TRAZO}
               animatedProps={propsTrazo}
               fill={tema.colores.superficie}
               stroke={tema.colores.borde}
