@@ -45,8 +45,8 @@ export function crearDependencias(): IDependencias {
     urlBase: entorno.apiUrl,
     // El token sale de la sesión activa; un 401 con sesión la limpia y vuelve al login (CA9).
     obtenerToken: () => Promise.resolve(sesionActiva.token()),
-    alNoAutorizado: () => {
-      invalidarSesionUseCase(almacenSeguro, sesionActiva);
+    alNoAutorizado: tokenPeticion => {
+      invalidarSesionUseCase(almacenSeguro, sesionActiva, tokenPeticion);
     },
   });
   return {

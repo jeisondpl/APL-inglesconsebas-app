@@ -273,6 +273,17 @@ describe('invalidarSesionUseCase', () => {
     expect(almacen.datos.size).toBe(1);
   });
 
+  it('un 401 de una petición con otro token no invalida la sesión actual (M1)', async () => {
+    const activa = crearSesionActiva({ tipo: 'autenticado', sesion });
+    const almacen = crearAlmacenEnMemoria({ sesion: 'x' });
+    await invalidarSesionUseCase(almacen, activa, 'token-anterior');
+    await invalidarSesionUseCase(almacen, activa, null);
+    expect(activa.token()).toBe('viejo');
+    expect(almacen.datos.size).toBe(1);
+    await invalidarSesionUseCase(almacen, activa, 'viejo');
+    expect(activa.obtener()).toEqual({ tipo: 'sinSesion', motivo: 'vencida' });
+  });
+
   it('con sesión pasa a vencida y borra', async () => {
     const activa = crearSesionActiva({ tipo: 'autenticado', sesion });
     const almacen = crearAlmacenEnMemoria({ sesion: 'x' });

@@ -199,4 +199,56 @@ describe('crearDependencias (CA11)', () => {
       globalThis.fetch = original;
     }
   });
+
+  // F1-03 vuelta 1 (M1): el 401 tardío de una petición con el token anterior no invalida la
+  // sesión que entró después.
+  it('un 401 que llega con el token de una sesión anterior no invalida la actual', async () => {
+    const original = globalThis.fetch;
+    let responder!: () => void;
+    globalThis.fetch = jest.fn(
+      () =>
+        new Promise(res => {
+          responder = () =>
+            res({ status: 401, ok: false, text: () => Promise.resolve('') });
+        }),
+    ) as unknown as typeof fetch;
+    const usuario = {
+      id: 's1',
+      nombre: 'Ana',
+      usuario: 'ana',
+      rol: 'estudiante' as const,
+    };
+    try {
+      const dependencias = crearDependencias();
+      dependencias.sesionActiva.establecer({
+        tipo: 'autenticado',
+        sesion: {
+          token: 'anterior',
+          expiraEn: '2099-01-01T00:00:00Z',
+          renovarDesde: null,
+          usuario,
+        },
+      });
+      const peticion = dependencias.api.get('auth.php', { action: 'me' });
+      await new Promise(r => setImmediate(r));
+      const actual = {
+        token: 'actual',
+        expiraEn: '2099-01-01T00:00:00Z',
+        renovarDesde: null,
+        usuario,
+      };
+      dependencias.sesionActiva.establecer({
+        tipo: 'autenticado',
+        sesion: actual,
+      });
+      responder();
+      await peticion;
+      expect(dependencias.sesionActiva.obtener()).toEqual({
+        tipo: 'autenticado',
+        sesion: actual,
+      });
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
 });

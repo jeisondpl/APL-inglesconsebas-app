@@ -102,6 +102,18 @@ describe('crearClienteApi · respuesta 401 (CA9)', () => {
     expect(r).toEqual({ error: true, msg: 'Token inválido', code: 401 });
   });
 
+  // F1-03 vuelta 1 (M1): el aviso lleva el token con el que salió la petición.
+  it('pasa a alNoAutorizado el token de la petición (o null sin token)', async () => {
+    const alNoAutorizado = jest.fn();
+    const f = fetchQueResponde(respuesta(401));
+    await cliente(f, {
+      alNoAutorizado,
+      obtenerToken: () => Promise.resolve('abc'),
+    }).get('x');
+    await cliente(f, { alNoAutorizado }).get('x');
+    expect(alNoAutorizado.mock.calls).toEqual([['abc'], [null]]);
+  });
+
   it('sin {error} en el cuerpo usa el mensaje de sesión no válida', async () => {
     const alNoAutorizado = jest.fn();
     const f = fetchQueResponde(respuesta(401));
