@@ -373,4 +373,102 @@ describe('arrancarSesionUseCase', () => {
       motivo: 'cerrada',
     });
   });
+
+  // Vuelta 1 (B1): un `me` o `renew` tardío no debe resucitar ni pisar otra sesión.
+  /** `me` que no responde hasta que se llame a `responder`. */
+  function meDiferido() {
+    let responder!: () => void;
+    const obtenerUsuarioActual = jest.fn(
+      () =>
+        new Promise<
+          ReturnType<
+            typeof respuestaOk<{
+              usuario: typeof sesion.usuario;
+              expiraEn: string;
+            }>
+          >
+        >(res => {
+          responder = () =>
+            res(
+              respuestaOk({
+                usuario: { ...sesion.usuario, nombre: 'Ana Torres' },
+                expiraEn: '2026-12-15T00:00:00Z',
+              }),
+            );
+        }),
+    );
+    return { obtenerUsuarioActual, responder: () => responder() };
+  }
+
+  it('logout durante `me`: el almacén queda vacío y la sesión cerrada', async () => {
+    const me = meDiferido();
+    const repo = repoFalso({ obtenerUsuarioActual: me.obtenerUsuarioActual });
+    const a = args(repo, serializarSesion(sesion));
+    const arranque = arrancarSesionUseCase(a);
+    await Promise.resolve();
+    await new Promise(r => setImmediate(r));
+    expect(me.obtenerUsuarioActual).toHaveBeenCalledTimes(1);
+    // Cierre de sesión mientras `me` sigue en vuelo.
+    await cerrarSesionUseCase(repo, a.almacen);
+    a.sesionActiva.establecer({ tipo: 'sinSesion', motivo: 'cerrada' });
+    me.responder();
+    await arranque;
+    expect(a.almacen.datos.has('sesion')).toBe(false);
+    expect(a.sesionActiva.obtener()).toEqual({
+      tipo: 'sinSesion',
+      motivo: 'cerrada',
+    });
+  });
+
+  it('login de otro usuario durante `me`: no cambian ni el almacén ni el estado', async () => {
+    const me = meDiferido();
+    const repo = repoFalso({ obtenerUsuarioActual: me.obtenerUsuarioActual });
+    const a = args(repo, serializarSesion(sesion));
+    const arranque = arrancarSesionUseCase(a);
+    await new Promise(r => setImmediate(r));
+    const otra: IResponseSesion = {
+      token: 'otro',
+      expiraEn: '2026-12-30T00:00:00Z',
+      renovarDesde: null,
+      usuario: { id: 't1', nombre: 'Meli', usuario: 'meli', rol: 'profe' },
+    };
+    await a.almacen.guardar('sesion', serializarSesion(otra));
+    a.sesionActiva.establecer({ tipo: 'autenticado', sesion: otra });
+    me.responder();
+    await arranque;
+    expect(guardadaEn(a.almacen)).toEqual({ version: 1, ...otra });
+    expect(a.sesionActiva.obtener()).toEqual({
+      tipo: 'autenticado',
+      sesion: otra,
+    });
+  });
+
+  it('un `renew` tardío tras el logout no guarda el token nuevo', async () => {
+    let responder!: () => void;
+    const repo = repoFalso({
+      renovar: () =>
+        new Promise(res => {
+          responder = () =>
+            res(
+              respuestaOk({
+                token: 'nuevo',
+                expiraEn: '2026-12-20T00:00:00Z',
+                renovarDesde: null,
+              }),
+            );
+        }),
+    });
+    const a = {
+      ...args(repo, serializarSesion(sesion)),
+      ahora: new Date('2026-11-17T12:00:00Z'),
+    };
+    const arranque = arrancarSesionUseCase(a);
+    await new Promise(r => setImmediate(r));
+    await cerrarSesionUseCase(repo, a.almacen);
+    a.sesionActiva.establecer({ tipo: 'sinSesion', motivo: 'cerrada' });
+    responder();
+    await arranque;
+    expect(a.almacen.datos.has('sesion')).toBe(false);
+    expect(a.sesionActiva.token()).toBeNull();
+  });
 });

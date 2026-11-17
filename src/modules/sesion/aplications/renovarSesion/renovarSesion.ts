@@ -1,8 +1,13 @@
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
-import { respuestaOk, type HttpResponse } from '@/shared/lib/HttpResponse';
+import {
+  respuestaError,
+  respuestaOk,
+  type HttpResponse,
+} from '@/shared/lib/HttpResponse';
 
 import type { IResponseSesion } from '../../domain/entities/Sesion.entities';
 import type { SesionRepository } from '../../domain/models/SesionRepository';
+import { mensajesSesion } from '../../domain/sesion.mensajes';
 import {
   CLAVE_SESION,
   serializarSesion,
@@ -12,12 +17,15 @@ export type RenovarSesion = (
   repo: SesionRepository,
   almacen: SecureStoragePort,
   sesion: IResponseSesion,
+  /** Si devuelve false al llegar la respuesta, no se guarda nada (la sesión se cerró o cambió). */
+  sigueVigente?: () => boolean,
 ) => Promise<HttpResponse<IResponseSesion>>;
 
 async function renovar(
   repo: SesionRepository,
   almacen: SecureStoragePort,
   sesion: IResponseSesion,
+  sigueVigente: () => boolean,
 ): Promise<HttpResponse<IResponseSesion>> {
   const r = await repo.renovar();
   if (r.code === 401) {
@@ -28,6 +36,9 @@ async function renovar(
     return respuestaOk(sesion);
   }
   const renovada: IResponseSesion = { ...sesion, ...r.response };
+  if (!sigueVigente()) {
+    return respuestaError(mensajesSesion.sesionCambio);
+  }
   await almacen.guardar(CLAVE_SESION, serializarSesion(renovada));
   return respuestaOk(renovada, r.code);
 }
@@ -38,9 +49,9 @@ async function renovar(
  */
 export function crearRenovadorSesion(): RenovarSesion {
   let enVuelo: Promise<HttpResponse<IResponseSesion>> | null = null;
-  return (repo, almacen, sesion) => {
+  return (repo, almacen, sesion, sigueVigente = () => true) => {
     if (!enVuelo) {
-      enVuelo = renovar(repo, almacen, sesion).finally(() => {
+      enVuelo = renovar(repo, almacen, sesion, sigueVigente).finally(() => {
         enVuelo = null;
       });
     }
