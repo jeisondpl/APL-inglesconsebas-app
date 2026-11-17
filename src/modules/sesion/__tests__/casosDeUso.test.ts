@@ -307,6 +307,60 @@ describe('crearSesionActiva', () => {
   });
 });
 
+// Vuelta 2 (V1-F1): durante el cierre el token sirve para el logout pero ya no es vigente.
+describe('crearSesionActiva: cierre', () => {
+  it('iniciarCierre conserva el token y quita la vigencia hasta el siguiente establecer', () => {
+    const activa = crearSesionActiva({ tipo: 'autenticado', sesion });
+    expect(activa.esVigente('viejo')).toBe(true);
+    expect(activa.esVigente('otro')).toBe(false);
+    activa.iniciarCierre();
+    expect(activa.token()).toBe('viejo');
+    expect(activa.esVigente('viejo')).toBe(false);
+    activa.establecer({ tipo: 'autenticado', sesion });
+    expect(activa.esVigente('viejo')).toBe(true);
+  });
+
+  it('sin sesión iniciarCierre no marca nada y nada es vigente', () => {
+    const activa = crearSesionActiva({ tipo: 'sinSesion' });
+    activa.iniciarCierre();
+    activa.establecer({ tipo: 'autenticado', sesion });
+    expect(activa.esVigente('viejo')).toBe(true);
+    activa.establecer({ tipo: 'sinSesion' });
+    expect(activa.esVigente('viejo')).toBe(false);
+  });
+
+  it('un me que llega durante el cierre no guarda aunque el token sea el mismo', async () => {
+    let responder!: () => void;
+    const repo = repoFalso({
+      obtenerUsuarioActual: () =>
+        new Promise(res => {
+          responder = () =>
+            res(
+              respuestaOk({
+                usuario: sesion.usuario,
+                expiraEn: sesion.expiraEn,
+              }),
+            );
+        }),
+    });
+    const almacen = crearAlmacenEnMemoria({ sesion: serializarSesion(sesion) });
+    const sesionActiva = crearSesionActiva();
+    const arranque = arrancarSesionUseCase({
+      repo,
+      almacen,
+      sesionActiva,
+      renovar: crearRenovadorSesion(),
+      ahora,
+    });
+    await new Promise(r => setImmediate(r));
+    sesionActiva.iniciarCierre();
+    await almacen.borrar('sesion');
+    responder();
+    await arranque;
+    expect(almacen.datos.has('sesion')).toBe(false);
+  });
+});
+
 describe('arrancarSesionUseCase', () => {
   const args = (repo: SesionRepository, texto?: string) => ({
     repo,

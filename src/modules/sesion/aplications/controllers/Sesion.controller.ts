@@ -55,7 +55,10 @@ export function useSesionController(): ISesionController {
   );
 
   const _cerrarSesion = useCallback(async () => {
-    // El logout sale con el token de la sesión: el estado cambia cuando termina (máx. 3 s).
+    // Antes de cualquier await: la sesión deja de ser vigente, así que ningún `me`/`renew` tardío
+    // puede volver a guardarla mientras se cierra. token() sigue sirviendo para el Bearer del logout.
+    sesionActiva.iniciarCierre();
+    // El estado pasa a sinSesion cuando termina el cierre (máx. 3 s de logout + borrado).
     await cerrarSesionUseCase(repo, almacen);
     sesionActiva.establecer({ tipo: 'sinSesion', motivo: 'cerrada' });
   }, [repo, almacen, sesionActiva]);

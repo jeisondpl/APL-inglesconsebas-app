@@ -35,7 +35,8 @@ export async function arrancarSesionUseCase({
     return;
   }
   sesionActiva.establecer({ tipo: 'autenticado', sesion: guardada });
-  const sigueVigente = () => sesionActiva.token() === guardada.token;
+  // Vigente = misma sesión y sin cierre en curso (iniciarCierre la descarta antes del logout).
+  const sigueVigente = () => sesionActiva.esVigente(guardada.token);
 
   const validada = await validarSesionUseCase(
     repo,
