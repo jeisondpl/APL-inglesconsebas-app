@@ -56,6 +56,7 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 
 ## Sistema de diseño y marca (F1-01b)
 
+- **Skill `ingles-con-sebas-brand`** (`.claude/skills/ingles-con-sebas-brand/`, 2026-11-17): reglas operativas de la marca (qué es oficial y qué derivado, conflictos del kit, tokens, logo, componentes, patrones móviles) y scripts `auditar-marca.mjs`, `contraste.mjs` y `generar-tokens.mjs`. Úsala para cualquier pantalla, componente o revisión visual.
 - **Kit de marca oficial** de Sebastián (2026-11-10) en `assets/marca/kit/` (manual, PDF vectoriales y PNG). Sustituye a la exploración «Dirección A». Paleta oficial: #FFFFFF, #000000, #86EF86 y #A5AFA5; títulos en Nohemi Medium y cuerpo en DM Sans.
 - **Tokens** en `src/shared/theme`: `temaOscuro`/`temaClaro` con las mismas claves semánticas; se consumen con `useTema()` y `useEstilos(fabrica)` (fábrica declarada fuera del componente). No se escriben hex en pantallas. `PREFERENCIA_TEMA_POR_DEFECTO = 'sistema'` (sin dato del sistema, oscuro); guardar la preferencia es el ítem 1.14.
 - **Componentes** en `src/shared/components`. Solo `HostNotificaciones` y `notify.ts` importan `react-native-toast-message`. Escaparate en `src/app/escaparate`, abierto desde el inicio provisional (con la sesión, solo en `__DEV__`).
@@ -75,6 +76,16 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - **Tests**: `crearDependenciasDePrueba()` (`src/app/di/dependenciasDePrueba.ts`) da un contenedor sin red ni nativos: `crearMemoriaSesionRepository` (usuarios del seed; `tokenMemoria('ana')` sirve para sesiones guardadas), un almacén en memoria y splash y enlaces falsos. `jest.setup.ts` mockea `react-native-keychain` con un `Map`.
 - **Fuera de alcance** (F1-03b): biometría (1.13), perfil, cambio de PIN y guardar el tema (1.14), sin conexión (1.15), abrir en la web (1.16) y validar al volver a primer plano.
 - **Probar en el teléfono por USB**: `.env.dispositivo` + `adb reverse tcp:8080 tcp:8080` (pasos en el README). **Pendiente sin Mac**: `pod install` de `react-native-keychain`.
+
+## Animaciones (F1-04)
+
+- **Reanimated 4**: `react-native-reanimated` 4.7.1 y `react-native-worklets` 0.13.1 (versión exacta,
+  compatibles con RN 0.86–0.88). `react-native-worklets/plugin` es el último plugin de
+  `babel.config.js`: tras cambiar Babel, Metro se reinicia con `--reset-cache`.
+- **Tests**: `jest.setup.ts` usa los mocks oficiales de reanimated y worklets. Las animaciones
+  resuelven al instante y `Animated.View` es un `View`; `useReducedMotion` devuelve `false` (se
+  espía para probar reduce-motion).
+- **Pendiente sin Mac**: `pod install` de reanimated y worklets.
 
 ## Onboarding (EXT-01)
 

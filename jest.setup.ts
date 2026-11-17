@@ -71,3 +71,13 @@ jest.mock('react-native-keychain', () => {
   };
   return { __esModule: true, default: Keychain, ...Keychain };
 });
+
+// react-native-reanimated 4 (F1-04): mock oficial. Las animaciones resuelven al instante a su valor
+// final, `useAnimatedStyle` se calcula en cada render y `Animated.View` es un View normal.
+// react-native-worklets no tiene runtime de UI en Jest: se usa su mock oficial.
+jest.mock('react-native-worklets', () =>
+  jest.requireActual('react-native-worklets/src/mock'),
+);
+jest.mock('react-native-reanimated', () =>
+  jest.requireActual('react-native-reanimated/mock'),
+);

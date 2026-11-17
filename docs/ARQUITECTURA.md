@@ -218,6 +218,11 @@ La infraestructura transforma la respuesta cruda (HTTP, nativa o local) a `HttpR
 3. Las listas usan `FlatList` o `FlashList` con un `keyExtractor` estable. `useCallback` y `useMemo` se usan donde aporten.
 4. Hay tres entornos, `dev`, `staging` y `prod`, con variables propias y flavors o schemes nativos.
 5. Toda variable de entorno nueva se agrega a `.env.example` en el mismo cambio.
+6. Las animaciones usan **Reanimated 4** (`react-native-reanimated` 4.7.1 + `react-native-worklets`
+   0.13.1, F1-04), que exige la arquitectura nueva. `react-native-worklets/plugin` va el último en
+   `babel.config.js`; al cambiar Babel se reinicia Metro con `--reset-cache`. En Jest se usan los
+   mocks oficiales (`jest.setup.ts`). Las piezas de movimiento comunes viven en
+   `src/shared/movimiento`. **Pendiente sin Mac**: `pod install`.
 
 ## 10. Android
 
