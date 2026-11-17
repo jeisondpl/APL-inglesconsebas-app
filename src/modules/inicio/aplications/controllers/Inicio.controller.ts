@@ -62,6 +62,9 @@ export function useInicioController({
   const generacion = useRef(0);
   const montado = useRef(true);
   const yaListo = useRef(false);
+  // El reloj va en una referencia: una función nueva en cada render no debe relanzar la carga.
+  const reloj = useRef(ahora);
+  reloj.current = ahora;
 
   const leer = useCallback(async () => {
     const mia = ++generacion.current;
@@ -70,7 +73,7 @@ export function useInicioController({
     if (mia !== generacion.current || !montado.current) {
       return;
     }
-    setAhoraMs(ahora());
+    setAhoraMs(reloj.current());
     if (r.error || !r.response) {
       const msg = r.msg ?? textosComunes.errores.desconocido;
       // Si ya había datos, un refresco fallido los conserva y avisa con un toast.
@@ -83,7 +86,7 @@ export function useInicioController({
     }
     yaListo.current = true;
     setResultado({ tipo: 'listo', resumen: r.response });
-  }, [repo, idEstudiante, ahora]);
+  }, [repo, idEstudiante]);
 
   const _cargar = useCallback(async () => {
     yaListo.current = false;
@@ -111,9 +114,12 @@ export function useInicioController({
   }, [_cargar]);
 
   useEffect(() => {
-    const reloj = setInterval(() => setAhoraMs(ahora()), INTERVALO_RELOJ_MS);
-    return () => clearInterval(reloj);
-  }, [ahora]);
+    const intervalo = setInterval(
+      () => setAhoraMs(reloj.current()),
+      INTERVALO_RELOJ_MS,
+    );
+    return () => clearInterval(intervalo);
+  }, []);
 
   const estado = useMemo<EstadoInicio>(
     () =>
