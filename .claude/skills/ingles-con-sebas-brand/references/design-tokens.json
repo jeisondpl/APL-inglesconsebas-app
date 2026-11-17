@@ -224,6 +224,12 @@
         "$value": "#86EF86",
         "$type": "color",
         "origen": "oficial"
+      },
+      "velo": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial",
+        "nota": "derivado: velo de hoja inferior, al 60 %"
       }
     },
     "claro": {
@@ -388,6 +394,12 @@
         "$value": "#86EF86",
         "$type": "color",
         "origen": "oficial"
+      },
+      "velo": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial",
+        "nota": "derivado: velo de hoja inferior, al 60 %"
       }
     }
   },
