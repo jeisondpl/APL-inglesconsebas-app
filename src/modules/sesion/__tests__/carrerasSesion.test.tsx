@@ -207,10 +207,8 @@ describe('carreras del arranque (B1)', () => {
     expect(base.datos.has('sesion')).toBe(false);
   });
 
-  // FALLO DE LA VUELTA 1 (ver pruebas.md): durante el borrado del cierre la sesión sigue
-  // `autenticado` con el mismo token, así que `sigueVigente()` es true y `me` vuelve a guardar.
-  // `it.failing` mantiene la puerta en verde mientras el fallo exista; al corregirlo, este caso
-  // fallará y hay que cambiarlo a `it`.
+  // V1-F1 (vuelta 1, ver pruebas.md): este caso fallaba porque durante el borrado del cierre la
+  // sesión seguía vigente. Corregido en la vuelta 2 con `iniciarCierre` antes de cualquier await.
   it('(a) me llega mientras el Keychain borra (el borrado se aplica al empezar, como la llamada nativa): el almacén queda vacío', async () => {
     // Como react-native-keychain: resetGenericPassword se encola en el hilo nativo y se aplica
     // antes que un setGenericPassword pedido después, pero la promesa de JS resuelve más tarde.
@@ -336,6 +334,15 @@ describe('carreras del arranque (B1)', () => {
   });
 });
 
+/** Respuestas pendientes de todos los contenedores: se contestan al final de cada test. */
+const sinContestar: Array<(status: number, cuerpo: unknown) => void> = [];
+afterEach(async () => {
+  // Sin esto, el temporizador de 15 s del cliente HTTP deja Jest abierto.
+  await act(async () => {
+    sinContestar.splice(0).forEach(responder => responder(500, {}));
+  });
+});
+
 /** Contenedor con el cliente HTTP real y fetch diferido por petición, para el 401 tardío. */
 function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
   const almacen = crearAlmacenEnMemoria(almacenInicial);
@@ -349,15 +356,17 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
     (url: string, init: RequestInit) =>
       new Promise<Response>(resolver => {
         const cabeceras = init.headers as Record<string, string>;
+        const responder = (status: number, cuerpo: unknown) =>
+          resolver({
+            ok: status >= 200 && status < 300,
+            status,
+            text: () => Promise.resolve(JSON.stringify(cuerpo)),
+          } as unknown as Response);
+        sinContestar.push(responder);
         pendientes.push({
           url,
           token: cabeceras.Authorization?.replace('Bearer ', ''),
-          responder: (status, cuerpo) =>
-            resolver({
-              ok: status >= 200 && status < 300,
-              status,
-              text: () => Promise.resolve(JSON.stringify(cuerpo)),
-            } as unknown as Response),
+          responder,
         });
       }),
   );
@@ -469,5 +478,123 @@ describe('401 tardío con token viejo (CA9)', () => {
     await invalidarSesionUseCase(almacen, activa, 'token-meli');
     expect(activa.obtener()).toEqual({ tipo: 'sinSesion', motivo: 'vencida' });
     expect(almacen.datos.has('sesion')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Tester (F1-03, vuelta 2): el cierre con la marca «cerrando» y el cliente HTTP real.
+
+/** Arranca con la sesión de ana y lanza el cierre; el logout queda pendiente. */
+async function cerrarConLogoutPendiente() {
+  const ctx = contenedorConFetchDiferido({
+    sesion: serializarSesion(sesionDe('ana')),
+  });
+  const r = await arrancar(ctx.dependencias);
+  let cierre: Promise<void> = Promise.resolve();
+  await act(async () => {
+    cierre = r.result.current.sesion._cerrarSesion();
+  });
+  const pendiente = (accion: string) =>
+    ctx.pendientes.find(p => p.url.includes(`action=${accion}`));
+  return { ...ctx, ...r, cierre: () => cierre, pendiente };
+}
+
+describe('cierre de sesión con el cliente HTTP real (vuelta 2)', () => {
+  it('el logout sale con el Bearer de la sesión aunque ya no sea vigente', async () => {
+    const { pendiente, dependencias, cierre } =
+      await cerrarConLogoutPendiente();
+    const logout = pendiente('logout');
+    expect(logout?.token).toBe('token-ana');
+    expect(dependencias.sesionActiva.esVigente('token-ana')).toBe(false);
+    await act(async () => {
+      logout?.responder(200, { ok: true });
+      await cierre();
+    });
+  });
+
+  it('me 200 durante el logout: no se guarda ni se publica, y al terminar el almacén queda vacío', async () => {
+    const { pendiente, dependencias, almacen, result, cierre } =
+      await cerrarConLogoutPendiente();
+    await act(async () =>
+      pendiente('me')?.responder(200, {
+        role: 'student',
+        expiresAt: new Date(Date.now() + 30 * DIA).toISOString(),
+        student: { id: 's1', name: 'Ana (tardía)', username: 'ana' },
+      }),
+    );
+    // Mientras sigue el logout, la sesión publicada no cambia y no se volvió a guardar.
+    expect(result.current.sesion.usuario?.nombre).toBe('Ana Torres');
+    await act(async () => {
+      pendiente('logout')?.responder(200, { ok: true });
+      await cierre();
+    });
+    expect(dependencias.sesionActiva.obtener()).toEqual({
+      tipo: 'sinSesion',
+      motivo: 'cerrada',
+    });
+    expect(almacen.datos.has('sesion')).toBe(false);
+  });
+
+  it('el logout con 401 (sesión ya revocada) termina como cerrada, sin aviso de vencida, y borra', async () => {
+    const { pendiente, dependencias, almacen, cierre } =
+      await cerrarConLogoutPendiente();
+    await act(async () => {
+      pendiente('logout')?.responder(401, { error: 'Sesión revocada' });
+      await cierre();
+    });
+    expect(dependencias.sesionActiva.obtener()).toEqual({
+      tipo: 'sinSesion',
+      motivo: 'cerrada',
+    });
+    expect(almacen.datos.has('sesion')).toBe(false);
+  });
+
+  it('me 401 durante el cierre (token activo) tampoco deja el aviso de vencida al terminar', async () => {
+    const { pendiente, dependencias, almacen, cierre } =
+      await cerrarConLogoutPendiente();
+    await act(async () =>
+      pendiente('me')?.responder(401, { error: 'Sesión revocada' }),
+    );
+    await act(async () => {
+      pendiente('logout')?.responder(200, { ok: true });
+      await cierre();
+    });
+    expect(dependencias.sesionActiva.obtener()).toEqual({
+      tipo: 'sinSesion',
+      motivo: 'cerrada',
+    });
+    expect(almacen.datos.has('sesion')).toBe(false);
+  });
+
+  it('tras cerrar, un login nuevo es vigente y su me posterior sí se guarda (la marca no se queda pegada)', async () => {
+    const { pendiente, dependencias, almacen, result, cierre, pendientes } =
+      await cerrarConLogoutPendiente();
+    await act(async () => {
+      pendiente('logout')?.responder(200, { ok: true });
+      await cierre();
+    });
+    let login: Promise<unknown> = Promise.resolve();
+    await act(async () => {
+      login = result.current.sesion._iniciarSesion({
+        usuario: 'meli',
+        pin: '1111',
+      });
+    });
+    await act(async () => {
+      pendientes
+        .find(p => p.url.endsWith('/auth.php'))
+        ?.responder(200, {
+          role: 'teacher',
+          teacher: { id: 't1', name: 'Meli', username: 'meli' },
+          token: 'token-meli',
+          expiresAt: new Date(Date.now() + 30 * DIA).toISOString(),
+          renewAfter: null,
+        });
+      await login;
+    });
+    expect(dependencias.sesionActiva.esVigente('token-meli')).toBe(true);
+    expect(JSON.parse(almacen.datos.get('sesion') ?? '{}').token).toBe(
+      'token-meli',
+    );
   });
 });
