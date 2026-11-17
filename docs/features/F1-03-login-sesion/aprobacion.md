@@ -1,3 +1,109 @@
+**APROBADO**
+
+# aprobacion.md · F1-03 · Login, sesión y navegación (vuelta 2)
+
+> Aprobador, 2026-11-17, rama `feat/F1-03-login-sesion`. Revisé el `git diff main...HEAD` completo (30 commits) y, con más detalle, las correcciones posteriores al veredicto anterior (`07a8712..HEAD`): 22 archivos, +1115 / −36. Volví a correr `npm run calidad` y salió con **exit 0**:
+> - `tsc`, ESLint (con boundaries) y Prettier limpios.
+> - Jest: 29 suites y 566 tests en verde.
+> - Cobertura global: 99,05 % en statements y 96,41 % en branches.
+> - `sesion/domain` y todas las carpetas de `sesion/aplications` al 100 %; `controllers` al 98,91 %.
+> - No hay ningún `it.failing`, `it.skip`, `it.only` ni `xit` en `src`.
+
+El bloqueante B1 está resuelto en el código y tiene tests que lo distinguen del comportamiento anterior. También quedó cerrado el resto de B1 que encontró el tester (V1-F1). Las mejoras M1, M2, M3, M5 y M6 están hechas. Sigue pendiente M4, la verificación en el dispositivo, y anoto dos mejoras nuevas que no bloquean.
+
+## 1. Checklist
+
+| # | Punto | | Evidencia |
+|---|---|---|---|
+| 1 | Capas | ✔ | `SesionActiva` (el puerto, en domain) gana `iniciarCierre` y `esVigente`, sin importar de otras capas. Los casos de uso reciben `sigueVigente` por parámetro, sin depender de React. Boundaries pasa. |
+| 2 | Convenciones | ✔ | Nombres en español, imports con `@/`, métodos del controller con `_` y sin `any`. Commits Conventional en español, uno por hallazgo (B1, M1, M2+M3, M5, M6, V1-F1). |
+| 3 | Criterios | ✔ | CA1–CA17 siguen implementados y con test. Las correcciones no amplían el alcance: solo cierran las carreras de B1 y aplican las mejoras de la vuelta 1. |
+| 4 | Seguridad | ✔ | Un `me` o `renew` tardío ya no vuelve a escribir una sesión cerrada ni pisa la de otro usuario (B1 resuelto). Un 401 solo invalida la sesión con la que salió la petición. El token solo va por `SecureStoragePort`, el PIN no se guarda y no hay `console.*`. |
+| 5 | Errores | ✔ | Un resultado descartado devuelve `respuestaError(mensajesSesion.sesionCambio)`, con el texto centralizado en `sesion.mensajes.ts:9`. Los adaptadores siguen sin lanzar. |
+| 6 | Accesibilidad e i18n | ✔ | Sin cambios en roles ni etiquetas. `PasoUsuario` y `PasoPin` ya usan `tema.espaciado`: `l` = 16 y `xxl` = 24, los mismos valores que antes. |
+| 7 | Tests | ✔ | `carrerasSesion.test.tsx` tiene 17 casos con los controllers reales y el cliente HTTP real con fetch diferido. Hay unitarios de `iniciarCierre` y `esVigente` en `casosDeUso.test.ts:312-330`. El tester hizo una prueba de mutación: anulando `iniciarCierre` fallan 3 casos. El tester solo tocó tests y `pruebas.md` (`4e9871e`, `0e2ff9f`, `40c776e`, `e735d45`, `abeb0e8`, `24aadc6`). |
+| 8 | Nativo | ✔ | Se quitó la línea en blanco de `android/app/build.gradle`. No hay dependencias ni permisos nuevos. |
+| 9 | API | ✔ | No cambia el contrato con `auth.php`. `alNoAutorizado` recibe el `bearer` con el que salió la petición (`src/shared/lib/api.ts:148`). |
+
+## 2. Criterios
+
+| CA | Implementación | Test |
+|---|---|---|
+| CA1 | `infrastructure/apiSesionRepository.ts:89-118`, `app/navigation/rutaInicioPorRol.ts` | `apiSesionRepository.test.ts`, `NavegadorRaiz.test.tsx`, `carrerasSesion.test.tsx:569` |
+| CA2 | `Login.controller.ts:88-97`, `PasoUsuario.tsx`, `LoginScreen.tsx:73` (`usuarioNormalizado`) | `LoginScreen.test.tsx` («  ANA » → «PIN para ana») |
+| CA3 | `Login.controller.ts:108-136` (PIN en `ref`), `TecladoPin.tsx`, `LoginScreen.tsx:36-50` | `Login.controller.test.tsx` (2 y 4 toques en el mismo ciclo), `LoginScreen.test.tsx` |
+| CA4 | `Login.controller.ts:61-81`, `PasoPin.tsx` | `Login.controller.test.tsx`, `LoginScreen.test.tsx` |
+| CA5 | `apiSesionRepository.ts:101-108` | `apiSesionRepository.test.ts` |
+| CA6 | `sesion.validations.ts:64-82`, `iniciarSesion.ts:39-43`, `KeychainSecureStorageAdapter.ts` | `casosDeUso.test.ts`, `sesion.seguridad.test.ts`, `KeychainSecureStorageAdapter.test.ts` |
+| CA7 | `arrancarSesion.ts:37-61`, `validarSesion.ts:41-44` | `carrerasSesion.test.tsx:322` (`me` tardío pero vigente), `NavegadorRaiz.test.tsx`, `casosDeUso.test.ts` |
+| CA8 | `restaurarSesion.ts`, `sesion.validations.ts:49-52, 91-117` | `casosDeUso.test.ts`, `NavegadorRaiz.test.tsx` |
+| CA9 | `invalidarSesion.ts:12-25`, `contenedor.ts:48-50`, `api.ts:148` | `carrerasSesion.test.tsx:396-500`, `DependenciasProvider.test.tsx`, `api.test.ts` |
+| CA10 | `renovarSesion.ts:24-58` | `casosDeUso.test.ts` (concurrencia), `carrerasSesion.test.tsx:137, 283` |
+| CA11 | `cerrarSesion.ts`, `Sesion.controller.ts:57-64` (`iniciarCierre` antes del primer `await`) | `carrerasSesion.test.tsx:114-250, 502-568`, `NavegadorRaiz.test.tsx` |
+| CA12 | `NavegadorRaiz.tsx:36-77`, `presentation/navigation.tsx` | `NavegadorRaiz.test.tsx`, `rutaInicioPorRol.test.ts` |
+| CA13 | `LoginScreen.tsx`, `TecladoPin.tsx`, `temas.ts` | `LoginScreen.test.tsx` (los dos temas) |
+| CA14 | `Login.controller.ts:138-143`, `LinkingEnlacesAdapter.ts` | `Login.controller.test.tsx`, `LinkingEnlacesAdapter.test.ts` |
+| CA15 | `TecladoPin.tsx`, `PuntosPin.tsx`, `BotonTema.tsx`, `PasoPin.tsx` | `LoginScreen.test.tsx` |
+| CA16 | `InicioProvisionalScreen.tsx` | `InicioProvisionalScreen.test.tsx` |
+| CA17 | — | `npm run calidad` en verde (lo comprobé). El APK de debug compiló según `pruebas.md`. |
+
+## 3. Estado de los hallazgos de la vuelta 1
+
+| Hallazgo | Estado | Evidencia |
+|---|---|---|
+| **B1** (bloqueante) | ✔ resuelto | Ver el detalle debajo de esta tabla. |
+| M1 · un 401 tardío invalida la sesión nueva | ✔ resuelto | `api.ts:148` pasa el `bearer` a `alNoAutorizado`. `invalidarSesion.ts:20-22` lo ignora si no coincide con `token()`; si es `null` tampoco actúa, así que el 401 del login no toca la sesión. Tests en `carrerasSesion.test.tsx:397, 450, 467`. |
+| M2 · título del paso PIN | ✔ resuelto | `Login.controller.ts:148` expone `usuarioNormalizado`, y `LoginScreen.tsx:73` lo usa. |
+| M3 · un toque rápido pierde un dígito | ✔ resuelto | `Login.controller.ts:55-59` guarda el PIN en una `ref`. `_pulsarDigito`, `_borrar` y `_confirmar` calculan sobre `pinActual.current` (líneas 113-134). |
+| M4 · verificación manual en el moto g77 | ✘ pendiente | Sigue anotada abajo como mejora. |
+| M5 · línea en blanco en `build.gradle` | ✔ resuelto | `6c06bb5`. |
+| M6 · medidas fijas | ✔ resuelto | `PasoUsuario.tsx:11` y `PasoPin.tsx:29` usan `tema.espaciado`. |
+
+**Detalle de B1:**
+- **La guarda.** `arrancarSesion.ts:39` define `sigueVigente = () => sesionActiva.esVigente(guardada.token)`. Se comprueba justo antes de cada `guardar` (`validarSesion.ts:41`, `renovarSesion.ts:39`) y antes del `establecer` final (`arrancarSesion.ts:59`).
+- **La marca de cierre (V1-F1).** `esVigente` (`sesionActiva.ts:22-25`) exige token igual y además que no haya un cierre en curso. `Sesion.controller.ts:60` llama a `iniciarCierre()` antes del primer `await`, y `token()` sigue dando el Bearer del logout.
+- **Los dos tests que pedía la vuelta 1:**
+  - logout durante `me`: el almacén queda vacío (`carrerasSesion.test.tsx:114`, más las variantes 137, 172 y 212 con el borrado del Keychain cruzado);
+  - login de otro usuario durante `me` o `renew`: no cambia ni el almacén ni el estado (líneas 250 y 283).
+
+## 4. Hallazgos nuevos
+
+### M7 · mejora · un 401 durante el cierre pasa un momento por «vencida» y abre una ventana de unos 3 s
+
+**Dónde:** `src/modules/sesion/aplications/invalidarSesion/invalidarSesion.ts:17-23`, junto con `Sesion.controller.ts:60-63`.
+
+**Problema.** `invalidarSesionUseCase` no mira la marca `cerrando`. Si durante el logout (hasta 3 s) llega un 401 con el token activo, sea del propio logout o de un `me`, ocurre esto:
+1. El estado pasa a `sinSesion/vencida`. El navegador cambia al login con el aviso «Tu sesión venció».
+2. Cuando termina el cierre, el estado pasa a `cerrada`.
+
+El test `carrerasSesion.test.tsx:552` solo comprueba el estado final. Durante esa ventana se ve un aviso que no corresponde. Además, si alguien llegara a entrar con otro usuario antes de que acabe el cierre, el `borrar` y el `establecer(cerrada)` del cierre anterior le cerrarían la sesión nueva. Es un fallo seguro (expulsa, no da acceso) y poco probable, por eso no bloquea.
+
+**Corrección.** Que `invalidarSesionUseCase` no haga nada mientras haya un cierre en curso, usando `esVigente(tokenPeticion)` en lugar de comparar con `token()`. Y que `_cerrarSesion` solo haga el `establecer(cerrada)` si nadie autenticó otra sesión mientras tanto.
+
+### M8 · mejora · el renovador compartido usa la guarda del primer llamante
+
+**Dónde:** `src/modules/sesion/aplications/renovarSesion/renovarSesion.ts:52-58`.
+
+**Problema.** Con una renovación ya en vuelo, una segunda llamada recibe esa misma promesa y su `sigueVigente` se descarta. Hoy el único llamante es `arrancarSesionUseCase`, así que no hay fallo. Pero el plan deja para F1-03b la validación al volver a primer plano, que reutilizará este renovador.
+
+**Corrección.** Cuando se añada un segundo llamante, que cada uno vuelva a comprobar su propia guarda al recibir el resultado. O documentar en el JSDoc que la guarda es la del primero.
+
+### M4 · mejora (sigue de la vuelta 1) · la verificación manual en el moto g77 está pendiente
+
+**Dónde:** `docs/features/F1-03-login-sesion/pruebas.md`, §5. La vuelta 1 y la vuelta 2 dicen las dos que el teléfono estaba desconectado.
+
+**Problema.** El plan pide capturas y pruebas de CA1, CA4, CA7–CA9 y CA11–CA14 en el dispositivo. No bloquea, porque cada CA tiene un test automático en verde.
+
+**Corrección.** Hacer los 10 pasos de §5 antes de la demo del hito H-S2 (2026-11-20) y guardar las capturas en `capturas/`.
+
+---
+
+**Veredicto:** ningún bloqueante abierto. La feature queda **APROBADA** para el merge. Las mejoras M4, M7 y M8 hay que anotarlas en la tarjeta: M4 antes de la demo de H-S2, M7 y M8 para F1-03b.
+
+---
+
+## Historial · vuelta 1
+
 **RECHAZADO**
 
 # aprobacion.md · F1-03 · Login, sesión y navegación
