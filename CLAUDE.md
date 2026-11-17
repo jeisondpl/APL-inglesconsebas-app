@@ -49,7 +49,7 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
   - `di/`: `crearDependencias()` es el único sitio donde se instancian el cliente HTTP, los repositorios y los adaptadores. Un módulo nuevo añade su puerto a `IRepositorios`; un SDK nuevo, el suyo a `INativos`. Se consumen con `useRepository` y `useNative`. En los tests, `DependenciasProvider valor={…}` (o `Providers dependencias={…}`) sustituye el contenedor;
   - `providers/`: SafeArea, `TemaProvider`, dependencias y `LimiteDeErrores`, con `HostNotificaciones` como hermano dentro del tema;
   - `navigation/`: native-stack con `temaNavegacion(tema)` desde los tokens y `RaizParamList` tipado globalmente; `onReady` oculta el splash;
-  - `inicio/InicioProvisionalScreen.tsx`: inicio **provisional** de los tres roles (saludo, rol, versión, entorno y «Cerrar sesión»). Lo sustituye el inicio real (1.17).
+  - `inicio/InicioProvisionalScreen.tsx`: inicio **provisional** de profe y admin (saludo, rol, versión, entorno y «Cerrar sesión»). El estudiante ya tiene el suyo (F1-05).
 - **`src/shared/lib/`**: `HttpResponse`, `api.ts` (`crearClienteApi`, nunca lanza), `entorno.ts` (`leerEntorno` puro + `entorno`), `notify.ts` (única puerta a los toasts), `utils.ts` y `textos.ts`.
 - **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context`, `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`) y `react-native-bootsplash` (`hide` resuelve). `react-native-svg` se renderiza sin mock. Lo que use `useTema` se monta dentro de `TemaProvider` (o de `Providers`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
 - **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context` (y los de F1-01b), y versionar `Podfile.lock`.
@@ -94,6 +94,31 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - **Estado en memoria**: `banderaOnboarding` (`IDependencias.banderaOnboarding`, hook `useBanderaOnboarding`): `cargando` → `pendiente` o `visto`. Terminar u omitir la pone en `visto` antes de guardar; si guardar falla se avanza igual y en el siguiente arranque vuelve a salir.
 - **Arranque**: `NavegadorRaiz` lee la sesión y la bandera en paralelo (`useArranqueSesion` y `useArranqueOnboarding`) y devuelve `null` hasta tener las dos, así que el splash sigue. `rutaInicialRaiz` elige: inicio del rol si hay sesión; `Onboarding` si la bandera está pendiente; si no, `rutaInicialAuth()`. Con sesión y sin bandera, la bandera se marca para que cerrar sesión lleve al login. Al terminar la bienvenida su grupo desaparece y queda `Login` como única ruta (sin regreso).
 - **Tests**: `crearDependenciasDePrueba()` arranca la bandera en `visto` (los tests de F1-03 siguen yendo al login). Para ejercer la lectura real, pasa `onboardingInicial: { tipo: 'cargando' }`. Un contenedor armado a mano debe incluir `banderaOnboarding`.
+
+## Inicio del estudiante y pestañas (F1-05)
+
+- **Pestañas**: con sesión de estudiante, la ruta `InicioEstudiante` monta `PestanasEstudiante`
+  (`src/app/navigation`): patrón `MainTabs` de Livic (estado de la pestaña activa + contexto
+  `usePestanas().irAPestana`), sin `@react-navigation/bottom-tabs`. Profe y admin siguen en
+  `InicioProvisionalScreen` (mismo nombre de ruta). Clases, Mensajes y Tareas son
+  `PantallaProximamente` (`src/app/pestanas`).
+- **`BarraPestanas`**: copia fiel de `LivicTabBar` con tokens (barra `superficie` + `borde`, círculo
+  `marca` + ícono `sobreMarca`, inactivos `textoSecundario`). Se oculta con el teclado y con el
+  scroll: las pantallas usan `useOcultarBarraAlDesplazar()` en un `Animated.ScrollView` y reservan
+  `ESPACIO_BARRA_PESTANAS` abajo (`src/shared/movimiento/barraPestanas.tsx`, proveedor
+  `ProveedorBarraPestanas`). Íconos de trazo 1.75 en `src/shared/iconos`.
+- **Módulo `src/modules/inicio`**: lecturas que el estudiante puede hacer con su token (tabla
+  sección → endpoint en `docs/features/F1-05-inicio-estudiante/plan.md`): `auth.php?action=me`,
+  `class_sessions`, `schedule`, `tasks` y `chispa` (`get_unread`, `get_thread`). Cada sección es
+  independiente: si una falla, solo esa muestra «Reintentar». Lo que no hay se dice («Aún no…»).
+- **`inicio.reglas.ts`** es un espejo de `PLAN_RULES` de la web (mínimo por plan y nombre): otra
+  constante duplicada a mano. Antelación de cancelación: 24 h en Flex, 12 h en el resto.
+- La pantalla del módulo no importa `sesion`: `PestanasEstudiante` le pasa el usuario,
+  `alCerrarSesion` y `alVerSistemaDiseno` (solo `__DEV__`). Se abren desde la hoja del avatar.
+- **Token `velo`** (negro, con `OPACIDAD_VELO` 0.6) para hojas inferiores.
+- **Tests**: `crearDependenciasDePrueba()` registra `crearMemoriaInicioRepository()` (vacío); pasa
+  `inicio` para dar datos. Un contenedor armado a mano debe incluir `repositorios.inicio`. Al
+  serializar el árbol con `JSON.stringify`, omite la prop `refreshControl` (es circular).
 
 ## Contexto
 
