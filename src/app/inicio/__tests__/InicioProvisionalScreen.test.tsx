@@ -2,10 +2,14 @@
 // entorno leído de react-native-config. Este archivo usa una configuración de producción distinta
 // de la del mock global (dev, localhost) para comprobar que la pantalla la lee de verdad.
 // F1-01b: el constructor añade TemaProvider al montaje (la pantalla usa el sistema de diseño).
+// F1-03 (constructor): la pantalla lee la sesión; el montaje añade el contenedor de prueba con una
+// sesión activa de «ana».
 import { NavigationContainer } from '@react-navigation/native';
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DependenciasProvider } from '@/app/di';
+import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
 import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
 import { TemaProvider } from '@/shared/theme';
 
@@ -19,13 +23,33 @@ jest.mock('react-native-config', () => {
   return { __esModule: true, default: config, Config: config };
 });
 
+const conAna = () =>
+  crearDependenciasDePrueba({
+    estadoInicial: {
+      tipo: 'autenticado',
+      sesion: {
+        token: 't',
+        expiraEn: '2099-01-01T00:00:00Z',
+        renovarDesde: null,
+        usuario: {
+          id: 's1',
+          nombre: 'Ana Torres',
+          usuario: 'ana',
+          rol: 'estudiante',
+        },
+      },
+    },
+  });
+
 const montar = () =>
   render(
     <SafeAreaProvider>
       <TemaProvider>
-        <NavigationContainer>
-          <InicioProvisionalScreen />
-        </NavigationContainer>
+        <DependenciasProvider valor={conAna()}>
+          <NavigationContainer>
+            <InicioProvisionalScreen />
+          </NavigationContainer>
+        </DependenciasProvider>
       </TemaProvider>
     </SafeAreaProvider>,
   );
@@ -53,6 +77,15 @@ describe('InicioProvisionalScreen (CA17)', () => {
     await montar();
     expect(
       screen.getByText('Servidor: app.inglesconsebas.com'),
+    ).toBeOnTheScreen();
+  });
+
+  it('saluda por el nombre y muestra el rol (F1-03)', async () => {
+    await montar();
+    expect(screen.getByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(screen.getByText('Rol: Estudiante')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: 'Cerrar sesión' }),
     ).toBeOnTheScreen();
   });
 });
