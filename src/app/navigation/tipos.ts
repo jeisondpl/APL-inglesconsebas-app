@@ -1,3 +1,4 @@
+import type { OnboardingParamList } from '@/modules/onboarding/presentation/navigation';
 import type { AuthParamList } from '@/modules/sesion/presentation/navigation';
 
 /** Rutas del flujo App (con sesión): un inicio por rol y el escaparate de desarrollo. */
@@ -9,8 +10,8 @@ export type AppParamList = {
   SistemaDiseno: undefined;
 };
 
-/** Rutas del navegador raíz: flujo Auth (sin sesión) y flujo App (con sesión). */
-export type RaizParamList = AuthParamList & AppParamList;
+/** Rutas del navegador raíz: Auth (sin sesión), la bienvenida (EXT-01) y App (con sesión). */
+export type RaizParamList = AuthParamList & OnboardingParamList & AppParamList;
 
 declare global {
   // Tipado global de useNavigation y useRoute (React Navigation).
