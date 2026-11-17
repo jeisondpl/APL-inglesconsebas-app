@@ -64,3 +64,14 @@ export function useNative<K extends keyof INativos>(clave: K): INativos[K] {
   }
   return nativos[clave];
 }
+
+/** Estado de la sesión en memoria del contenedor (lo comparte con el cliente HTTP). */
+export function useSesionActiva(): IDependencias['sesionActiva'] {
+  const { sesionActiva } = useDependencias('useSesionActiva');
+  if (!sesionActiva) {
+    throw new Error(
+      'useSesionActiva: el contenedor no tiene `sesionActiva` (src/app/di/contenedor.ts).',
+    );
+  }
+  return sesionActiva;
+}
