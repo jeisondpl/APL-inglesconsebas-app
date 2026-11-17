@@ -246,7 +246,7 @@ describe('NavegadorRaiz · CA11: el splash espera a las dos lecturas', () => {
     expect(screen.toJSON()).toBeNull();
     expect(splash.ocultar).not.toHaveBeenCalled();
     await resolver(CLAVE);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     expect(splash.ocultar).toHaveBeenCalledTimes(1);
     expect(mockRendersBienvenida.n).toBe(0);
   });
@@ -290,7 +290,7 @@ describe('NavegadorRaiz · CA3 y CA4: con sesión guardada', () => {
     const guardar = jest.spyOn(almacen, 'guardar');
     const { dependencias } = contenedor(almacen);
     await montar(dependencias);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     expect(guardadosDeBandera(guardar)).toBe(0);
     expect(mockRendersBienvenida.n).toBe(0);
   });
@@ -300,7 +300,7 @@ describe('NavegadorRaiz · CA3 y CA4: con sesión guardada', () => {
     const guardar = jest.spyOn(almacen, 'guardar');
     const { dependencias } = contenedor(almacen);
     await montar(dependencias);
-    await screen.findByText('Hola, Ana Torres');
+    await screen.findByText('Hola, Ana');
     await act(async () => {});
     expect(guardadosDeBandera(guardar)).toBe(1);
   });

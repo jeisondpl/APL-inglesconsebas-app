@@ -97,7 +97,7 @@ const montarCon = (
 async function montarConSesion(preferencia?: PreferenciaTema) {
   const contexto = contenedorConSplash(almacenConAna());
   const resultado = await montarCon(contexto.dependencias, preferencia);
-  await screen.findByText('Hola, Ana Torres');
+  await screen.findByText('Hola, Ana');
   return { ...contexto, ...resultado };
 }
 
@@ -149,9 +149,9 @@ describe('NavegadorRaiz (CA18)', () => {
     async (esquema, tema) => {
       useColorScheme.mockReturnValue(esquema);
       await montarConSesion();
-      expect(
-        screen.getByRole('header', { name: 'Hola, Ana Torres' }),
-      ).toHaveStyle({ color: tema.colores.texto });
+      expect(screen.getByRole('header', { name: 'Hola, Ana' })).toHaveStyle({
+        color: tema.colores.texto,
+      });
       expect(screen.getByTestId('inicio-estudiante')).toHaveStyle({
         backgroundColor: tema.colores.fondo,
       });
@@ -319,7 +319,7 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
 
   it.each([
     // F1-05: el estudiante entra a sus pestañas, sin el rol del inicio provisional.
-    ['ana', '1234', 'Hola, Ana Torres', null],
+    ['ana', '1234', 'Hola, Ana', null],
     ['meli', '1111', 'Hola, Meli', 'Rol: Profe'],
     ['yggodguz', '2905', 'Hola, Admin', 'Rol: Admin'],
   ])('el login de %s lleva a su inicio', async (usuario, pin, saludo, rol) => {
@@ -390,7 +390,7 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
     });
     token = () => dependencias.sesionActiva.token();
     await montarCon(dependencias);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     expect(screen.queryByText('Inicia sesión')).toBeNull();
     expect(screen.queryByLabelText('Usuario')).toBeNull();
     await waitFor(() =>
@@ -410,7 +410,7 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
             {
               usuario: {
                 id: 's0000000000000a1',
-                nombre: 'Ana María Torres',
+                nombre: 'Anita Torres',
                 usuario: 'ana',
                 rol: 'estudiante' as const,
               },
@@ -426,11 +426,11 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
       almacenInicial: { sesion: sesionGuardada() },
     });
     await montarCon(dependencias);
-    expect(await screen.findByText('Hola, Ana María Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Anita')).toBeOnTheScreen();
     const guardada = JSON.parse(
       (await dependencias.nativos.almacenSeguro.leer('sesion')) ?? '{}',
     );
-    expect(guardada.usuario.nombre).toBe('Ana María Torres');
+    expect(guardada.usuario.nombre).toBe('Anita Torres');
     expect(guardada.expiraEn).toBe(nuevaExpira);
     expect(guardada).not.toHaveProperty('pin');
   });
@@ -449,7 +449,7 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
       almacenInicial: { sesion: texto },
     });
     await montarCon(dependencias);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     await expect(
       dependencias.nativos.almacenSeguro.leer('sesion'),
     ).resolves.toBe(texto);
@@ -494,7 +494,7 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
     });
     token = () => dependencias.sesionActiva.token();
     await montarCon(dependencias);
-    await screen.findByText('Hola, Ana Torres');
+    await screen.findByText('Hola, Ana');
     await waitFor(() =>
       expect(dependencias.sesionActiva.token()).not.toBe(tokenMemoria('ana')),
     );
@@ -513,7 +513,7 @@ describe('NavegadorRaiz: arranque con sesión guardada (tester F1-03)', () => {
     await montarCon(dependencias);
     await screen.findByText('Inicia sesión');
     await iniciarSesion('ana', '1234');
-    await screen.findByText('Hola, Ana Torres');
+    await screen.findByText('Hola, Ana');
     expect(screen.queryByText('Inicia sesión')).toBeNull();
     expect(screen.queryByLabelText('Dígito 1')).toBeNull();
     expect(JSON.stringify(screen.toJSON(), sinRefreshControl)).not.toMatch(
@@ -653,7 +653,7 @@ describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
     await montarCon(dependencias);
     await screen.findByText('Inicia sesión');
     await iniciarSesion('  ANA ', '1234');
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     const cuerpoLogin = JSON.parse(String(fetchImpl.mock.calls[0][1].body));
     expect(cuerpoLogin).toEqual({
       username: 'ana',
@@ -686,7 +686,7 @@ describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
     await montarCon(dependencias);
     await screen.findByText('Inicia sesión');
     await iniciarSesion('ana', '1234');
-    await screen.findByText('Hola, Ana Torres');
+    await screen.findByText('Hola, Ana');
     conRed = false;
     await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();

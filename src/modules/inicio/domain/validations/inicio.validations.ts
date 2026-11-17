@@ -297,6 +297,11 @@ export function ultimoMensaje(
 }
 
 /** Inicial del nombre para el avatar (mayúscula), o «?» si no hay nombre. */
+/** Primer nombre para el saludo («Ana Torres» → «Ana»); vacío si no hay nombre. */
+export function nombreDePila(nombre: string | null | undefined): string {
+  return (nombre ?? '').trim().split(/\s+/)[0] ?? '';
+}
+
 export function inicialDe(nombre: string | null | undefined): string {
   const limpio = (nombre ?? '').trim();
   return limpio ? limpio.charAt(0).toLocaleUpperCase('es') : '?';

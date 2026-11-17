@@ -112,7 +112,7 @@ describe('NavegadorRaiz: bienvenida (EXT-01)', () => {
     const almacen = crearAlmacenEnMemoria({ sesion: sesionDeAna() });
     const { dependencias } = contenedor(almacen);
     await montar(dependencias);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     expect(textoDelArbol()).not.toContain(TITULO_O1);
     await waitFor(() =>
       expect(almacen.datos.get('hasSeenOnboarding')).toBe('1'),

@@ -15,6 +15,7 @@ import {
   horasDeAviso,
   hoyBogota,
   inicialDe,
+  nombreDePila,
   instanteBogota,
   nombrePlan,
   partesFecha,
@@ -408,6 +409,9 @@ describe('ultimoMensaje (CA12) e inicialDe', () => {
     expect(inicialDe(' ana Torres')).toBe('A');
     expect(inicialDe('élida')).toBe('É');
     expect(inicialDe('')).toBe('?');
+    expect(nombreDePila('  Ana Torres ')).toBe('Ana');
+    expect(nombreDePila('María José Pérez')).toBe('María');
+    expect(nombreDePila(null)).toBe('');
     expect(inicialDe(null)).toBe('?');
   });
 });

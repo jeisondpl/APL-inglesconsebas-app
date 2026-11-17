@@ -4,7 +4,10 @@ import { LogoMarca } from '@/shared/components/LogoMarca';
 import { Texto } from '@/shared/components/Texto';
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
-import { inicialDe } from '../../domain/validations/inicio.validations';
+import {
+  inicialDe,
+  nombreDePila,
+} from '../../domain/validations/inicio.validations';
 import { textosInicio as textos } from '../inicio.textos';
 
 export interface IPropsCabeceraInicio {
@@ -61,7 +64,7 @@ export function CabeceraInicio({
       />
       <View style={estilos.textos}>
         <Texto variante="titulo" accessibilityRole="header" numberOfLines={1}>
-          {textos.saludo(nombre)}
+          {textos.saludo(nombreDePila(nombre))}
         </Texto>
         {subtitulo ? (
           <Texto variante="detalle" color="textoSecundario" numberOfLines={1}>

@@ -281,7 +281,7 @@ describe('PestanasEstudiante', () => {
 
   it('arranca en Inicio y la insignia toma los no leídos del inicio (CA1, CA6)', async () => {
     await montar(2);
-    expect(await screen.findByText('Hola, Ana Torres')).toBeOnTheScreen();
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Inicio' })).toBeSelected();
     expect(
       await screen.findByRole('tab', { name: 'Mensajes, 2 mensajes sin leer' }),
@@ -295,13 +295,13 @@ describe('PestanasEstudiante', () => {
     'pulsar %s muestra su pantalla «Próximamente» (CA2, CA16)',
     async (pestana, testID, titulo) => {
       await montar();
-      await screen.findByText('Hola, Ana Torres');
+      await screen.findByText('Hola, Ana');
       await fireEvent.press(screen.getByRole('tab', { name: pestana }));
       expect(screen.getByTestId(testID)).toBeOnTheScreen();
       expect(screen.getByRole('header', { name: titulo })).toBeOnTheScreen();
       expect(screen.getByText('Próximamente')).toBeOnTheScreen();
       expect(screen.getByRole('tab', { name: pestana })).toBeSelected();
-      expect(screen.queryByText('Hola, Ana Torres')).toBeNull();
+      expect(screen.queryByText('Hola, Ana')).toBeNull();
     },
   );
 

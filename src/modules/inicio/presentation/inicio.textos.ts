@@ -179,13 +179,16 @@ export const textosInicio = {
     imagen: 'Imagen',
     voz: 'Nota de voz',
     vacio: 'Aún no tienes mensajes',
+    /** La otra parte de la conversación: si el último lo envió el estudiante, es la academia. */
     remitente: (m: IResponseMensaje) =>
-      m.deEstudiante ? 'Tú' : m.remitente || 'Inglés con Sebas',
+      m.deEstudiante ? 'Inglés con Sebas' : m.remitente || 'Inglés con Sebas',
     contenido: (m: IResponseMensaje) => {
-      if (m.texto) {
-        return m.texto;
-      }
-      return m.adjunto === 'voz' ? 'Nota de voz' : 'Imagen';
+      const cuerpo = m.texto
+        ? m.texto
+        : m.adjunto === 'voz'
+        ? 'Nota de voz'
+        : 'Imagen';
+      return m.deEstudiante ? `Tú: ${cuerpo}` : cuerpo;
     },
     /** Hora si es de hoy; si no, la fecha. */
     cuando: (enviadoEl: string, ahoraMs: number) => {

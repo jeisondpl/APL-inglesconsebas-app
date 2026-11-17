@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Insignia } from '@/shared/components/Insignia';
+import { LogoMarca } from '@/shared/components/LogoMarca';
 import { Tarjeta } from '@/shared/components/Tarjeta';
 import { Texto } from '@/shared/components/Texto';
 import { IconoFlecha, IconoTareas } from '@/shared/iconos';
@@ -196,11 +197,15 @@ export function SeccionMensajes({
             onPress={alAbrir}
           >
             <View style={estilos.fila}>
-              <View style={estilos.avatar}>
-                <Texto variante="subtitulo" color="sobreExitoSuave">
-                  {inicialDe(remitente)}
-                </Texto>
-              </View>
+              {ultimo.deEstudiante || !ultimo.remitente ? (
+                <LogoMarca tamano={38} />
+              ) : (
+                <View style={estilos.avatar}>
+                  <Texto variante="subtitulo" color="sobreExitoSuave">
+                    {inicialDe(remitente)}
+                  </Texto>
+                </View>
+              )}
               <View style={estilos.centro}>
                 <View style={estilos.lineaEntre}>
                   <Texto

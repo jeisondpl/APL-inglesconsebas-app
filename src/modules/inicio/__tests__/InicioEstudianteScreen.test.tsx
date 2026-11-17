@@ -134,9 +134,7 @@ async function montar(
 describe('InicioEstudianteScreen', () => {
   it('cabecera: saludo como encabezado, plan con el ciclo y avatar (CA7)', async () => {
     await montar();
-    expect(
-      screen.getByRole('header', { name: 'Hola, Ana Torres' }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Hola, Ana' })).toBeOnTheScreen();
     expect(
       await screen.findByText('Plan Progress · ciclo 15 nov – 14 dic'),
     ).toBeOnTheScreen();
@@ -416,9 +414,18 @@ describe('textosInicio', () => {
       enviadoEl: '2026-11-10 08:00:00',
     };
     expect(m.remitente(base)).toBe('Inglés con Sebas');
-    expect(m.remitente({ ...base, deEstudiante: true })).toBe('Tú');
+    expect(m.remitente({ ...base, deEstudiante: true })).toBe(
+      'Inglés con Sebas',
+    );
     expect(m.contenido(base)).toBe('Nota de voz');
     expect(m.contenido({ ...base, adjunto: 'imagen' })).toBe('Imagen');
+    expect(
+      m.contenido({
+        ...base,
+        deEstudiante: true,
+        texto: 'Listo, la grabo hoy.',
+      }),
+    ).toBe('Tú: Listo, la grabo hoy.');
     expect(m.cuando(base.enviadoEl, Date.UTC(2026, 10, 17, 15))).toBe('10 nov');
     expect(m.cuando('', 0)).toBe('');
     expect(m.abrir('Meli', null)).toBe('Último mensaje de Meli');
