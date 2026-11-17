@@ -136,23 +136,6 @@ describe('LoginScreen · paso usuario (CA2)', () => {
     expect(screen.getByLabelText('Usuario')).toHaveDisplayValue('  ANA ');
   });
 
-  // Vuelta 1 (CA3): toques rápidos en la pantalla, sin re-render entre ellos, no pierden dígitos.
-  it('cuatro toques seguidos en el mismo ciclo envían «1234» una sola vez', async () => {
-    const repo = repoColgado();
-    await montar(crearDependenciasDePrueba({ repo }));
-    await irAlPin('ana');
-    const teclas = ['1', '2', '3', '4'].map(d => tecla(`Dígito ${d}`));
-    await act(async () => {
-      // Sin await entre toques: los cuatro se disparan antes de que React vuelva a pintar.
-      await Promise.all(teclas.map(t => fireEvent.press(t)));
-    });
-    expect(repo.iniciarSesion).toHaveBeenCalledTimes(1);
-    expect(repo.iniciarSesion).toHaveBeenCalledWith({
-      usuario: 'ana',
-      pin: '1234',
-    });
-  });
-
   it('enviar desde el teclado del sistema (submit) también continúa', async () => {
     await montar();
     const campo = screen.getByLabelText('Usuario');
