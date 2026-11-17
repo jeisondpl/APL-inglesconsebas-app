@@ -226,7 +226,8 @@ export function LoginScreen() {
 
   return (
     <Pantalla style={estilos.pantalla}>
-      <FondoMarca alturaHalo={0.24} />
+      {/* Sin isotipo de fondo: el hero ya es el logo con la mano. */}
+      <FondoMarca alturaHalo={0.24} conIsotipo={false} />
       <View style={estilos.contenido}>
         <View style={estilos.barra}>
           <BotonTema />
