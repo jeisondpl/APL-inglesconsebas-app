@@ -35,6 +35,10 @@ import { textosSesion } from '../sesion.textos';
 
 /** Escala del logo cuando sube con el teclado abierto (Livic: 72 de 96). */
 const ESCALA_LOGO_ARRIBA = 0.75;
+/** Escala mínima del logo si el hueco sobre la tarjeta es muy bajo. */
+const ESCALA_LOGO_MINIMA = 0.45;
+/** Aire total (arriba + abajo) que se deja al logo dentro del hueco. */
+const MARGEN_LOGO = 24;
 /** Alto de teclado con el que el hero termina de desvanecerse. */
 const TECLADO_COMPLETO = 220;
 /** Duración del deslizamiento entre los pasos usuario y PIN. */
@@ -126,14 +130,29 @@ export function LoginScreen() {
   const progresoTeclado = useDerivedValue(() =>
     Math.min(elevacion.value / TECLADO_COMPLETO, 1),
   );
-  // Distancia del centro del logo al borde superior del hero (se mide al pintarse).
-  const alturaLogo = useSharedValue(0);
+  // Posiciones (en el contenido) para centrar el logo en el hueco libre sobre la tarjeta.
+  const heroY = useSharedValue(0);
+  const logoY = useSharedValue(0);
+  const logoAlto = useSharedValue(0);
+  const tarjetaY = useSharedValue(0);
+  const medirHero = useCallback(
+    (e: LayoutChangeEvent) => {
+      heroY.value = e.nativeEvent.layout.y;
+    },
+    [heroY],
+  );
   const medirLogo = useCallback(
     (e: LayoutChangeEvent) => {
-      const { y, height } = e.nativeEvent.layout;
-      alturaLogo.value = y + height / 2;
+      logoY.value = e.nativeEvent.layout.y;
+      logoAlto.value = e.nativeEvent.layout.height;
     },
-    [alturaLogo],
+    [logoY, logoAlto],
+  );
+  const medirTarjeta = useCallback(
+    (e: LayoutChangeEvent) => {
+      tarjetaY.value = e.nativeEvent.layout.y;
+    },
+    [tarjetaY],
   );
 
   const estiloTarjeta = useAnimatedStyle(() => ({
@@ -151,15 +170,28 @@ export function LoginScreen() {
       { scale: interpolate(progresoTeclado.value, [0, 1], [1, 0.95]) },
     ],
   }));
-  // El logo sube hasta quedar arriba del hero (a la mitad de su alto reducido) y se achica.
+  // Con el teclado abierto el logo sigue visible: viaja al centro del hueco entre la barra y la
+  // tarjeta ya elevada, y se achica lo necesario para caber (como el logo viajero de Livic).
   const estiloLogo = useAnimatedStyle(() => {
     const t = progresoTeclado.value;
+    if (logoAlto.value === 0 || t === 0) {
+      return { transform: [{ translateY: 0 }, { scale: 1 }] };
+    }
     const facil = 1 - (1 - t) * (1 - t);
-    const destino = -Math.max(alturaLogo.value - 48, 0);
+    const arriba = heroY.value;
+    const abajo = tarjetaY.value - elevacion.value;
+    const hueco = Math.max(abajo - arriba, 0);
+    const escalaCabe = (hueco - MARGEN_LOGO) / logoAlto.value;
+    const escalaFinal = Math.max(
+      Math.min(ESCALA_LOGO_ARRIBA, escalaCabe),
+      ESCALA_LOGO_MINIMA,
+    );
+    const centroActual = heroY.value + logoY.value + logoAlto.value / 2;
+    const centroDestino = arriba + hueco / 2;
     return {
       transform: [
-        { translateY: destino * facil },
-        { scale: interpolate(facil, [0, 1], [1, ESCALA_LOGO_ARRIBA]) },
+        { translateY: (centroDestino - centroActual) * facil },
+        { scale: interpolate(facil, [0, 1], [1, escalaFinal]) },
       ],
     };
   });
@@ -183,13 +215,16 @@ export function LoginScreen() {
         <Pressable
           style={estilos.hero}
           onPress={Keyboard.dismiss}
+          onLayout={medirHero}
           accessible={false}
         >
-          <Revelar retraso={0}>
-            <Animated.View style={estiloLogo} onLayout={medirLogo}>
-              <Marca esEncabezado ancho={200} />
-            </Animated.View>
-          </Revelar>
+          <View onLayout={medirLogo}>
+            <Revelar retraso={0}>
+              <Animated.View style={estiloLogo}>
+                <Marca esEncabezado ancho={200} />
+              </Animated.View>
+            </Revelar>
+          </View>
           <Animated.View style={[estilos.textosHero, estiloTextosHero]}>
             <Revelar retraso={90} style={estilos.textosHero}>
               <Texto variante="h1" style={estilos.saludo}>
@@ -206,7 +241,10 @@ export function LoginScreen() {
             </View>
           ) : null}
         </Pressable>
-        <Animated.View style={[estilos.elevacion, estiloTarjeta]}>
+        <Animated.View
+          style={[estilos.elevacion, estiloTarjeta]}
+          onLayout={medirTarjeta}
+        >
           <Revelar retraso={200} desde={40}>
             <View style={estilos.tarjeta}>
               <View style={estilos.asa} />
