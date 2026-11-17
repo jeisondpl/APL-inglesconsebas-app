@@ -3,6 +3,8 @@
 // el montaje añade DependenciasProvider porque NavegadorRaiz oculta el splash con useNative.
 // F1-03 (constructor): la ruta inicial depende de la sesión. Los montajes usan el contenedor de
 // prueba (sesión en memoria) y, donde se mira el inicio, una sesión guardada de «ana».
+// EXT-01 (constructor): contenedorConApi arma IDependencias a mano; añade la bandera de la
+// bienvenida en `visto` para que el arranque siga yendo al login.
 import {
   fireEvent,
   render,
@@ -18,6 +20,7 @@ import {
   crearDependenciasDePrueba,
 } from '@/app/di/dependenciasDePrueba';
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
+import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
@@ -537,6 +540,7 @@ function contenedorConApi(
     },
     api,
     sesionActiva,
+    banderaOnboarding: crearBanderaOnboarding({ tipo: 'visto' }),
   };
   return { dependencias, fetchImpl, almacen };
 }

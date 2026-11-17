@@ -1,7 +1,9 @@
 // CA16: App monta con todos los providers. CA10: el host de toasts de la librería se renderiza,
 // incluido el tipo `warning` que la librería no trae.
 // F1-03 (constructor): sin sesión guardada, la app arranca en el login (no en el inicio provisional).
-import { render, screen } from '@testing-library/react-native';
+// EXT-01 (constructor): con el contenedor real y el Keychain mockeado vacío, la app arranca en la
+// bienvenida (O1); «Omitir» lleva al login.
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 
@@ -25,8 +27,17 @@ const ToastHost = jest.requireMock('react-native-toast-message')
 beforeEach(() => ToastHost.mockClear());
 
 describe('App (CA16)', () => {
-  it('monta con todos los providers y, sin sesión guardada, muestra el login', async () => {
+  it('monta con todos los providers y, sin sesión ni bandera, muestra la bienvenida', async () => {
     await render(<App />);
+    expect(
+      await screen.findByRole('header', {
+        name: 'Tu inglés, en un solo lugar',
+      }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Inicia sesión')).toBeNull();
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Omitir la bienvenida' }),
+    );
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(
       screen.getByRole('header', { name: 'Inglés con Sebas' }),

@@ -1,3 +1,5 @@
+import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
+import type { EstadoOnboarding } from '@/modules/onboarding/domain/entities/Onboarding.entities';
 import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { EstadoSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
@@ -41,11 +43,18 @@ export interface IOpcionesDependenciasDePrueba {
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   almacen?: SecureStoragePort;
+  /**
+   * Estado inicial de la bandera de la bienvenida (EXT-01). Por defecto `visto`, para que los tests
+   * que esperan el login con el almacén vacío sigan igual. Pasa `{ tipo: 'cargando' }` para ejercer
+   * la lectura real de `hasSeenOnboarding` del almacén, como en la app.
+   */
+  onboardingInicial?: EstadoOnboarding;
 }
 
 /**
  * Contenedor para pruebas, sin red ni módulos nativos: repositorio de sesión en memoria (usuarios
- * del seed, Bearer de la sesión activa), almacén en memoria y splash y enlaces falsos.
+ * del seed, Bearer de la sesión activa), almacén en memoria, splash y enlaces falsos y la bandera
+ * de la bienvenida en `visto` salvo que se pida otra cosa.
  */
 export function crearDependenciasDePrueba(
   opciones: IOpcionesDependenciasDePrueba = {},
@@ -69,5 +78,8 @@ export function crearDependenciasDePrueba(
     },
     api,
     sesionActiva,
+    banderaOnboarding: crearBanderaOnboarding(
+      opciones.onboardingInicial ?? { tipo: 'visto' },
+    ),
   };
 }

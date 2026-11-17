@@ -2,14 +2,14 @@ import type { ComponentType } from 'react';
 
 import { LoginScreen } from './screens/LoginScreen';
 
-/** Rutas del flujo Auth (sin sesión). EXT-01 añadirá `Onboarding`. */
+/** Rutas del flujo Auth (sin sesión). La bienvenida (EXT-01) es un módulo propio, `onboarding`. */
 export type AuthParamList = {
   Login: undefined;
 };
 
 /**
- * Ruta inicial del flujo Auth. Hoy siempre `Login`; es el punto de enganche del onboarding
- * (EXT-01), que añadirá su ruta y la condición para mostrarla.
+ * Ruta inicial del flujo Auth: siempre `Login`. Es la rama «sin bienvenida» del arranque: el
+ * navegador raíz decide entre la bienvenida (EXT-01) y Auth con `rutaInicialRaiz`.
  */
 export function rutaInicialAuth(): keyof AuthParamList {
   return 'Login';

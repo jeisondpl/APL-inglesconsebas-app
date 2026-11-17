@@ -75,3 +75,14 @@ export function useSesionActiva(): IDependencias['sesionActiva'] {
   }
   return sesionActiva;
 }
+
+/** Bandera de la bienvenida en memoria del contenedor (EXT-01). */
+export function useBanderaOnboarding(): IDependencias['banderaOnboarding'] {
+  const { banderaOnboarding } = useDependencias('useBanderaOnboarding');
+  if (!banderaOnboarding) {
+    throw new Error(
+      'useBanderaOnboarding: el contenedor no tiene `banderaOnboarding` (src/app/di/contenedor.ts).',
+    );
+  }
+  return banderaOnboarding;
+}

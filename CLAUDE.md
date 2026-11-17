@@ -70,11 +70,19 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
 - **`sesionActiva`** (`IDependencias.sesionActiva`, hook `useSesionActiva`) es el estado en memoria: `restaurando` → `sinSesion` (motivo `cerrada` o `vencida`) o `autenticado`. El cliente HTTP lee de ahí el token. Su `alNoAutorizado` llama a `invalidarSesionUseCase`, que solo actúa con sesión: el 401 del login no la toca.
 - **Almacén**: `SecureStoragePort` (`useNative('almacenSeguro')`) con `react-native-keychain` 11.0.0 y el servicio `com.inglesconsebas.app.<clave>`. La sesión va en la clave `sesion` como JSON `{version:1, token, expiraEn, renovarDesde, usuario}`. Nunca se usa AsyncStorage ni se guarda el PIN. `EnlacesPort` (`useNative('enlaces')`) abre WhatsApp con `Linking`.
 - **Arranque**: `useArranqueSesion()` en `NavegadorRaiz` ejecuta `arrancarSesionUseCase` una vez: restaurar → publicar → `me` → `renew` si toca. Con `restaurando`, el navegador devuelve `null` y el splash sigue. Los flujos se eligen por estado, sin `navigate` imperativo:
-  - Auth, con `rutaInicialAuth()` (punto de enganche de EXT-01);
+  - Auth, con `rutaInicialAuth()` (desde EXT-01, a través de `rutaInicialRaiz`);
   - App, con `rutaInicioPorRol(rol)`.
 - **Tests**: `crearDependenciasDePrueba()` (`src/app/di/dependenciasDePrueba.ts`) da un contenedor sin red ni nativos: `crearMemoriaSesionRepository` (usuarios del seed; `tokenMemoria('ana')` sirve para sesiones guardadas), un almacén en memoria y splash y enlaces falsos. `jest.setup.ts` mockea `react-native-keychain` con un `Map`.
 - **Fuera de alcance** (F1-03b): biometría (1.13), perfil, cambio de PIN y guardar el tema (1.14), sin conexión (1.15), abrir en la web (1.16) y validar al volver a primer plano.
 - **Probar en el teléfono por USB**: `.env.dispositivo` + `adb reverse tcp:8080 tcp:8080` (pasos en el README). **Pendiente sin Mac**: `pod install` de `react-native-keychain`.
+
+## Onboarding (EXT-01)
+
+- **Módulo `src/modules/onboarding`**: bienvenida de 4 páginas (O1–O4) la primera vez que se abre la app sin sesión. `FlatList` horizontal paginado; «Siguiente», «Omitir» (en todas), «Comenzar» (O4) y atrás de Android (página anterior en O2–O4). Textos en `onboarding.textos.ts` e ilustraciones SVG con tokens del tema en el arreglo `PAGINAS_ONBOARDING` (`onboarding.config.ts`). Sin hex en el módulo.
+- **Bandera**: `hasSeenOnboarding = '1'` en el `SecureStoragePort` (servicio `com.inglesconsebas.app.hasSeenOnboarding`). Sin dependencias nuevas y nunca el almacén no cifrado (lo vigila `sesion.seguridad.test.ts`, que prohíbe hasta la palabra en `src/`). En iOS el Keychain sobrevive a reinstalar (R1, aceptado).
+- **Estado en memoria**: `banderaOnboarding` (`IDependencias.banderaOnboarding`, hook `useBanderaOnboarding`): `cargando` → `pendiente` o `visto`. Terminar u omitir la pone en `visto` antes de guardar; si guardar falla se avanza igual y en el siguiente arranque vuelve a salir.
+- **Arranque**: `NavegadorRaiz` lee la sesión y la bandera en paralelo (`useArranqueSesion` y `useArranqueOnboarding`) y devuelve `null` hasta tener las dos, así que el splash sigue. `rutaInicialRaiz` elige: inicio del rol si hay sesión; `Onboarding` si la bandera está pendiente; si no, `rutaInicialAuth()`. Con sesión y sin bandera, la bandera se marca para que cerrar sesión lleve al login. Al terminar la bienvenida su grupo desaparece y queda `Login` como única ruta (sin regreso).
+- **Tests**: `crearDependenciasDePrueba()` arranca la bandera en `visto` (los tests de F1-03 siguen yendo al login). Para ejercer la lectura real, pasa `onboardingInicial: { tipo: 'cargando' }`. Un contenedor armado a mano debe incluir `banderaOnboarding`.
 
 ## Contexto
 

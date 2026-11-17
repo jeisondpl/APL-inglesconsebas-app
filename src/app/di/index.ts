@@ -6,6 +6,7 @@ export {
 } from './contenedor';
 export {
   DependenciasProvider,
+  useBanderaOnboarding,
   useNative,
   useRepository,
   useSesionActiva,
