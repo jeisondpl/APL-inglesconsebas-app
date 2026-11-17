@@ -85,3 +85,6 @@ dist/
 *.apk
 *.aab
 coverage/
+
+# Worktrees de agentes de Claude Code
+.claude/worktrees/

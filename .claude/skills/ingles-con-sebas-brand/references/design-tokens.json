@@ -1,0 +1,595 @@
+{
+  "$description": "Tokens de Inglés con Sebas generados desde src/shared/theme y assets/marca/logo.json por scripts/generar-tokens.mjs. No editar a mano. origen=oficial: manual de marca p. 7 (y #62696B, p. 4); derivado: decisión de la app.",
+  "paleta": {
+    "blanco": {
+      "$value": "#FFFFFF",
+      "$type": "color",
+      "origen": "oficial"
+    },
+    "negro": {
+      "$value": "#000000",
+      "$type": "color",
+      "origen": "oficial"
+    },
+    "verde": {
+      "$value": "#86EF86",
+      "$type": "color",
+      "origen": "oficial"
+    },
+    "gris": {
+      "$value": "#A5AFA5",
+      "$type": "color",
+      "origen": "oficial"
+    },
+    "grisLogo": {
+      "$value": "#62696B",
+      "$type": "color",
+      "origen": "oficial"
+    },
+    "verdeProfundo": {
+      "$value": "#5DDB5D",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "verdeBosque": {
+      "$value": "#1F6B1F",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "verdeMedio": {
+      "$value": "#2D8A2D",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "rojoAviso": {
+      "$value": "#FF7B7B",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "rojoAvisoClaro": {
+      "$value": "#C13333",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "ambar": {
+      "$value": "#F5B84A",
+      "$type": "color",
+      "origen": "derivado"
+    },
+    "ambarClaro": {
+      "$value": "#9A6700",
+      "$type": "color",
+      "origen": "derivado"
+    }
+  },
+  "color": {
+    "oscuro": {
+      "fondo": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "superficie": {
+        "$value": "#0E1210",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "superficieAlterna": {
+        "$value": "#161B18",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "campoFondo": {
+        "$value": "#0A0D0B",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "borde": {
+        "$value": "#262D29",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordeMarca": {
+        "$value": "#2A5B37",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "pista": {
+        "$value": "#1E2420",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "texto": {
+        "$value": "#FFFFFF",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "textoSecundario": {
+        "$value": "#A5AFA5",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "textoTenue": {
+        "$value": "#6F7A72",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado del gris oficial"
+      },
+      "marca": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "marcaActiva": {
+        "$value": "#5DDB5D",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "acento": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "sobreMarca": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "destacado": {
+        "$value": "#0F2A18",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordeDestacado": {
+        "$value": "#1E4A2B",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "exitoSuave": {
+        "$value": "#123122",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobreExitoSuave": {
+        "$value": "#A6F3AE",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "peligro": {
+        "$value": "#FF7B7B",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "peligroSuave": {
+        "$value": "#361316",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobrePeligroSuave": {
+        "$value": "#FFB4B4",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordePeligro": {
+        "$value": "#4A2226",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "aviso": {
+        "$value": "#F5B84A",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "avisoSuave": {
+        "$value": "#33260F",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobreAvisoSuave": {
+        "$value": "#F5B84A",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "Provisional: el azul de `.btn-blue` de Leap. El kit no define un azul."
+      },
+      "info": {
+        "$value": "#60A5FA",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "confirmar": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "sobreConfirmar": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "halo": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      }
+    },
+    "claro": {
+      "fondo": {
+        "$value": "#FFFFFF",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "superficie": {
+        "$value": "#FFFFFF",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "superficieAlterna": {
+        "$value": "#F2F5F2",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "campoFondo": {
+        "$value": "#FFFFFF",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "borde": {
+        "$value": "#DCE2DC",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordeMarca": {
+        "$value": "#9FC5A0",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "pista": {
+        "$value": "#E1E6E1",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "texto": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "textoSecundario": {
+        "$value": "#62696B",
+        "$type": "color",
+        "origen": "oficial",
+        "nota": "El gris oficial da 2.2:1 sobre blanco: se oscurece para llegar a 3:1."
+      },
+      "textoTenue": {
+        "$value": "#7A857C",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "marca": {
+        "$value": "#1F6B1F",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "marcaActiva": {
+        "$value": "#174F17",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "acento": {
+        "$value": "#2D8A2D",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "sobreMarca": {
+        "$value": "#FFFFFF",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "destacado": {
+        "$value": "#E6F2E6",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordeDestacado": {
+        "$value": "#C9E0C9",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "exitoSuave": {
+        "$value": "#DCEDDC",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobreExitoSuave": {
+        "$value": "#1C5E1C",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "peligro": {
+        "$value": "#C13333",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "peligroSuave": {
+        "$value": "#FBE4E4",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobrePeligroSuave": {
+        "$value": "#9B2C2C",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "bordePeligro": {
+        "$value": "#E7B3B3",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "aviso": {
+        "$value": "#9A6700",
+        "$type": "color",
+        "origen": "derivado"
+      },
+      "avisoSuave": {
+        "$value": "#F7ECD6",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "sobreAvisoSuave": {
+        "$value": "#7A5200",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "derivado"
+      },
+      "info": {
+        "$value": "#2563EB",
+        "$type": "color",
+        "origen": "derivado",
+        "nota": "El verde oficial con check negro también en claro (lienzo del login, P8)."
+      },
+      "confirmar": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "sobreConfirmar": {
+        "$value": "#000000",
+        "$type": "color",
+        "origen": "oficial"
+      },
+      "halo": {
+        "$value": "#86EF86",
+        "$type": "color",
+        "origen": "oficial"
+      }
+    }
+  },
+  "logo": {
+    "paleta": {
+      "blanco": "#FFFFFF",
+      "negro": "#000000",
+      "verde": "#86EF86",
+      "gris": "#A5AFA5"
+    },
+    "oscuro": {
+      "fondo": "#000000",
+      "nombre": "#FFFFFF",
+      "con": "#A5AFA5",
+      "manoContorno": "#A5AFA5",
+      "manoRelleno": "#FFFFFF"
+    },
+    "claro": {
+      "fondo": "#FFFFFF",
+      "nombre": "#62696B",
+      "con": "#A5AFA5",
+      "manoContorno": "#A5AFA5",
+      "manoRelleno": "#FFFFFF"
+    },
+    "isotipo": {
+      "corporate": {
+        "circulo": "#000000",
+        "manoContorno": "#FFFFFF",
+        "letra": "#A5AFA5"
+      },
+      "self": {
+        "circulo": "#A5AFA5",
+        "manoContorno": "#FFFFFF",
+        "letra": "#A5AFA5"
+      },
+      "kids": {
+        "circulo": "#86EF86",
+        "manoContorno": "#FFFFFF",
+        "letra": "#86EF86"
+      }
+    }
+  },
+  "fuente": {
+    "nohemiMedium": {
+      "$value": "Nohemi-Medium",
+      "$type": "fontFamily"
+    },
+    "dmSansRegular": {
+      "$value": "DMSans-Regular",
+      "$type": "fontFamily"
+    },
+    "dmSansMedium": {
+      "$value": "DMSans-Medium",
+      "$type": "fontFamily"
+    },
+    "dmSansSemiBold": {
+      "$value": "DMSans-SemiBold",
+      "$type": "fontFamily"
+    }
+  },
+  "tipografia": {
+    "h1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 28,
+        "lineHeight": 34
+      }
+    },
+    "h2": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 20,
+        "lineHeight": 26
+      }
+    },
+    "titulo": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 17,
+        "lineHeight": 22
+      }
+    },
+    "subtitulo": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 15,
+        "lineHeight": 20
+      }
+    },
+    "cuerpo": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "DMSans-Regular",
+        "fontSize": 15,
+        "lineHeight": 22
+      }
+    },
+    "cuerpoFuerte": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "DMSans-SemiBold",
+        "fontSize": 13.5,
+        "lineHeight": 18
+      }
+    },
+    "boton": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 14,
+        "lineHeight": 18
+      }
+    },
+    "detalle": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "DMSans-Regular",
+        "fontSize": 12,
+        "lineHeight": 16
+      }
+    },
+    "etiqueta": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "Nohemi-Medium",
+        "fontSize": 10,
+        "lineHeight": 14,
+        "letterSpacing": 2,
+        "textTransform": "uppercase"
+      }
+    },
+    "insignia": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "DMSans-SemiBold",
+        "fontSize": 11,
+        "lineHeight": 14
+      }
+    }
+  },
+  "espaciado": {
+    "xs": {
+      "$value": 4,
+      "$type": "dimension"
+    },
+    "s": {
+      "$value": 8,
+      "$type": "dimension"
+    },
+    "m": {
+      "$value": 12,
+      "$type": "dimension"
+    },
+    "l": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "xl": {
+      "$value": 20,
+      "$type": "dimension"
+    },
+    "xxl": {
+      "$value": 24,
+      "$type": "dimension"
+    },
+    "xxxl": {
+      "$value": 32,
+      "$type": "dimension"
+    }
+  },
+  "radio": {
+    "icono": {
+      "$value": 12,
+      "$type": "dimension"
+    },
+    "boton": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "campo": {
+      "$value": 16,
+      "$type": "dimension"
+    },
+    "tarjeta": {
+      "$value": 20,
+      "$type": "dimension"
+    },
+    "heroe": {
+      "$value": 26,
+      "$type": "dimension"
+    },
+    "pildora": {
+      "$value": 999,
+      "$type": "dimension"
+    }
+  },
+  "toqueMinimo": {
+    "$value": 44,
+    "$type": "dimension"
+  }
+}
