@@ -49,6 +49,11 @@ export interface IColoresTema {
   /** Botón confirmar del teclado de PIN: verde oficial en los dos temas (F1-03, P8). */
   confirmar: string;
   sobreConfirmar: string;
+  /**
+   * Halo de marca del fondo animado (F1-04): el verde oficial en los dos temas. Se pinta con
+   * opacidad baja (gradiente radial), así que no compite con el texto.
+   */
+  halo: string;
 }
 
 export interface ITema {
@@ -96,6 +101,7 @@ const coloresOscuros: IColoresTema = {
   info: '#60A5FA',
   confirmar: paleta.verde,
   sobreConfirmar: paleta.negro,
+  halo: paleta.verde,
 };
 
 /**
@@ -135,6 +141,7 @@ const coloresClaros: IColoresTema = {
   // El verde oficial con check negro también en claro (lienzo del login, P8).
   confirmar: paleta.verde,
   sobreConfirmar: paleta.negro,
+  halo: paleta.verde,
 };
 
 const base: Omit<ITema, 'modo' | 'colores'> = {

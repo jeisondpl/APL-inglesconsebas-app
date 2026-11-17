@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -6,7 +7,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 
+import { usePresionEscala } from '@/shared/movimiento/usePresionEscala';
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
 import { Texto } from './Texto';
@@ -51,13 +54,19 @@ const crearEstilos = (tema: ITema) => {
   });
 };
 
+/** Pressable animado: recibe la escala al pulsar (F1-04) junto a sus estilos de siempre. */
+const PressableAnimado = Animated.createAnimatedComponent(Pressable);
+
 const colorTexto = {
   primario: 'sobreMarca',
   secundario: 'marca',
   peligro: 'peligro',
 } as const;
 
-/** Botón del sistema de diseño: primario, secundario y peligro. */
+/**
+ * Botón del sistema de diseño: primario, secundario y peligro. Al pulsarlo escala a 0.97 con
+ * resorte (F1-04; con reduce-motion solo baja la opacidad).
+ */
 export function Boton({
   titulo,
   onPress,
@@ -72,8 +81,10 @@ export function Boton({
   const { tema } = useTema();
   const estilos = useEstilos(crearEstilos);
   const inactivo = deshabilitado || cargando;
+  const [pulsado, setPulsado] = useState(false);
+  const { estiloEscala, alPresionar, alSoltar } = usePresionEscala();
   return (
-    <Pressable
+    <PressableAnimado
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? titulo}
@@ -81,12 +92,21 @@ export function Boton({
       accessibilityState={{ disabled: inactivo, busy: cargando }}
       disabled={inactivo}
       onPress={inactivo ? undefined : onPress}
-      style={({ pressed }) => [
+      onPressIn={() => {
+        setPulsado(true);
+        alPresionar();
+      }}
+      onPressOut={() => {
+        setPulsado(false);
+        alSoltar();
+      }}
+      style={[
         estilos.base,
         estilos[variante],
         deshabilitado && estilos.inactivo,
-        pressed && estilos.pulsado,
+        pulsado && estilos.pulsado,
         style,
+        estiloEscala,
       ]}
     >
       <View style={estilos.contenido}>
@@ -100,6 +120,6 @@ export function Boton({
           {titulo}
         </Texto>
       </View>
-    </Pressable>
+    </PressableAnimado>
   );
 }
