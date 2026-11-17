@@ -20,7 +20,7 @@ Sirve de referencia para el equipo y de contexto para asistentes de IA.
 | Identificador Android (`applicationId`) | `com.inglesconsebas.app`. Permanente. |
 | Bundle ID iOS | `com.inglesconsebas.app`. Permanente. |
 | Nombre interno RN / AppRegistry | `InglesConSebas` |
-| Dominios de negocio (módulos) | `sesion`, `cuenta`, `inicio`, `alertas`, `clases`, `mensajes`, `tareas`, `notificaciones` |
+| Dominios de negocio (módulos) | `sesion`, `onboarding` (bienvenida, EXT-01), `cuenta`, `inicio`, `alertas`, `clases`, `mensajes`, `tareas`, `notificaciones` |
 | API backend (URL por entorno) | dev: `http://10.0.2.2:8080/api` desde el emulador Android, o `http://localhost:8080/api` en iOS. Es el Docker de Leap. staging: no existe todavía. prod: `https://app.inglesconsebas.com/api`. |
 | SDK nativos a integrar | Almacenamiento seguro (Keychain/Keystore), biometría, push (FCM/APNs), grabación y reproducción de audio, selector de imágenes, conectividad |
 | Idioma de UI | `es-CO` |
