@@ -26,6 +26,8 @@ export const textosOnboarding = {
   comenzar: 'Comenzar',
   omitir: 'Omitir',
   omitirEtiqueta: 'Omitir la bienvenida',
+  /** Botón atrás que aparece al deslizar (F1-04). */
+  anteriorEtiqueta: 'Página anterior',
   /** Etiqueta del indicador de páginas. */
   paso: (n: number, total: number) => `Paso ${n} de ${total}`,
 } as const;

@@ -1,6 +1,13 @@
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedProps,
+} from 'react-native-reanimated';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { useTema } from '@/shared/theme';
+
+import { useBucleIlustracion } from './animacion';
 
 import {
   ALTO_ILUSTRACION,
@@ -20,10 +27,29 @@ const LINEAS: readonly (readonly [number, number])[] = [
 /** Puntos de la burbuja de feedback (cx). */
 const PUNTOS = [165, 175, 185] as const;
 
-/** O4: hoja de la tarea entregada con el check y la burbuja de feedback (geometría del lienzo). */
+const PathAnimado = Animated.createAnimatedComponent(Path);
+
+/** Largo del trazo del check (6√2 + 17 ≈ 25.5), redondeado hacia arriba. */
+const LARGO_CHECK = 26;
+/** Ciclo del check: se dibuja en el primer cuarto y queda dibujado el resto. */
+const CHECK_MS = 3200;
+
+/**
+ * O4: hoja de la tarea entregada con el check y la burbuja de feedback (geometría del lienzo). El
+ * check se dibuja con `strokeDashoffset` en bucle (F1-04); con reduce-motion se ve dibujado.
+ */
 export function IlustracionTareas() {
   const { tema } = useTema();
   const c = tema.colores;
+  const t = useBucleIlustracion(CHECK_MS);
+  const propsCheck = useAnimatedProps(() => ({
+    strokeDashoffset: interpolate(
+      t.value,
+      [0.05, 0.3],
+      [LARGO_CHECK, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
   return (
     <Svg
       testID="ilustracion-tareas"
@@ -54,7 +80,9 @@ export function IlustracionTareas() {
         />
       ))}
       <Circle cx={88} cy={142} r={21} fill={c.marca} />
-      <Path
+      <PathAnimado
+        animatedProps={propsCheck}
+        strokeDasharray={LARGO_CHECK}
         d="M79.5 142.5l6 6 11.5-12.5"
         stroke={c.sobreMarca}
         strokeWidth={2.6}
