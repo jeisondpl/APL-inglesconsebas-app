@@ -165,7 +165,6 @@ dependencies {
     // Los módulos nativos de npm entran por autolinking con la versión fijada en package.json.
     // react-native-keychain 11.0.0 (F1-03): guarda el token de sesión en el Android Keystore.
 
-
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
