@@ -1,10 +1,9 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   BackHandler,
   Keyboard,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   type LayoutChangeEvent,
@@ -22,7 +21,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AvisoEnLinea, Marca, Pantalla, Texto } from '@/shared/components';
+import {
+  AvisoEnLinea,
+  Marca,
+  Pantalla,
+  PROPORCION_MARCA,
+  Texto,
+} from '@/shared/components';
 import { FondoMarca, PulsoCarga, Revelar } from '@/shared/movimiento';
 import { useEstilos, type ITema } from '@/shared/theme';
 
@@ -33,6 +38,10 @@ import { PasoPin } from '../components/PasoPin';
 import { PasoUsuario } from '../components/PasoUsuario';
 import { textosSesion } from '../sesion.textos';
 
+/** Ancho del logo del hero cuando hay sitio de sobra. */
+const ANCHO_LOGO = 200;
+/** Ancho mínimo del logo en pantallas bajas, donde cede espacio a la tarjeta. */
+const ANCHO_LOGO_MINIMO = 96;
 /** Escala del logo cuando sube con el teclado abierto (Livic: 72 de 96). */
 const ESCALA_LOGO_ARRIBA = 0.75;
 /** Escala mínima del logo si el hueco sobre la tarjeta es muy bajo. */
@@ -47,7 +56,8 @@ const CAMBIO_PASO_MS = 260;
 const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
     pantalla: { padding: 0 },
-    desplazable: { flexGrow: 1 },
+    // Sin scroll: todo cabe en el alto del dispositivo; el hero es lo que cede si falta sitio.
+    contenido: { flex: 1 },
     barra: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
@@ -56,12 +66,15 @@ const crearEstilos = (tema: ITema) =>
     },
     hero: {
       flex: 1,
+      minHeight: 0,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: tema.espaciado.xxl,
       paddingVertical: tema.espaciado.l,
       gap: tema.espaciado.l,
     },
+    // Hueco del logo: es lo único del hero que encoge cuando la pantalla es baja.
+    huecoLogo: { flexShrink: 1, minHeight: 0, alignItems: 'center' },
     textosHero: { alignItems: 'center', gap: tema.espaciado.xs },
     saludo: { fontSize: 34, lineHeight: 40, textAlign: 'center' },
     centrado: { textAlign: 'center' },
@@ -141,10 +154,21 @@ export function LoginScreen() {
     },
     [heroY],
   );
+  // Si el hueco del logo queda más bajo que el logo (pantalla baja), el logo se achica a lo que cabe.
+  // Cada paso tiene una tarjeta de alto distinto: al cambiar, se vuelve a medir desde el ancho pleno.
+  const [anchoLogo, setAnchoLogo] = useState(ANCHO_LOGO);
+  useEffect(() => setAnchoLogo(ANCHO_LOGO), [paso]);
   const medirLogo = useCallback(
     (e: LayoutChangeEvent) => {
-      logoY.value = e.nativeEvent.layout.y;
-      logoAlto.value = e.nativeEvent.layout.height;
+      const { y, height } = e.nativeEvent.layout;
+      logoY.value = y;
+      logoAlto.value = height;
+      const anchoQueCabe = Math.floor(height / PROPORCION_MARCA);
+      setAnchoLogo(actual =>
+        anchoQueCabe < actual
+          ? Math.max(anchoQueCabe, ANCHO_LOGO_MINIMO)
+          : actual,
+      );
     },
     [logoY, logoAlto],
   );
@@ -203,11 +227,7 @@ export function LoginScreen() {
   return (
     <Pantalla style={estilos.pantalla}>
       <FondoMarca alturaHalo={0.24} />
-      <ScrollView
-        contentContainerStyle={estilos.desplazable}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={estilos.contenido}>
         <View style={estilos.barra}>
           <BotonTema />
         </View>
@@ -218,10 +238,10 @@ export function LoginScreen() {
           onLayout={medirHero}
           accessible={false}
         >
-          <View onLayout={medirLogo}>
+          <View style={estilos.huecoLogo} onLayout={medirLogo}>
             <Revelar retraso={0}>
               <Animated.View style={estiloLogo}>
-                <Marca esEncabezado ancho={200} />
+                <Marca esEncabezado ancho={anchoLogo} />
               </Animated.View>
             </Revelar>
           </View>
@@ -287,7 +307,7 @@ export function LoginScreen() {
             </Texto>
           </View>
         </Animated.View>
-      </ScrollView>
+      </View>
     </Pantalla>
   );
 }

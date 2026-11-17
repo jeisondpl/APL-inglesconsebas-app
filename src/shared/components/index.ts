@@ -18,7 +18,7 @@ export {
   type CategoriaIsotipo,
   type IPropsLogoMarca,
 } from './LogoMarca';
-export { Marca, type IPropsMarca } from './Marca';
+export { Marca, PROPORCION_MARCA, type IPropsMarca } from './Marca';
 export { Pantalla, type IPropsPantalla } from './Pantalla';
 export { Tarjeta, type IPropsTarjeta } from './Tarjeta';
 export { Texto, type IPropsTexto } from './Texto';
