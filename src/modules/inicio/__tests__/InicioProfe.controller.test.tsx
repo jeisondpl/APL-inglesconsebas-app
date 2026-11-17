@@ -136,7 +136,7 @@ describe('useInicioProfeController', () => {
         }).then(() => base.listarClases()),
     };
     const { unmount } = await montar(repo);
-    unmount();
+    await unmount();
     await act(async () => soltar());
     expect(Toast.show).not.toHaveBeenCalled();
   });

@@ -288,10 +288,7 @@ describe('PestanasEstudiante', () => {
     ).toBeOnTheScreen();
   });
 
-  it.each([
-    ['Clases', 'pestana-contenido-clases', 'Clases'],
-    ['Tareas', 'pestana-contenido-tareas', 'Tareas'],
-  ])(
+  it.each([['Tareas', 'pestana-contenido-tareas', 'Tareas']])(
     'pulsar %s muestra su pantalla «Próximamente» (CA2, CA16)',
     async (pestana, testID, titulo) => {
       await montar();
@@ -304,6 +301,16 @@ describe('PestanasEstudiante', () => {
       expect(screen.queryByText('Hola, Ana')).toBeNull();
     },
   );
+
+  it('pulsar Clases abre el historial del estudiante (F2-01)', async () => {
+    await montar();
+    await screen.findByText('Hola, Ana');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Clases' }));
+    expect(await screen.findByTestId('clases-estudiante')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Clases' })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Clases' })).toBeSelected();
+    expect(screen.queryByText('Hola, Ana')).toBeNull();
+  });
 
   it('la tarjeta de mensajes del inicio lleva a la pestaña Mensajes', async () => {
     const dependencias = crearDependenciasDePrueba({

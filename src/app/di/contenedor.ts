@@ -1,4 +1,6 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
+import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
 import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
@@ -30,6 +32,8 @@ export interface IRepositorios {
   inicio: InicioRepository;
   /** Inicio del profe (F1-07). */
   inicioProfe: InicioProfeRepository;
+  /** Clases del estudiante (F2-01). */
+  clases: ClasesRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -73,6 +77,7 @@ export function crearDependencias(): IDependencias {
       }),
       inicio: crearApiInicioRepository(api),
       inicioProfe: crearApiInicioProfeRepository(api),
+      clases: crearApiClasesRepository(api),
     },
     nativos: {
       splash: crearBootSplashAdapter(),

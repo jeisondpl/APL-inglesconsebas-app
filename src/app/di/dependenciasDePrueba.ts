@@ -1,4 +1,6 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
+import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
 import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
@@ -56,6 +58,8 @@ export interface IOpcionesDependenciasDePrueba {
   inicio?: InicioRepository;
   /** Inicio del profe (F1-07). Por defecto, en memoria y vacío. */
   inicioProfe?: InicioProfeRepository;
+  /** Clases del estudiante (F2-01). Por defecto, en memoria y vacío. */
+  clases?: ClasesRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   /** Login con Google. Por defecto no disponible (el botón no aparece). */
@@ -89,6 +93,7 @@ export function crearDependenciasDePrueba(
         }),
       inicio: opciones.inicio ?? crearMemoriaInicioRepository(),
       inicioProfe: opciones.inicioProfe ?? crearMemoriaInicioProfeRepository(),
+      clases: opciones.clases ?? crearMemoriaClasesRepository(),
     },
     nativos: {
       splash: opciones.splash ?? { ocultar: () => Promise.resolve() },

@@ -82,13 +82,13 @@ describe('App (CA16)', () => {
 
 describe('Providers (CA11, CA16)', () => {
   function Consumidor() {
-    const repo = useRepository('clases' as never) as { nombre: string };
+    const repo = useRepository('inventado' as never) as { nombre: string };
     return <Text>{repo.nombre}</Text>;
   }
 
   it('inyecta el contenedor recibido en dependencias', async () => {
     const dependencias = {
-      repositorios: { clases: { nombre: 'repo falso' } },
+      repositorios: { inventado: { nombre: 'repo falso' } },
       nativos: {},
       api: { get: jest.fn(), post: jest.fn() },
     } as unknown as IDependencias;

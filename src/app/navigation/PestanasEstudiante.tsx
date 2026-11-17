@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { PantallaProximamente } from '@/app/pestanas/PantallaProximamente';
 import { textosPestanas as textos } from '@/app/pestanas/pestanas.textos';
+import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
 import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
 import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
@@ -63,6 +64,12 @@ function PestanaInicio({
   );
 }
 
+/** Clases del estudiante con el id de la sesión. */
+function PestanaClases() {
+  const { usuario } = useSesionController();
+  return usuario ? <ClasesScreen usuario={usuario} /> : null;
+}
+
 function Contenido({
   rol,
   activa,
@@ -78,7 +85,9 @@ function Contenido({
     case 'inicio':
       return <PestanaInicio rol={rol} alCambiarNoLeidos={alCambiarNoLeidos} />;
     case 'clases':
-      return (
+      return rol === 'estudiante' ? (
+        <PestanaClases />
+      ) : (
         <PantallaProximamente
           testID="pestana-contenido-clases"
           {...pantallas.clases}
