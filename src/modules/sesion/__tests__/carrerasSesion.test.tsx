@@ -211,46 +211,43 @@ describe('carreras del arranque (B1)', () => {
   // `autenticado` con el mismo token, así que `sigueVigente()` es true y `me` vuelve a guardar.
   // `it.failing` mantiene la puerta en verde mientras el fallo exista; al corregirlo, este caso
   // fallará y hay que cambiarlo a `it`.
-  it.failing(
-    '(a) me llega mientras el Keychain borra (el borrado se aplica al empezar, como la llamada nativa): el almacén queda vacío',
-    async () => {
-      // Como react-native-keychain: resetGenericPassword se encola en el hilo nativo y se aplica
-      // antes que un setGenericPassword pedido después, pero la promesa de JS resuelve más tarde.
-      const base = crearAlmacenEnMemoria({
-        sesion: serializarSesion(sesionDe('ana')),
-      });
-      const fin = diferida<void>();
-      let borradoLento = false;
-      const almacen = {
-        ...base,
-        borrar: async (clave: string) => {
-          await base.borrar(clave);
-          if (borradoLento) {
-            await fin.promesa;
-          }
-        },
-      };
-      const { repo, me } = repoControlado();
-      const dependencias = crearDependenciasDePrueba({ repo, almacen });
-      const { result } = await arrancar(dependencias);
+  it('(a) me llega mientras el Keychain borra (el borrado se aplica al empezar, como la llamada nativa): el almacén queda vacío', async () => {
+    // Como react-native-keychain: resetGenericPassword se encola en el hilo nativo y se aplica
+    // antes que un setGenericPassword pedido después, pero la promesa de JS resuelve más tarde.
+    const base = crearAlmacenEnMemoria({
+      sesion: serializarSesion(sesionDe('ana')),
+    });
+    const fin = diferida<void>();
+    let borradoLento = false;
+    const almacen = {
+      ...base,
+      borrar: async (clave: string) => {
+        await base.borrar(clave);
+        if (borradoLento) {
+          await fin.promesa;
+        }
+      },
+    };
+    const { repo, me } = repoControlado();
+    const dependencias = crearDependenciasDePrueba({ repo, almacen });
+    const { result } = await arrancar(dependencias);
 
-      borradoLento = true;
-      let cierre: Promise<void> = Promise.resolve();
-      await act(async () => {
-        cierre = result.current.sesion._cerrarSesion();
-      });
-      await act(async () => me.resolver(meDeAna()));
-      await act(async () => {
-        fin.resolver();
-        await cierre;
-      });
-      expect(dependencias.sesionActiva.obtener()).toEqual({
-        tipo: 'sinSesion',
-        motivo: 'cerrada',
-      });
-      expect(base.datos.has('sesion')).toBe(false);
-    },
-  );
+    borradoLento = true;
+    let cierre: Promise<void> = Promise.resolve();
+    await act(async () => {
+      cierre = result.current.sesion._cerrarSesion();
+    });
+    await act(async () => me.resolver(meDeAna()));
+    await act(async () => {
+      fin.resolver();
+      await cierre;
+    });
+    expect(dependencias.sesionActiva.obtener()).toEqual({
+      tipo: 'sinSesion',
+      motivo: 'cerrada',
+    });
+    expect(base.datos.has('sesion')).toBe(false);
+  });
 
   it('(b) login de otro usuario mientras me de la sesión anterior está en vuelo: no cambia almacén ni estado', async () => {
     const { repo, me } = repoControlado();
