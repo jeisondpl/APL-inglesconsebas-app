@@ -7,6 +7,7 @@ import type { EstadoSesion } from '@/modules/sesion/domain/entities/Sesion.entit
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import type { ClienteApi } from '@/shared/lib/api';
@@ -36,6 +37,13 @@ export function crearAlmacenEnMemoria(
   };
 }
 
+/** Google sin configurar, como un build sin GOOGLE_WEB_CLIENT_ID: el botón no aparece. */
+export const crearGoogleNoDisponible = (): GoogleSignInPort => ({
+  disponible: false,
+  obtenerIdToken: () => Promise.resolve({ tipo: 'cancelado' }),
+  cerrarSesion: () => Promise.resolve(),
+});
+
 export interface IOpcionesDependenciasDePrueba {
   /** Contenido inicial del almacén seguro (p. ej. `{ sesion: '<json>' }`). */
   almacenInicial?: Record<string, string>;
@@ -46,6 +54,8 @@ export interface IOpcionesDependenciasDePrueba {
   inicio?: InicioRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
+  /** Login con Google. Por defecto no disponible (el botón no aparece). */
+  google?: GoogleSignInPort;
   almacen?: SecureStoragePort;
   /**
    * Estado inicial de la bandera de la bienvenida (EXT-01). Por defecto `visto`, para que los tests
@@ -80,6 +90,7 @@ export function crearDependenciasDePrueba(
       almacenSeguro:
         opciones.almacen ?? crearAlmacenEnMemoria(opciones.almacenInicial),
       enlaces: opciones.enlaces ?? { abrir: () => Promise.resolve(true) },
+      google: opciones.google ?? crearGoogleNoDisponible(),
     },
     api,
     sesionActiva,

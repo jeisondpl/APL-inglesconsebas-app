@@ -106,6 +106,7 @@ describe('crearDependencias (CA11)', () => {
       'splash',
       'almacenSeguro',
       'enlaces',
+      'google',
     ]);
     expect(dependencias.sesionActiva.obtener()).toEqual({
       tipo: 'restaurando',

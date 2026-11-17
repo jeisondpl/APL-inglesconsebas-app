@@ -8,6 +8,29 @@ jest.mock('react-native-config', () => ({
   Config: { API_URL: 'http://localhost:8080/api', APP_ENV: 'dev' },
 }));
 
+// @react-native-google-signin (F1-06): su mock oficial no está en `exports`, así que se imita aquí.
+// signIn devuelve un ID token fijo; un test cambia la respuesta con mockResolvedValueOnce.
+jest.mock('@react-native-google-signin/google-signin', () => ({
+  __esModule: true,
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn(() => Promise.resolve(true)),
+    signIn: jest.fn(() =>
+      Promise.resolve({ type: 'success', data: { idToken: 'mockIdToken' } }),
+    ),
+    hasPreviousSignIn: jest.fn(() => false),
+    signOut: jest.fn(() => Promise.resolve(null)),
+  },
+  isCancelledResponse: (r: { type?: string }) => r?.type === 'cancelled',
+  isErrorWithCode: (e: unknown) =>
+    typeof e === 'object' && e !== null && 'code' in e,
+  statusCodes: {
+    SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    PLAY_SERVICES_NOT_AVAILABLE: 'PLAY_SERVICES_NOT_AVAILABLE',
+  },
+}));
+
 // Mock oficial de react-native-safe-area-context (insets y marcos fijos).
 jest.mock(
   'react-native-safe-area-context',

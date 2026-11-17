@@ -8,9 +8,11 @@ import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
 import { crearKeychainSecureStorageAdapter } from '@/native/adapters/KeychainSecureStorageAdapter';
 import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import { crearClienteApi, type ClienteApi } from '@/shared/lib/api';
@@ -30,6 +32,8 @@ export interface INativos {
   splash: SplashPort;
   almacenSeguro: SecureStoragePort;
   enlaces: EnlacesPort;
+  /** Login con Google (F1-06). */
+  google: GoogleSignInPort;
 }
 
 export interface IDependencias {
@@ -68,6 +72,10 @@ export function crearDependencias(): IDependencias {
       splash: crearBootSplashAdapter(),
       almacenSeguro,
       enlaces: crearLinkingEnlacesAdapter(),
+      google: crearGoogleSignInAdapter({
+        webClientId: entorno.googleWebClientId,
+        iosClientId: entorno.googleIosClientId,
+      }),
     },
     api,
     sesionActiva,

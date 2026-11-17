@@ -6,6 +6,10 @@ export type EntornoApp = 'dev' | 'staging' | 'prod';
 export interface IEntorno {
   apiUrl: string;
   appEnv: EntornoApp;
+  /** Client ID web de Google (login con Google, F1-06). `null` = botón oculto. */
+  googleWebClientId: string | null;
+  /** Client ID de iOS de Google, si existe. */
+  googleIosClientId: string | null;
 }
 
 const ENTORNOS: readonly EntornoApp[] = ['dev', 'staging', 'prod'];
@@ -32,7 +36,12 @@ export function leerEntorno(
       }». Valores admitidos: ${ENTORNOS.join(', ')}.`,
     );
   }
-  return { apiUrl: apiUrl.replace(/\/+$/, ''), appEnv };
+  return {
+    apiUrl: apiUrl.replace(/\/+$/, ''),
+    appEnv,
+    googleWebClientId: config.GOOGLE_WEB_CLIENT_ID?.trim() || null,
+    googleIosClientId: config.GOOGLE_IOS_CLIENT_ID?.trim() || null,
+  };
 }
 
 /** Entorno de este build, leído de react-native-config. */
