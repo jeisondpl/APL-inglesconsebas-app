@@ -12,7 +12,8 @@ import type {
 } from '../../domain/entities/Inicio.entities';
 import type { InicioRepository } from '../../domain/models/InicioRepository';
 
-function seccion<T>(r: HttpResponse<T>): Seccion<T> {
+/** Respuesta de una lectura como sección del inicio (la comparten estudiante y profe). */
+export function seccion<T>(r: HttpResponse<T>): Seccion<T> {
   return !r.error && r.response !== undefined
     ? { ok: true, datos: r.response }
     : { ok: false, msg: r.msg ?? textosComunes.errores.desconocido };

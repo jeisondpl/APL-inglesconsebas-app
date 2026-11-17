@@ -31,6 +31,7 @@ import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
+import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
 import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import {
@@ -319,25 +320,28 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
   });
 
   it.each([
-    // F1-05: el estudiante entra a sus pestañas, sin el rol del inicio provisional.
-    ['ana', '1234', 'Hola, Ana', null],
-    ['meli', '1111', 'Hola, Meli', 'Rol: Profe'],
+    // F1-05/F1-07: estudiante y profe entran a sus pestañas; el admin, al inicio provisional.
+    ['ana', '1234', 'Hola, Ana', 'pestanas-estudiante'],
+    ['meli', '1111', 'Hola, Meli', 'pestanas-profe'],
     ['yggodguz', '2905', 'Hola, Admin', 'Rol: Admin'],
-  ])('el login de %s lleva a su inicio', async (usuario, pin, saludo, rol) => {
-    const { dependencias } = contenedorConSplash();
-    await montarCon(dependencias);
-    await screen.findByText('Inicia sesión');
-    await iniciarSesion(usuario, pin);
-    expect(await screen.findByText(saludo)).toBeOnTheScreen();
-    if (rol) {
-      expect(screen.getByText(rol)).toBeOnTheScreen();
-    } else {
-      expect(screen.getByTestId('pestanas-estudiante')).toBeOnTheScreen();
-    }
-    await expect(
-      dependencias.nativos.almacenSeguro.leer('sesion'),
-    ).resolves.toMatch(/"token"/);
-  });
+  ])(
+    'el login de %s lleva a su inicio',
+    async (usuario, pin, saludo, destino) => {
+      const { dependencias } = contenedorConSplash();
+      await montarCon(dependencias);
+      await screen.findByText('Inicia sesión');
+      await iniciarSesion(usuario, pin);
+      expect(await screen.findByText(saludo)).toBeOnTheScreen();
+      if (destino.startsWith('pestanas-')) {
+        expect(screen.getByTestId(destino)).toBeOnTheScreen();
+      } else {
+        expect(screen.getByText(destino)).toBeOnTheScreen();
+      }
+      await expect(
+        dependencias.nativos.almacenSeguro.leer('sesion'),
+      ).resolves.toMatch(/"token"/);
+    },
+  );
 
   it('«Cerrar sesión» vuelve al login con el paso usuario vacío', async () => {
     const { dependencias } = await montarConSesion();
@@ -580,6 +584,7 @@ function contenedorConApi(
       sesion: crearApiSesionRepository(api, { etiquetaDispositivo: 'test' }),
       // F1-05: IRepositorios exige el inicio; en memoria para no añadir peticiones al fetch falso.
       inicio: crearMemoriaInicioRepository(),
+      inicioProfe: crearMemoriaInicioProfeRepository(),
     },
     nativos: {
       splash: { ocultar: () => Promise.resolve() },

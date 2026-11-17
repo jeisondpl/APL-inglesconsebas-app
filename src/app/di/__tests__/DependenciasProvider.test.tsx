@@ -101,6 +101,7 @@ describe('crearDependencias (CA11)', () => {
     expect(Object.keys(dependencias.repositorios)).toEqual([
       'sesion',
       'inicio',
+      'inicioProfe',
     ]);
     expect(Object.keys(dependencias.nativos)).toEqual([
       'splash',

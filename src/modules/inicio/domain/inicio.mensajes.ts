@@ -7,4 +7,8 @@ export const mensajesInicio = {
   proximamente: 'Próximamente',
   reagendarProximamente:
     'Pronto vas a poder reagendar tus clases desde la App.',
+  /** Inicio del profe (F1-07). */
+  asistenciaProximamente:
+    'Pronto vas a poder marcar la asistencia desde la App. Por ahora, desde la web.',
+  estudianteSinNombre: 'Estudiante',
 } as const;

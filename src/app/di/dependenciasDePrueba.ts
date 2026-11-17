@@ -1,4 +1,6 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
+import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
 import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import type { EstadoOnboarding } from '@/modules/onboarding/domain/entities/Onboarding.entities';
@@ -52,6 +54,8 @@ export interface IOpcionesDependenciasDePrueba {
   repo?: SesionRepository;
   /** Repositorio del inicio. Por defecto, en memoria y vacío (estados vacíos, sin red). */
   inicio?: InicioRepository;
+  /** Inicio del profe (F1-07). Por defecto, en memoria y vacío. */
+  inicioProfe?: InicioProfeRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   /** Login con Google. Por defecto no disponible (el botón no aparece). */
@@ -84,6 +88,7 @@ export function crearDependenciasDePrueba(
           obtenerToken: () => sesionActiva.token(),
         }),
       inicio: opciones.inicio ?? crearMemoriaInicioRepository(),
+      inicioProfe: opciones.inicioProfe ?? crearMemoriaInicioProfeRepository(),
     },
     nativos: {
       splash: opciones.splash ?? { ocultar: () => Promise.resolve() },

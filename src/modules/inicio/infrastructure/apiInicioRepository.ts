@@ -38,16 +38,16 @@ export function textoDe(valor: unknown): string | null {
 }
 
 /** Errores del cliente HTTP tal cual, con su `msg` y `code`. */
-function propagar<T>(r: HttpResponse<unknown>): HttpResponse<T> {
+export function propagar<T>(r: HttpResponse<unknown>): HttpResponse<T> {
   return respuestaError<T>(r.msg ?? textosComunes.errores.desconocido, r.code);
 }
 
-function invalida<T>(code?: number): HttpResponse<T> {
+export function invalida<T>(code?: number): HttpResponse<T> {
   return respuestaError<T>(textosComunes.errores.respuestaInvalida, code);
 }
 
 /** Lista de Leap mapeada; si la respuesta no es un array, error de formato. */
-function lista<C, D>(
+export function lista<C, D>(
   r: HttpResponse<C[]>,
   mapear: (crudo: C) => D | null,
 ): HttpResponse<D[]> {

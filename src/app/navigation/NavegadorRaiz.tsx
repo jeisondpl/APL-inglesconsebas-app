@@ -13,7 +13,7 @@ import { useArranqueSesion } from '@/modules/sesion/aplications/controllers/Sesi
 import { pantallasAuth } from '@/modules/sesion/presentation/navigation';
 import { useTema } from '@/shared/theme';
 
-import { PestanasEstudiante } from './PestanasEstudiante';
+import { PestanasEstudiante, PestanasProfe } from './PestanasEstudiante';
 import { rutaInicialRaiz } from './rutaInicialRaiz';
 import { rutaInicioPorRol } from './rutaInicioPorRol';
 import { temaNavegacion } from './temaNavegacion';
@@ -62,12 +62,14 @@ export function NavegadorRaiz() {
       >
         {rutaInicio ? (
           <Pila.Group>
-            {/* F1-05: el estudiante entra a sus pestañas; profe y admin, al inicio provisional. */}
+            {/* Estudiante (F1-05) y profe (F1-07) entran a sus pestañas; el admin, al provisional. */}
             <Pila.Screen
               name={rutaInicio}
               component={
                 rutaInicio === 'InicioEstudiante'
                   ? PestanasEstudiante
+                  : rutaInicio === 'InicioProfe'
+                  ? PestanasProfe
                   : InicioProvisionalScreen
               }
             />

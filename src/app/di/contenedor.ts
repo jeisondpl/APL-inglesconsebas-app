@@ -1,4 +1,6 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
+import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
 import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import type { BanderaOnboarding } from '@/modules/onboarding/domain/models/BanderaOnboarding';
@@ -26,6 +28,8 @@ export interface IRepositorios {
   sesion: SesionRepository;
   /** Inicio del estudiante (F1-05). */
   inicio: InicioRepository;
+  /** Inicio del profe (F1-07). */
+  inicioProfe: InicioProfeRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -68,6 +72,7 @@ export function crearDependencias(): IDependencias {
         etiquetaDispositivo: etiquetaDispositivo(),
       }),
       inicio: crearApiInicioRepository(api),
+      inicioProfe: crearApiInicioProfeRepository(api),
     },
     nativos: {
       splash: crearBootSplashAdapter(),

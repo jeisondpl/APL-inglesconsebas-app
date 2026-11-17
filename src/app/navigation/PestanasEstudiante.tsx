@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { PantallaProximamente } from '@/app/pestanas/PantallaProximamente';
 import { textosPestanas as textos } from '@/app/pestanas/pestanas.textos';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
+import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
 import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
 import {
   IconoClases,
@@ -31,10 +32,15 @@ const crearEstilos = (tema: ITema) =>
     contenido: { flex: 1 },
   });
 
+/** Rol con pestañas: el estudiante (F1-05) y el profe (F1-07). */
+export type RolPestanas = 'estudiante' | 'profe';
+
 /** Inicio con los datos de la sesión y las acciones que la pantalla del módulo no puede importar. */
 function PestanaInicio({
+  rol,
   alCambiarNoLeidos,
 }: {
+  rol: RolPestanas;
   alCambiarNoLeidos: (n: number) => void;
 }) {
   const navegacion = useNavigation();
@@ -43,8 +49,9 @@ function PestanaInicio({
   if (!usuario) {
     return null;
   }
+  const Inicio = rol === 'profe' ? InicioProfeScreen : InicioEstudianteScreen;
   return (
-    <InicioEstudianteScreen
+    <Inicio
       usuario={usuario}
       alCerrarSesion={_cerrarSesion}
       alVerSistemaDiseno={
@@ -57,41 +64,44 @@ function PestanaInicio({
 }
 
 function Contenido({
+  rol,
   activa,
   alCambiarNoLeidos,
 }: {
+  rol: RolPestanas;
   activa: PestanaEstudiante;
   alCambiarNoLeidos: (n: number) => void;
 }) {
+  const pantallas = rol === 'profe' ? textos.pantallasProfe : textos.pantallas;
   // Como Livic: solo se monta la pestaña activa.
   switch (activa) {
     case 'inicio':
-      return <PestanaInicio alCambiarNoLeidos={alCambiarNoLeidos} />;
+      return <PestanaInicio rol={rol} alCambiarNoLeidos={alCambiarNoLeidos} />;
     case 'clases':
       return (
         <PantallaProximamente
           testID="pestana-contenido-clases"
-          {...textos.pantallas.clases}
+          {...pantallas.clases}
         />
       );
     case 'mensajes':
       return (
         <PantallaProximamente
           testID="pestana-contenido-mensajes"
-          {...textos.pantallas.mensajes}
+          {...pantallas.mensajes}
         />
       );
     case 'tareas':
       return (
         <PantallaProximamente
           testID="pestana-contenido-tareas"
-          {...textos.pantallas.tareas}
+          {...pantallas.tareas}
         />
       );
   }
 }
 
-function Estructura() {
+function Estructura({ rol }: { rol: RolPestanas }) {
   const estilos = useEstilos(crearEstilos);
   const estadoBarra = useEstadoBarraPestanas();
   const [activa, setActiva] = useState<PestanaEstudiante>('inicio');
@@ -124,9 +134,13 @@ function Estructura() {
 
   return (
     <ProveedorPestanas activa={activa} irAPestana={irAPestana}>
-      <View style={estilos.raiz} testID="pestanas-estudiante">
+      <View style={estilos.raiz} testID={`pestanas-${rol}`}>
         <View style={estilos.contenido}>
-          <Contenido activa={activa} alCambiarNoLeidos={setNoLeidos} />
+          <Contenido
+            rol={rol}
+            activa={activa}
+            alCambiarNoLeidos={setNoLeidos}
+          />
         </View>
         <BarraPestanas
           pestanas={pestanas}
@@ -146,7 +160,16 @@ function Estructura() {
 export function PestanasEstudiante() {
   return (
     <ProveedorBarraPestanas>
-      <Estructura />
+      <Estructura rol="estudiante" />
+    </ProveedorBarraPestanas>
+  );
+}
+
+/** Inicio del profe con las mismas cuatro pestañas (F1-07); Clases, Mensajes y Tareas, próximamente. */
+export function PestanasProfe() {
+  return (
+    <ProveedorBarraPestanas>
+      <Estructura rol="profe" />
     </ProveedorBarraPestanas>
   );
 }
