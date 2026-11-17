@@ -159,8 +159,9 @@ export function FondoMarca({
           {
             width: ladoIsotipo,
             height: ladoIsotipo,
-            right: -ladoIsotipo * 0.38,
-            top: alto * 0.06,
+            // Centrado en horizontal y a la altura del halo, detrás del contenido principal.
+            left: (ancho - ladoIsotipo) / 2,
+            top: alto * alturaHalo - ladoIsotipo / 2,
             opacity: OPACIDAD_ISOTIPO,
           },
           estiloIsotipo,
