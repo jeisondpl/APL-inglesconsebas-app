@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fuentes/DMSans-Medium.ttf",
+      "sha1": "6e8b4c3c899786d5d9b5698c87dc8264e2b818cd"
+    },
+    {
+      "path": "assets/fuentes/DMSans-Regular.ttf",
+      "sha1": "982b0e6f1234a1fa364309eb508eb374c27572cf"
+    },
+    {
+      "path": "assets/fuentes/DMSans-SemiBold.ttf",
+      "sha1": "74ae0321e69f616713fd7589765fa2124e9d2681"
+    },
+    {
+      "path": "assets/fuentes/Nohemi-Medium.otf",
+      "sha1": "93c4f11c04b91912c50efd50a62be5acc603e7c7"
+    }
+  ]
+}

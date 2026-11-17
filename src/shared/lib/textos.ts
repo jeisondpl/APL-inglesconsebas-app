@@ -12,4 +12,8 @@ export const textosComunes = {
     servidor: 'Ocurrió un error en el servidor. Inténtalo más tarde.',
     desconocido: 'Ocurrió un error inesperado.',
   },
+  /** Nombre visible de la marca. `Marca` lo usa como etiqueta accesible del logo principal. */
+  marca: {
+    nombre: 'Inglés con Sebas',
+  },
 } as const;

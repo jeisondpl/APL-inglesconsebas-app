@@ -1,12 +1,18 @@
 // CA16: LimiteDeErrores muestra el fallback (título, mensaje y botón accesible «Reintentar» con
 // alto ≥ 44) y «Reintentar» vuelve a montar la pantalla.
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
-import { useEffect } from 'react';
+// F1-01b: el constructor envuelve en TemaProvider y compara con los tokens en lugar de
+// DarkTheme/DefaultTheme (migración a tokens).
+import {
+  fireEvent,
+  render as renderBase,
+  screen,
+} from '@testing-library/react-native';
+import { useEffect, type ReactElement } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { LimiteDeErrores } from '@/app/providers';
 import { textosLimiteDeErrores as textos } from '@/app/providers/limiteDeErrores.textos';
+import { TemaProvider, temaClaro, temaOscuro } from '@/shared/theme';
 
 jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
   __esModule: true,
@@ -16,6 +22,9 @@ jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
 const useColorScheme = jest.requireMock(
   'react-native/Libraries/Utilities/useColorScheme',
 ).default as jest.Mock;
+
+const render = (elemento: ReactElement) =>
+  renderBase(<TemaProvider>{elemento}</TemaProvider>);
 
 /** Pantalla falsa que falla mientras `control.fallar` sea true y cuenta sus montajes. */
 const control = { fallar: false, montajes: 0 };
@@ -121,10 +130,10 @@ describe('LimiteDeErrores (CA16)', () => {
   });
 
   it.each([
-    ['dark', DarkTheme],
-    ['light', DefaultTheme],
+    ['dark', temaOscuro],
+    ['light', temaClaro],
   ] as const)(
-    'el fallback usa los colores del tema de navegación (%s)',
+    'el fallback usa los colores de los tokens del tema (%s)',
     async (esquema, tema) => {
       useColorScheme.mockReturnValue(esquema);
       control.fallar = true;
@@ -134,10 +143,10 @@ describe('LimiteDeErrores (CA16)', () => {
         </LimiteDeErrores>,
       );
       expect(screen.getByRole('alert').parent).toHaveStyle({
-        backgroundColor: tema.colors.background,
+        backgroundColor: tema.colores.fondo,
       });
       expect(screen.getByRole('header')).toHaveStyle({
-        color: tema.colors.text,
+        color: tema.colores.texto,
       });
     },
   );
