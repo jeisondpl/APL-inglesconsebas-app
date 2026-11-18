@@ -105,6 +105,7 @@ describe('crearDependencias (CA11)', () => {
       'clases',
       'agenda',
       'mensajes',
+      'tareas',
       'notificaciones',
     ]);
     expect(Object.keys(dependencias.nativos)).toEqual([

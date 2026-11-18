@@ -1,5 +1,7 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
 import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import type { TareasRepository } from '@/modules/tareas/domain/models/TareasRepository';
+import { crearMemoriaTareasRepository } from '@/modules/tareas/infrastructure/memoriaTareasRepository';
 import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
 import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
 import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
@@ -91,6 +93,8 @@ export interface IOpcionesDependenciasDePrueba {
   mensajes?: MensajesRepository;
   /** Dispositivos push (F2-03). Por defecto, en memoria. */
   notificaciones?: NotificacionesRepository;
+  /** Tareas (F3-02). Por defecto, en memoria y vacío. */
+  tareas?: TareasRepository;
   /** Push (F2-03). Por defecto, sin Firebase. */
   push?: PushPort;
   splash?: SplashPort;
@@ -133,6 +137,7 @@ export function crearDependenciasDePrueba(
       clases: opciones.clases ?? crearMemoriaClasesRepository(),
       agenda: opciones.agenda ?? crearMemoriaAgendaRepository(),
       mensajes: opciones.mensajes ?? crearMemoriaMensajesRepository(),
+      tareas: opciones.tareas ?? crearMemoriaTareasRepository(),
       notificaciones:
         opciones.notificaciones ?? crearMemoriaNotificacionesRepository(),
     },

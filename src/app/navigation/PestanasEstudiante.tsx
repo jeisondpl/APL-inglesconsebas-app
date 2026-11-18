@@ -2,13 +2,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { PantallaProximamente } from '@/app/pestanas/PantallaProximamente';
 import { textosPestanas as textos } from '@/app/pestanas/pestanas.textos';
 import { AgendaScreen } from '@/modules/agenda/presentation/screens/AgendaScreen';
 import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
 import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
 import { useNotificaciones } from '@/modules/notificaciones/aplications/controllers/Notificaciones.controller';
+import { TareasScreen } from '@/modules/tareas/presentation/screens/TareasScreen';
 import { MensajesScreen } from '@/modules/mensajes/presentation/screens/MensajesScreen';
 import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
 import {
@@ -110,7 +110,6 @@ function Contenido({
   activa: PestanaEstudiante;
   alCambiarNoLeidos: (n: number) => void;
 }) {
-  const pantallas = rol === 'profe' ? textos.pantallasProfe : textos.pantallas;
   // Como Livic: solo se monta la pestaña activa.
   switch (activa) {
     case 'inicio':
@@ -122,12 +121,7 @@ function Contenido({
         <PestanaMensajes rol={rol} alCambiarNoLeidos={alCambiarNoLeidos} />
       );
     case 'tareas':
-      return (
-        <PantallaProximamente
-          testID="pestana-contenido-tareas"
-          {...pantallas.tareas}
-        />
-      );
+      return <TareasScreen rol={rol} />;
   }
 }
 

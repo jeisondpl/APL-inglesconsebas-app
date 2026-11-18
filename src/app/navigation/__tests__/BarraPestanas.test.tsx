@@ -288,19 +288,16 @@ describe('PestanasEstudiante', () => {
     ).toBeOnTheScreen();
   });
 
-  it.each([['Tareas', 'pestana-contenido-tareas', 'Tareas']])(
-    'pulsar %s muestra su pantalla «Próximamente» (CA2, CA16)',
-    async (pestana, testID, titulo) => {
-      await montar();
-      await screen.findByText('Hola, Ana');
-      await fireEvent.press(screen.getByRole('tab', { name: pestana }));
-      expect(screen.getByTestId(testID)).toBeOnTheScreen();
-      expect(screen.getByRole('header', { name: titulo })).toBeOnTheScreen();
-      expect(screen.getByText('Próximamente')).toBeOnTheScreen();
-      expect(screen.getByRole('tab', { name: pestana })).toBeSelected();
-      expect(screen.queryByText('Hola, Ana')).toBeNull();
-    },
-  );
+  it('pulsar Tareas abre la lista de tareas del estudiante (F3-02)', async () => {
+    await montar();
+    await screen.findByText('Hola, Ana');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Tareas' }));
+    expect(await screen.findByTestId('tareas-lista')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Tareas' })).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Tareas' })).toBeSelected();
+    expect(screen.queryByText('Hola, Ana')).toBeNull();
+    expect(screen.queryByText('Próximamente')).toBeNull();
+  });
 
   it('pulsar Clases abre el historial del estudiante (F2-01)', async () => {
     await montar();

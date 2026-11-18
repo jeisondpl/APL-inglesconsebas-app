@@ -5,6 +5,8 @@ import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepo
 import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
+import type { TareasRepository } from '@/modules/tareas/domain/models/TareasRepository';
+import { crearApiTareasRepository } from '@/modules/tareas/infrastructure/apiTareasRepository';
 import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
 import { crearApiNotificacionesRepository } from '@/modules/notificaciones/infrastructure/apiNotificacionesRepository';
 import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
@@ -51,6 +53,8 @@ export interface IRepositorios {
   mensajes: MensajesRepository;
   /** Dispositivos push (F2-03). */
   notificaciones: NotificacionesRepository;
+  /** Tareas y feedback (F3-02). */
+  tareas: TareasRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -103,6 +107,7 @@ export function crearDependencias(): IDependencias {
       clases: crearApiClasesRepository(api),
       agenda: crearApiAgendaRepository(api),
       mensajes: crearApiMensajesRepository(api),
+      tareas: crearApiTareasRepository(api),
       notificaciones: crearApiNotificacionesRepository(api, {
         etiquetaDispositivo: etiquetaDispositivo(),
       }),

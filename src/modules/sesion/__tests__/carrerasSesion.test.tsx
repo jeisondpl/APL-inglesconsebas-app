@@ -29,6 +29,7 @@ import type {
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
+import { crearMemoriaTareasRepository } from '@/modules/tareas/infrastructure/memoriaTareasRepository';
 import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
 import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
@@ -411,6 +412,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       clases: crearMemoriaClasesRepository(),
       agenda: crearMemoriaAgendaRepository(),
       mensajes: crearMemoriaMensajesRepository(),
+      tareas: crearMemoriaTareasRepository(),
       notificaciones: crearMemoriaNotificacionesRepository(),
     },
     nativos: {
