@@ -15,6 +15,7 @@ import type {
 import {
   estadoVisible,
   puedeIntentarCancelar,
+  puedeIntentarReagendar,
 } from '../../domain/validations/clases.validations';
 import { textosClases as textos } from '../clases.textos';
 
@@ -153,14 +154,18 @@ function FilaClase({
   clase,
   esProxima,
   puedeCancelar,
+  puedeReagendar,
   alAbrirZoom,
   alCancelar,
+  alReagendar,
 }: {
   clase: IClaseHistorial;
   esProxima: boolean;
   puedeCancelar: boolean;
+  puedeReagendar: boolean;
   alAbrirZoom: (enlace: string) => void;
   alCancelar: (idClase: string) => void;
+  alReagendar: (idClase: string) => void;
 }) {
   const estilos = useEstilos(crearEstilos);
   const estado = estadoVisible(clase.estado);
@@ -202,13 +207,22 @@ function FilaClase({
             <Insignia tono={estado.tono} texto={estado.etiqueta} />
           </View>
         </View>
-        {(esProxima && clase.enlaceZoom) || puedeCancelar ? (
+        {(esProxima && clase.enlaceZoom) || puedeCancelar || puedeReagendar ? (
           <View style={estilos.botones}>
             {esProxima && clase.enlaceZoom ? (
               <Boton
                 titulo={textos.clase.abrirZoom}
                 accessibilityHint={textos.clase.abrirZoomAyuda}
                 onPress={() => alAbrirZoom(clase.enlaceZoom as string)}
+                style={estilos.botonFila}
+              />
+            ) : null}
+            {puedeReagendar ? (
+              <Boton
+                testID={`reagendar-${clase.id}`}
+                titulo={textos.reagendar.boton}
+                accessibilityLabel={textos.reagendar.botonAyuda(clase)}
+                onPress={() => alReagendar(clase.id)}
                 style={estilos.botonFila}
               />
             ) : null}
@@ -235,11 +249,13 @@ export function ListaClases({
   ahoraMs,
   alAbrirZoom,
   alCancelar,
+  alReagendar,
 }: {
   ciclo: ICicloClases;
   ahoraMs: number;
   alAbrirZoom: (enlace: string) => void;
   alCancelar: (idClase: string) => void;
+  alReagendar: (idClase: string) => void;
 }) {
   const estilos = useEstilos(crearEstilos);
   if (ciclo.clases.length === 0) {
@@ -259,8 +275,10 @@ export function ListaClases({
           clase={c}
           esProxima={c.id === ciclo.proximaId}
           puedeCancelar={puedeIntentarCancelar(c, ahoraMs)}
+          puedeReagendar={puedeIntentarReagendar(c)}
           alAbrirZoom={alAbrirZoom}
           alCancelar={alCancelar}
+          alReagendar={alReagendar}
         />
       ))}
     </View>

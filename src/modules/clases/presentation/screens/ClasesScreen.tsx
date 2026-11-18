@@ -15,6 +15,7 @@ import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
 import { useClasesController } from '../../aplications/controllers/Clases.controller';
 import { HojaCancelacion } from '../components/HojaCancelacion';
+import { HojaReagendar } from '../components/HojaReagendar';
 import {
   ListaClases,
   ResumenCiclo,
@@ -44,8 +45,8 @@ const crearEstilos = (tema: ITema) =>
 
 /**
  * Clases del estudiante (F2-01, ítem 2.1): el historial del ciclo con el estado de cada clase, un
- * selector para ver los ciclos anteriores y la próxima clase destacada con su Zoom. Es solo
- * lectura: cancelar y reagendar llegan en los ítems 2.2 y 2.3.
+ * selector para ver los ciclos anteriores y la próxima clase destacada con su Zoom. Cancelar (2.2)
+ * y escoger un nuevo espacio para lo «por reagendar» (2.3) los decide Leap.
  */
 export function ClasesScreen({ usuario }: IPropsClasesScreen) {
   const { tema } = useTema();
@@ -57,6 +58,11 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
     refrescando,
     ahoraMs,
     cancelacion,
+    reagendacion,
+    _abrirReagendar,
+    _cerrarReagendar,
+    _elegirEspacio,
+    _confirmarReagendar,
     _abrirCancelacion,
     _cerrarCancelacion,
     _confirmarCancelacion,
@@ -145,12 +151,19 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
                 ahoraMs={ahoraMs}
                 alAbrirZoom={_abrirClase}
                 alCancelar={_abrirCancelacion}
+                alReagendar={_abrirReagendar}
               />
             </Revelar>
           </>
         ) : null}
       </Animated.ScrollView>
 
+      <HojaReagendar
+        estado={reagendacion}
+        alCerrar={_cerrarReagendar}
+        alElegir={_elegirEspacio}
+        alConfirmar={_confirmarReagendar}
+      />
       <HojaCancelacion
         estado={cancelacion}
         alCerrar={_cerrarCancelacion}

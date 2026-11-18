@@ -42,9 +42,23 @@ cliente modificado podía cancelar sin costo). Decisión acordada con el usuario
   calcula estado ni tokens; muestra el `finalStatus` real.
 - **Power cobra un solo token.** La web hoy cobra doble en la cancelación tardía (<12 h): el
   servidor ya descuenta y la web llama además a `deduct_token`. Avisar a Sebas.
-- Escoger el nuevo espacio tras «reagendar» (2.3) y agendar otra clase en Flex (2.4) aún no están:
-  la hoja lo dice con honestidad («por ahora, desde la web»).
+- Agendar otra clase en Flex (2.4) aún no está (la hoja lo dice: «por ahora, desde la web»).
 - No se envía el mensaje automático de `chispa` que manda la web al cancelar (el servidor no lo hace).
+
+## 2.3 Reagendar (escoger espacio)
+
+- Backend (`app/api/reagendar.php`, solo en la copia de desarrollo): `reschedule_slots {id}` devuelve
+  los espacios ya filtrados (profes excluidas del estudiante, exclusivas como LeShaun solo si las
+  tiene, horario habitual, cruces a menos de 1 h con otra clase, anticipación 6 h / 12 h en Power,
+  plazo `expires_at`) y `student_reschedule {id,date,time,teacherId}` exige que el espacio esté en
+  esa lista, crea el evento como la web y ejecuta con `set_reschedule_date` (que repite sus reglas).
+  Solo clases `to_reschedule`; en grupo responde `en_grupo` (queda para la web). En desarrollo
+  (`LEAP_SIN_INTEGRACIONES=1`) los espacios se inventan. **Pendiente: portarlo al Leap de
+  Hostinger** y probar contra Google Calendar real.
+- App: botón «Escoger nuevo espacio» en las clases «Por reagendar»; hoja con el plazo, los espacios
+  por día (su profe primero) y confirmación. Un 409 (espacio ocupado) deja el error visible y vuelve
+  a leer las clases.
+- No se envían los mensajes de `chispa` ni el aviso al admin (`todos`) que manda la web.
 
 ## Fuera de alcance
 

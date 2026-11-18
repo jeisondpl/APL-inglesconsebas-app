@@ -8,6 +8,8 @@ import { textosComunes } from '@/shared/lib/textos';
 
 import type {
   EscenarioCancelacion,
+  EspaciosReagendar,
+  IEspacioReagendar,
   IOpcionCancelacion,
   IResponseClase,
   VistaPreviaCancelacion,
@@ -16,6 +18,7 @@ import type { ClasesRepository } from '../domain/models/ClasesRepository';
 import type {
   ILeapCancelacion,
   ILeapClase,
+  ILeapEspacios,
   ILeapVistaPrevia,
 } from './leapClases.tipos';
 
@@ -111,6 +114,39 @@ export function vistaPreviaDe(
   };
 }
 
+/** Espacios del dominio a partir de la respuesta de Leap; `null` si el formato no es el esperado. */
+export function espaciosDe(c: ILeapEspacios): EspaciosReagendar | null {
+  if (c.puede === false) {
+    return { puede: false, motivo: textoDe(c.motivo) ?? 'no_reagendable' };
+  }
+  if (c.puede !== true || !Array.isArray(c.espacios)) {
+    return null;
+  }
+  const espacios = c.espacios
+    .map((e): IEspacioReagendar | null => {
+      const fecha = textoDe(e.fecha);
+      const hora = textoDe(e.hora);
+      const idProfe = textoDe(e.idProfe);
+      return fecha && hora && idProfe
+        ? {
+            fecha,
+            hora,
+            idProfe,
+            profe: textoDe(e.profe) ?? '',
+            esMiProfe: e.esMiProfe === true,
+          }
+        : null;
+    })
+    .filter((e): e is IEspacioReagendar => e !== null);
+  return {
+    puede: true,
+    hasta: textoDe(c.hasta),
+    fechaOriginal: textoDe(c.fechaOriginal) ?? '',
+    anticipacionHoras: numeroDe(c.anticipacionHoras) ?? 0,
+    espacios,
+  };
+}
+
 /**
  * Adaptador de Clases con la API de Leap. Es una lectura que `PERMITIDAS_ESTUDIANTE`
  * (app/api/seguridad.php) deja hacer al estudiante con su propio id.
@@ -180,6 +216,50 @@ export function crearApiClasesRepository(api: ClienteApi): ClasesRepository {
       const estadoFinal = textoDe(r.response?.finalStatus);
       return estadoFinal
         ? respuestaOk({ estadoFinal }, r.code)
+        : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
+    },
+
+    async espaciosParaReagendar(idClase) {
+      const r = await api.post<ILeapEspacios>(
+        'api.php',
+        { action: 'reschedule_slots', id: idClase },
+        { endpoint: 'class_sessions' },
+      );
+      if (r.error) {
+        return respuestaError(
+          r.msg ?? textosComunes.errores.desconocido,
+          r.code,
+        );
+      }
+      const espacios =
+        r.response && typeof r.response === 'object'
+          ? espaciosDe(r.response)
+          : null;
+      return espacios
+        ? respuestaOk(espacios, r.code)
+        : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
+    },
+
+    async reagendarClase({ idClase, fecha, hora, idProfe }) {
+      const r = await api.post<{ ok?: boolean }>(
+        'api.php',
+        {
+          action: 'student_reschedule',
+          id: idClase,
+          date: fecha,
+          time: hora,
+          teacherId: idProfe,
+        },
+        { endpoint: 'class_sessions' },
+      );
+      if (r.error) {
+        return respuestaError(
+          r.msg ?? textosComunes.errores.desconocido,
+          r.code,
+        );
+      }
+      return r.response?.ok === true
+        ? respuestaOk({ ok: true as const }, r.code)
         : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
     },
   };

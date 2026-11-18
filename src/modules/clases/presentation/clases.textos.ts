@@ -34,7 +34,7 @@ const quedarian = (v: VistaCancelable) =>
 const PRONTO_AGENDAR =
   'Agendar otra clase desde la App llegará pronto; por ahora hazlo desde la web.';
 const PRONTO_ESCOGER =
-  'Escoger el nuevo espacio desde la App llegará pronto; por ahora, desde la web.';
+  'Después lo escoges aquí mismo, en Clases, con «Escoger nuevo espacio».';
 
 export interface ITextoEscenario {
   titulo: string;
@@ -131,6 +131,12 @@ const MOTIVOS_NO_CANCELABLE: Record<string, string> = {
   fecha_invalida: 'Esta clase no tiene una fecha válida.',
 };
 
+const MOTIVOS_NO_REAGENDABLE: Record<string, string> = {
+  no_reagendable: 'Esta clase no está pendiente de reagendar.',
+  vencida: 'El plazo para reagendar esta clase ya venció.',
+  en_grupo: 'Esta clase es de un grupo: por ahora reagéndala desde la web.',
+};
+
 /** Textos de Clases del estudiante (F2-01, 2.1 y 2.2). */
 export const textosClases = {
   titulo: 'Clases',
@@ -189,6 +195,33 @@ export const textosClases = {
               ? 'Gasta 1 cancelación y no se recupera.'
               : 'No gasta tokens.',
           },
+  },
+  reagendar: {
+    boton: 'Escoger nuevo espacio',
+    botonAyuda: (c: IClaseHistorial) =>
+      `Escoger un nuevo espacio para la clase del ${fechaConDia(c.fecha)}`,
+    revisando: 'Buscando espacios',
+    titulo: 'Escoge tu nuevo espacio',
+    plazo: (hasta: string | null) =>
+      hasta
+        ? `Tienes hasta el ${fechaConDia(hasta)} para escoger.`
+        : 'Escoge el espacio que más te convenga.',
+    regla: (horas: number) =>
+      `Cada clase solo se puede reagendar una vez. El espacio debe empezar con al menos ${horas} horas de anticipación.`,
+    vacio:
+      'Ahora mismo no hay espacios disponibles. Intenta de nuevo más tarde.',
+    conProfe: (hora: string, profe: string) => `${hora12(hora)} · ${profe}`,
+    miProfe: 'Tu profe',
+    confirmar: 'Confirmar este espacio',
+    confirmarElegido: (fecha: string, hora: string, profe: string) =>
+      `${fechaConDia(fecha)} a las ${hora12(hora)} con ${profe}`,
+    elegirPrimero: 'Escoge un espacio',
+    cerrar: 'Cerrar',
+    volver: 'Volver',
+    entendido: 'Entendido',
+    noSePuede: 'No se puede reagendar',
+    motivo: (motivo: string): string =>
+      MOTIVOS_NO_REAGENDABLE[motivo] ?? MOTIVOS_NO_REAGENDABLE.no_reagendable,
   },
   clase: {
     proxima: 'Próxima',

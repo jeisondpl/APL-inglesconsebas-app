@@ -10,4 +10,9 @@ export const mensajesClases = {
   canceladaTomada: 'Clase cancelada · cuenta como tomada',
   canceladaReagendar: 'Clase cancelada · tienes 1 mes para reagendarla',
   noSeCancelo: 'No se pudo cancelar la clase',
+  noSePuedeReagendar: 'Esta clase ya no se puede reagendar.',
+  eligeEspacio: 'Escoge un espacio para tu clase.',
+  reagendada: 'Clase reagendada',
+  noSeReagendo: 'No se pudo reagendar la clase',
+  noSeCargaronEspacios: 'No se pudieron cargar los espacios',
 } as const;

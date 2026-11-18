@@ -3,8 +3,10 @@ import type { HttpResponse } from '@/shared/lib/HttpResponse';
 import type {
   IArgsCancelar,
   IArgsClases,
+  IArgsReagendar,
   IResponseCancelacion,
   IResponseClase,
+  EspaciosReagendar,
   VistaPreviaCancelacion,
 } from '../entities/Clases.entities';
 
@@ -20,4 +22,10 @@ export interface ClasesRepository {
   cancelarClase(
     args: IArgsCancelar,
   ): Promise<HttpResponse<IResponseCancelacion>>;
+  /** Espacios que puede escoger para una clase «por reagendar» (Leap ya los filtró). */
+  espaciosParaReagendar(
+    idClase: string,
+  ): Promise<HttpResponse<EspaciosReagendar>>;
+  /** Escoge el espacio. Leap vuelve a validar y crea el evento. */
+  reagendarClase(args: IArgsReagendar): Promise<HttpResponse<{ ok: true }>>;
 }

@@ -3,6 +3,7 @@ import { hoyBogota, instanteBogota } from '@/shared/lib/fechas';
 import type {
   ICicloClases,
   IClaseHistorial,
+  IEspacioReagendar,
   IEstadoVisible,
   IResponseClase,
   IResumenCiclo,
@@ -173,6 +174,37 @@ export function puedeIntentarCancelar(
     clase.inicioMs !== null &&
     clase.inicioMs > ahoraMs
   );
+}
+
+/** La clase espera que escoja un espacio nuevo. Leap decide si de verdad se puede (plazo, grupo). */
+export function puedeIntentarReagendar(clase: IClaseHistorial): boolean {
+  return clase.estado === 'to_reschedule';
+}
+
+export interface IDiaEspacios {
+  fecha: string;
+  espacios: IEspacioReagendar[];
+}
+
+/** Los espacios por día, en orden de fecha; en cada día, primero su profe y luego por hora. */
+export function espaciosPorDia(
+  espacios: readonly IEspacioReagendar[],
+): IDiaEspacios[] {
+  const dias = new Map<string, IEspacioReagendar[]>();
+  for (const e of espacios) {
+    dias.set(e.fecha, [...(dias.get(e.fecha) ?? []), e]);
+  }
+  return [...dias.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([fecha, lista]) => ({
+      fecha,
+      espacios: [...lista].sort(
+        (a, b) =>
+          Number(b.esMiProfe) - Number(a.esMiProfe) ||
+          a.hora.localeCompare(b.hora) ||
+          a.profe.localeCompare(b.profe),
+      ),
+    }));
 }
 
 /** Posición del ciclo que se abre primero: el actual; si no hay, el más reciente. */

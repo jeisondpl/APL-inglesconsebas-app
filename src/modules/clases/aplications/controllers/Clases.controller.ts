@@ -6,7 +6,9 @@ import { textosComunes } from '@/shared/lib/textos';
 
 import { mensajesClases } from '../../domain/clases.mensajes';
 import type {
+  EspaciosReagendar,
   ICicloClases,
+  IEspacioReagendar,
   IResponseClase,
   OpcionCancelacion,
   VistaPreviaCancelacion,
@@ -20,6 +22,10 @@ import {
   vistaPreviaCancelacionUseCase,
 } from '../cancelarClase/cancelarClase';
 import { obtenerClasesUseCase } from '../obtenerClases/obtenerClases';
+import {
+  espaciosParaReagendarUseCase,
+  reagendarClaseUseCase,
+} from '../reagendarClase/reagendarClase';
 
 /** Cada cuánto se recalcula «la próxima» (sin volver a pedir datos). */
 export const INTERVALO_RELOJ_CLASES_MS = 60 * 1000;
@@ -42,6 +48,20 @@ export type EstadoCancelacion =
       error: string | null;
     };
 
+/** La hoja de reagendar: cerrada, pidiendo los espacios a Leap, o lista para escoger y confirmar. */
+export type EstadoReagendacion =
+  | { tipo: 'cerrada' }
+  | { tipo: 'cargando'; idClase: string }
+  | {
+      tipo: 'lista';
+      idClase: string;
+      datos: EspaciosReagendar;
+      elegido: IEspacioReagendar | null;
+      enviando: boolean;
+      /** Error de la última confirmación (p. ej. el espacio se ocupó). */
+      error: string | null;
+    };
+
 /** Aviso al terminar: según el estado en que Leap dejó la clase (puede diferir del esperado). */
 function avisoDeCancelacion(estadoFinal: string): string {
   if (estadoFinal === 'to_reschedule') {
@@ -53,6 +73,12 @@ function avisoDeCancelacion(estadoFinal: string): string {
 }
 
 export interface IClasesController {
+  reagendacion: EstadoReagendacion;
+  /** Pide a Leap los espacios y abre la hoja para escoger. */
+  _abrirReagendar(idClase: string): Promise<void>;
+  _cerrarReagendar(): void;
+  _elegirEspacio(espacio: IEspacioReagendar): void;
+  _confirmarReagendar(): Promise<void>;
   cancelacion: EstadoCancelacion;
   /** Pide a Leap qué pasaría y abre la hoja de confirmación. */
   _abrirCancelacion(idClase: string): Promise<void>;
@@ -101,6 +127,10 @@ export function useClasesController({
     tipo: 'cerrada',
   });
   const enCancelacion = useRef(false);
+  const [reagendacion, setReagendacion] = useState<EstadoReagendacion>({
+    tipo: 'cerrada',
+  });
+  const enReagendar = useRef(false);
   const [ahoraMs, setAhoraMs] = useState(ahora);
   const generacion = useRef(0);
   const montado = useRef(true);
@@ -258,6 +288,98 @@ export function useClasesController({
     [cancelacion, repo, leer],
   );
 
+  const _abrirReagendar = useCallback(
+    async (idClase: string) => {
+      if (enReagendar.current) {
+        return;
+      }
+      enReagendar.current = true;
+      setReagendacion({ tipo: 'cargando', idClase });
+      const r = await espaciosParaReagendarUseCase(repo, idClase);
+      enReagendar.current = false;
+      if (!montado.current) {
+        return;
+      }
+      if (r.error || !r.response) {
+        setReagendacion({ tipo: 'cerrada' });
+        notify.error(
+          mensajesClases.noSeCargaronEspacios,
+          r.msg ?? textosComunes.errores.desconocido,
+        );
+        return;
+      }
+      setReagendacion({
+        tipo: 'lista',
+        idClase,
+        datos: r.response,
+        elegido: null,
+        enviando: false,
+        error: null,
+      });
+    },
+    [repo],
+  );
+
+  const _cerrarReagendar = useCallback(() => {
+    // Mientras se envía no se cierra: no se sabría si la clase se reagendó.
+    setReagendacion(s =>
+      s.tipo === 'lista' && s.enviando ? s : { tipo: 'cerrada' },
+    );
+  }, []);
+
+  const _elegirEspacio = useCallback((espacio: IEspacioReagendar) => {
+    setReagendacion(s =>
+      s.tipo === 'lista' && !s.enviando
+        ? { ...s, elegido: espacio, error: null }
+        : s,
+    );
+  }, []);
+
+  const _confirmarReagendar = useCallback(async () => {
+    if (
+      reagendacion.tipo !== 'lista' ||
+      !reagendacion.elegido ||
+      enReagendar.current
+    ) {
+      return;
+    }
+    const { idClase, datos, elegido } = reagendacion;
+    enReagendar.current = true;
+    setReagendacion({ ...reagendacion, enviando: true, error: null });
+    const r = await reagendarClaseUseCase(
+      repo,
+      {
+        idClase,
+        fecha: elegido.fecha,
+        hora: elegido.hora,
+        idProfe: elegido.idProfe,
+      },
+      datos,
+    );
+    enReagendar.current = false;
+    if (!montado.current) {
+      return;
+    }
+    if (r.error || !r.response) {
+      setReagendacion({
+        tipo: 'lista',
+        idClase,
+        datos,
+        elegido: null,
+        enviando: false,
+        error: r.msg ?? textosComunes.errores.desconocido,
+      });
+      // Un 409 es que el espacio o la clase cambiaron: se vuelve a pedir la lista.
+      if (r.code === 409) {
+        await leer();
+      }
+      return;
+    }
+    setReagendacion({ tipo: 'cerrada' });
+    notify.success(mensajesClases.reagendada);
+    await leer();
+  }, [reagendacion, repo, leer]);
+
   const _abrirClase = useCallback(
     async (enlace: string) => {
       const abierto = await enlaces.abrir(enlace);
@@ -272,6 +394,11 @@ export function useClasesController({
   );
 
   return {
+    reagendacion,
+    _abrirReagendar,
+    _cerrarReagendar,
+    _elegirEspacio,
+    _confirmarReagendar,
     cancelacion,
     _abrirCancelacion,
     _cerrarCancelacion,

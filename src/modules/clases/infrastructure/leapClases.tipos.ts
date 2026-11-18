@@ -37,3 +37,19 @@ export interface ILeapCancelacion {
   ok?: boolean;
   finalStatus?: string;
 }
+
+/** Respuesta de POST class_sessions {action:'reschedule_slots'} (reagendar.php de Leap). */
+export interface ILeapEspacios {
+  puede?: boolean;
+  motivo?: string;
+  hasta?: string | null;
+  fechaOriginal?: string;
+  anticipacionHoras?: number | string;
+  espacios?: {
+    fecha?: string;
+    hora?: string;
+    profe?: string;
+    idProfe?: string;
+    esMiProfe?: boolean;
+  }[];
+}

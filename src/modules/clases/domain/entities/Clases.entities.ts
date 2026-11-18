@@ -133,3 +133,38 @@ export interface IArgsCancelar {
 export interface IResponseCancelacion {
   estadoFinal: string;
 }
+
+// ── Reagendar una clase «por reagendar» (ítem 2.3) ──────────────────────────────────────────
+// Leap filtra los espacios (profes excluidas o exclusivas, horario habitual, cruces, anticipación y
+// plazo) y valida de nuevo al confirmar: la App solo muestra y escoge.
+
+/** Un espacio que el estudiante puede escoger. */
+export interface IEspacioReagendar {
+  fecha: string;
+  hora: string;
+  profe: string;
+  idProfe: string;
+  /** Es su profe asignada: se muestra primero. */
+  esMiProfe: boolean;
+}
+
+/** Por qué no se puede reagendar (la App pone el texto). */
+export type MotivoNoReagendable = 'no_reagendable' | 'vencida' | 'en_grupo';
+
+export type EspaciosReagendar =
+  | { puede: false; motivo: MotivoNoReagendable | string }
+  | {
+      puede: true;
+      /** Último día para escoger (`Y-m-d`); `null` si Leap no puso plazo. */
+      hasta: string | null;
+      fechaOriginal: string;
+      anticipacionHoras: number;
+      espacios: IEspacioReagendar[];
+    };
+
+export interface IArgsReagendar {
+  idClase: string;
+  fecha: string;
+  hora: string;
+  idProfe: string;
+}
