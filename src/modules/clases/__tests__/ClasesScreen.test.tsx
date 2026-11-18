@@ -18,12 +18,19 @@ import {
   useClasesController,
 } from '@/modules/clases/aplications/controllers/Clases.controller';
 import { mensajesClases } from '@/modules/clases/domain/clases.mensajes';
-import type { IResponseClase } from '@/modules/clases/domain/entities/Clases.entities';
+import type {
+  IResponseClase,
+  VistaPreviaCancelacion,
+} from '@/modules/clases/domain/entities/Clases.entities';
 import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
 import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
-import { respuestaError, respuestaOk } from '@/shared/lib/HttpResponse';
+import {
+  respuestaError,
+  respuestaOk,
+  type HttpResponse,
+} from '@/shared/lib/HttpResponse';
 import { TemaProvider } from '@/shared/theme';
 
 // 17 nov 2026, 10:00 en Bogotá.
@@ -113,6 +120,7 @@ describe('useClasesController', () => {
 
   it('error: genérico si no hay mensaje; «Reintentar» vuelve a cargar', async () => {
     const repo = {
+      ...crearMemoriaClasesRepository(),
       listarClases: () => Promise.resolve({ error: true }),
     } as unknown as ClasesRepository;
     const { result } = await montar(repo);
@@ -129,6 +137,7 @@ describe('useClasesController', () => {
 
   it('un refresco fallido conserva la lista y el ciclo que se veía, y avisa', async () => {
     const repo = {
+      ...crearMemoriaClasesRepository(),
       listarClases: jest.fn(() => Promise.resolve(respuestaOk(CLASES))),
     };
     const { result } = await montar(repo);
@@ -156,6 +165,7 @@ describe('useClasesController', () => {
 
   it('si al refrescar hay menos ciclos, el índice no se sale de la lista', async () => {
     const repo = {
+      ...crearMemoriaClasesRepository(),
       listarClases: jest.fn(() => Promise.resolve(respuestaOk(CLASES))),
     };
     const { result } = await montar(repo);
@@ -193,12 +203,118 @@ describe('useClasesController', () => {
   it('una carga que llega tras desmontar no actualiza nada', async () => {
     let soltar: () => void = () => {};
     const repo: ClasesRepository = {
+      ...crearMemoriaClasesRepository(),
       listarClases: () =>
         new Promise(ok => {
           soltar = () => ok(respuestaOk(CLASES));
         }),
     };
     const { unmount } = await montar(repo);
+    await unmount();
+    await act(async () => soltar());
+    expect(Toast.show).not.toHaveBeenCalled();
+  });
+});
+
+describe('useClasesController · cancelar (ramas)', () => {
+  const vistaOk: VistaPreviaCancelacion = {
+    puede: true,
+    escenario: 'sin_tokens',
+    estadoFinal: 'cancelled_no_tokens',
+    opciones: [],
+    descuentaToken: false,
+    fecha: '2026-11-18',
+    hora: '18:00',
+    horasRestantes: 30,
+    tokensUsados: 2,
+    tokensMaximos: 2,
+    afectaMinimo: false,
+    minimo: 8,
+    enGrupo: false,
+  };
+
+  async function montarCtl(repo: ClasesRepository) {
+    const dependencias = crearDependenciasDePrueba({ clases: repo });
+    return renderHook(
+      () => useClasesController({ idEstudiante: 's1', ahora: () => AHORA }),
+      { wrapper: envoltorio(dependencias) },
+    );
+  }
+
+  it('confirmar sin vista abierta no hace nada', async () => {
+    const repo = crearMemoriaClasesRepository(CLASES);
+    const espia = jest.spyOn(repo, 'cancelarClase');
+    const { result } = await montarCtl(repo);
+    await act(async () => result.current._confirmarCancelacion());
+    expect(espia).not.toHaveBeenCalled();
+    expect(result.current.cancelacion).toEqual({ tipo: 'cerrada' });
+  });
+
+  it('abrir dos veces seguidas pide la vista una sola vez', async () => {
+    let soltar: () => void = () => {};
+    const base = crearMemoriaClasesRepository(CLASES);
+    const vistaPrevia = jest.fn(
+      () =>
+        new Promise<HttpResponse<VistaPreviaCancelacion>>(ok => {
+          soltar = () => ok(respuestaOk(vistaOk));
+        }),
+    );
+    const { result } = await montarCtl({
+      ...base,
+      vistaPreviaCancelacion: vistaPrevia,
+    });
+    await act(async () => {
+      result.current._abrirCancelacion('f1');
+      result.current._abrirCancelacion('f1');
+    });
+    expect(vistaPrevia).toHaveBeenCalledTimes(1);
+    await act(async () => soltar());
+    expect(result.current.cancelacion.tipo).toBe('lista');
+  });
+
+  it('desmontar mientras Leap responde la vista previa no actualiza nada', async () => {
+    let soltar: () => void = () => {};
+    const base = crearMemoriaClasesRepository(CLASES);
+    const repo: ClasesRepository = {
+      ...base,
+      vistaPreviaCancelacion: () =>
+        new Promise(ok => {
+          soltar = () => ok(respuestaError('tarde', 500));
+        }),
+    };
+    const { result, unmount } = await montarCtl(repo);
+    await act(async () => {
+      result.current._abrirCancelacion('f1');
+    });
+    await unmount();
+    await act(async () => soltar());
+    expect(Toast.show).not.toHaveBeenCalled();
+  });
+
+  it('mientras se envía no se cierra la hoja; al desmontar a mitad no se actualiza nada', async () => {
+    let soltar: () => void = () => {};
+    const base = crearMemoriaClasesRepository(CLASES, {
+      vistasPrevias: { f1: vistaOk },
+    });
+    const repo: ClasesRepository = {
+      ...base,
+      cancelarClase: () =>
+        new Promise(ok => {
+          soltar = () =>
+            ok(respuestaOk({ estadoFinal: 'cancelled_no_tokens' }));
+        }),
+    };
+    const { result, unmount } = await montarCtl(repo);
+    await act(async () => result.current._abrirCancelacion('f1'));
+    await act(async () => {
+      result.current._confirmarCancelacion();
+    });
+    await waitFor(() => {
+      const c = result.current.cancelacion;
+      expect(c.tipo === 'lista' && c.enviando).toBe(true);
+    });
+    await act(async () => result.current._cerrarCancelacion());
+    expect(result.current.cancelacion.tipo).toBe('lista');
     await unmount();
     await act(async () => soltar());
     expect(Toast.show).not.toHaveBeenCalled();
@@ -271,6 +387,7 @@ describe('ClasesScreen', () => {
 
   it('error de carga: aviso con «Reintentar»', async () => {
     await montarPantalla({
+      ...crearMemoriaClasesRepository(),
       listarClases: () => Promise.resolve(respuestaError('Sin conexión', 0)),
     });
     expect(await screen.findByTestId('clases-error')).toBeOnTheScreen();

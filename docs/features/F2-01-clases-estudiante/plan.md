@@ -28,7 +28,25 @@ al estudiante con su propio id. Devuelve el historial completo (hasta 2000 filas
 - **Próxima**: la primera `scheduled`/`rescheduled` que no pasó; sigue siéndolo 50 min tras empezar.
 - Las fechas y horas son de Bogotá (`shared/lib/fechas`, ahora compartido con el inicio).
 
+## Entrega 2.2: cancelar una clase
+
+La web decidía el resultado de cancelar en el navegador y el servidor lo validaba solo en parte (un
+cliente modificado podía cancelar sin costo). Decisión acordada con el usuario: **el servidor decide**.
+
+- Leap (copia de desarrollo, `app/api/cancelacion.php`): `cancel_preview` (qué pasaría) y
+  `student_cancel` (cancela con el estado y el costo que calcula el servidor, vía `update_status`).
+  Mismas ramas y orden que `CancelModal`; rechaza lo no cancelable. **Pendiente: portarlo al Leap de
+  Hostinger** antes de producción.
+- App: botón «Cancelar clase» en las clases programadas que no han empezado; hoja inferior con el
+  texto del escenario, opciones (reagendar o soltar) si Leap las ofrece, y confirmación. La App no
+  calcula estado ni tokens; muestra el `finalStatus` real.
+- **Power cobra un solo token.** La web hoy cobra doble en la cancelación tardía (<12 h): el
+  servidor ya descuenta y la web llama además a `deduct_token`. Avisar a Sebas.
+- Escoger el nuevo espacio tras «reagendar» (2.3) y agendar otra clase en Flex (2.4) aún no están:
+  la hoja lo dice con honestidad («por ahora, desde la web»).
+- No se envía el mensaje automático de `chispa` que manda la web al cancelar (el servidor no lo hace).
+
 ## Fuera de alcance
 
-Cancelar, reagendar, autoagendar Flex y el evento de Google (2.2 a 2.4). La pantalla no ofrece
+Reagendar, autoagendar Flex y el evento de Google (2.2 a 2.4). La pantalla no ofrece
 acciones que no existen.

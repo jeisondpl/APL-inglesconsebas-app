@@ -159,6 +159,22 @@ export function ciclosDeClases(
     .sort((a, b) => (b.inicio ?? '').localeCompare(a.inicio ?? ''));
 }
 
+/**
+ * ¿Se ofrece el botón «Cancelar»? Solo una clase programada, o reagendada con su fecha nueva, que
+ * aún no empezó. Es solo para no mostrar un botón inútil: quien decide si se puede y qué pasa es
+ * Leap (la vista previa y la cancelación lo vuelven a comprobar).
+ */
+export function puedeIntentarCancelar(
+  clase: IClaseHistorial,
+  ahoraMs: number,
+): boolean {
+  return (
+    PROGRAMADAS.includes(clase.estado) &&
+    clase.inicioMs !== null &&
+    clase.inicioMs > ahoraMs
+  );
+}
+
 /** Posición del ciclo que se abre primero: el actual; si no hay, el más reciente. */
 export function indiceCicloInicial(ciclos: readonly ICicloClases[]): number {
   const actual = ciclos.findIndex(c => c.esActual);

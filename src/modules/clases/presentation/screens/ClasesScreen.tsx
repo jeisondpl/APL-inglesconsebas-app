@@ -14,6 +14,7 @@ import {
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
 import { useClasesController } from '../../aplications/controllers/Clases.controller';
+import { HojaCancelacion } from '../components/HojaCancelacion';
 import {
   ListaClases,
   ResumenCiclo,
@@ -54,6 +55,11 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
     estado,
     indice,
     refrescando,
+    ahoraMs,
+    cancelacion,
+    _abrirCancelacion,
+    _cerrarCancelacion,
+    _confirmarCancelacion,
     _cargar,
     _refrescar,
     _verAnterior,
@@ -134,11 +140,22 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
               <ResumenCiclo ciclo={ciclo} />
             </Revelar>
             <Revelar retraso={PASO_ENTRADA * 3}>
-              <ListaClases ciclo={ciclo} alAbrirZoom={_abrirClase} />
+              <ListaClases
+                ciclo={ciclo}
+                ahoraMs={ahoraMs}
+                alAbrirZoom={_abrirClase}
+                alCancelar={_abrirCancelacion}
+              />
             </Revelar>
           </>
         ) : null}
       </Animated.ScrollView>
+
+      <HojaCancelacion
+        estado={cancelacion}
+        alCerrar={_cerrarCancelacion}
+        alConfirmar={_confirmarCancelacion}
+      />
     </SafeAreaView>
   );
 }

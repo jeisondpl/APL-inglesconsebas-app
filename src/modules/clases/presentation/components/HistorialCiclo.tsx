@@ -12,7 +12,10 @@ import type {
   ICicloClases,
   IClaseHistorial,
 } from '../../domain/entities/Clases.entities';
-import { estadoVisible } from '../../domain/validations/clases.validations';
+import {
+  estadoVisible,
+  puedeIntentarCancelar,
+} from '../../domain/validations/clases.validations';
 import { textosClases as textos } from '../clases.textos';
 
 const crearEstilos = (tema: ITema) =>
@@ -50,7 +53,12 @@ const crearEstilos = (tema: ITema) =>
     fecha: { width: 52, alignItems: 'center' },
     medio: { flex: 1, minWidth: 0, gap: 2 },
     derecha: { alignItems: 'flex-end', gap: tema.espaciado.xs },
-    boton: { marginTop: tema.espaciado.s },
+    botones: {
+      flexDirection: 'row',
+      gap: tema.espaciado.s,
+      marginTop: tema.espaciado.s,
+    },
+    botonFila: { flex: 1, paddingHorizontal: tema.espaciado.s },
   });
 
 /** Selector del ciclo: flechas para ir a los anteriores y el rango de fechas en el centro. */
@@ -144,11 +152,15 @@ export function ResumenCiclo({ ciclo }: { ciclo: ICicloClases }) {
 function FilaClase({
   clase,
   esProxima,
+  puedeCancelar,
   alAbrirZoom,
+  alCancelar,
 }: {
   clase: IClaseHistorial;
   esProxima: boolean;
+  puedeCancelar: boolean;
   alAbrirZoom: (enlace: string) => void;
+  alCancelar: (idClase: string) => void;
 }) {
   const estilos = useEstilos(crearEstilos);
   const estado = estadoVisible(clase.estado);
@@ -190,13 +202,27 @@ function FilaClase({
             <Insignia tono={estado.tono} texto={estado.etiqueta} />
           </View>
         </View>
-        {esProxima && clase.enlaceZoom ? (
-          <Boton
-            titulo={textos.clase.abrirZoom}
-            accessibilityHint={textos.clase.abrirZoomAyuda}
-            onPress={() => alAbrirZoom(clase.enlaceZoom as string)}
-            style={estilos.boton}
-          />
+        {(esProxima && clase.enlaceZoom) || puedeCancelar ? (
+          <View style={estilos.botones}>
+            {esProxima && clase.enlaceZoom ? (
+              <Boton
+                titulo={textos.clase.abrirZoom}
+                accessibilityHint={textos.clase.abrirZoomAyuda}
+                onPress={() => alAbrirZoom(clase.enlaceZoom as string)}
+                style={estilos.botonFila}
+              />
+            ) : null}
+            {puedeCancelar ? (
+              <Boton
+                testID={`cancelar-${clase.id}`}
+                variante="secundario"
+                titulo={textos.cancelar.boton}
+                accessibilityLabel={textos.cancelar.botonAyuda(clase)}
+                onPress={() => alCancelar(clase.id)}
+                style={estilos.botonFila}
+              />
+            ) : null}
+          </View>
         ) : null}
       </Tarjeta>
     </View>
@@ -206,10 +232,14 @@ function FilaClase({
 /** Todas las clases del ciclo por fecha, con la próxima destacada y su Zoom. */
 export function ListaClases({
   ciclo,
+  ahoraMs,
   alAbrirZoom,
+  alCancelar,
 }: {
   ciclo: ICicloClases;
+  ahoraMs: number;
   alAbrirZoom: (enlace: string) => void;
+  alCancelar: (idClase: string) => void;
 }) {
   const estilos = useEstilos(crearEstilos);
   if (ciclo.clases.length === 0) {
@@ -228,7 +258,9 @@ export function ListaClases({
           key={c.id}
           clase={c}
           esProxima={c.id === ciclo.proximaId}
+          puedeCancelar={puedeIntentarCancelar(c, ahoraMs)}
           alAbrirZoom={alAbrirZoom}
+          alCancelar={alCancelar}
         />
       ))}
     </View>

@@ -218,6 +218,7 @@ describe('obtenerClasesUseCase', () => {
       (await obtenerClasesUseCase(ok, { idEstudiante: 's1' })).response,
     ).toHaveLength(1);
     const sinMensaje = {
+      ...crearMemoriaClasesRepository(),
       listarClases: () => Promise.resolve({ error: true, code: 500 }),
     } as unknown as ClasesRepository;
     expect(
@@ -228,6 +229,7 @@ describe('obtenerClasesUseCase', () => {
       code: 500,
     });
     const conMensaje: ClasesRepository = {
+      ...crearMemoriaClasesRepository(),
       listarClases: () => Promise.resolve(respuestaError('Sin red', 0)),
     };
     expect(

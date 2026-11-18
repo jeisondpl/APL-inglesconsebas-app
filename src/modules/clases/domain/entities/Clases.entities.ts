@@ -70,3 +70,66 @@ export interface ICicloClases {
   /** La próxima clase de este ciclo (la primera programada que aún no pasó), si la hay. */
   proximaId: string | null;
 }
+
+// ── Cancelar una clase (F2-02 de la tarjeta F2-01, ítem 2.2) ────────────────────────────────
+// El SERVIDOR decide el resultado (cancel_preview / student_cancel en Leap): la App muestra lo que
+// pasaría, deja elegir si hay opciones y confirma. Nunca calcula el estado ni los tokens.
+
+/** Qué hacer con la clase cuando el servidor deja elegir. */
+export type OpcionCancelacion = 'reagendar' | 'soltar';
+
+/** Qué pasaría, según el servidor. Los textos los pone la App a partir del escenario. */
+export type EscenarioCancelacion =
+  | 'flex_libera'
+  | 'flex_tarde'
+  | 'power_tarde'
+  | 'power_elige'
+  | 'elige'
+  | 'reagendar_necesario'
+  | 'sin_tokens'
+  | 'reagendada';
+
+/** Por qué no se puede cancelar (la App pone el texto). */
+export type MotivoNoCancelable =
+  | 'no_cancelable'
+  | 'ya_empezo'
+  | 'ciclo_futuro'
+  | 'fecha_invalida';
+
+export interface IOpcionCancelacion {
+  opcion: OpcionCancelacion;
+  /** Estado en que quedará la clase con esta opción. */
+  estado: string;
+  descuentaToken: boolean;
+}
+
+export type VistaPreviaCancelacion =
+  | { puede: false; motivo: MotivoNoCancelable | string }
+  | {
+      puede: true;
+      escenario: EscenarioCancelacion;
+      estadoFinal: string;
+      opciones: IOpcionCancelacion[];
+      descuentaToken: boolean;
+      fecha: string;
+      hora: string;
+      horasRestantes: number;
+      tokensUsados: number;
+      tokensMaximos: number;
+      /** Esta cancelación dejaría al estudiante por debajo del mínimo del ciclo. */
+      afectaMinimo: boolean;
+      minimo: number;
+      /** Hay compañero de grupo: la cancelación también lo afecta. */
+      enGrupo: boolean;
+    };
+
+export interface IArgsCancelar {
+  idClase: string;
+  /** Obligatoria si la vista previa trae `opciones`. */
+  opcion?: OpcionCancelacion;
+}
+
+/** Resultado real, que puede diferir del esperado (p. ej. sin tokens a última hora). */
+export interface IResponseCancelacion {
+  estadoFinal: string;
+}

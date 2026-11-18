@@ -8,11 +8,17 @@ import { mensajesClases } from '../../domain/clases.mensajes';
 import type {
   ICicloClases,
   IResponseClase,
+  OpcionCancelacion,
+  VistaPreviaCancelacion,
 } from '../../domain/entities/Clases.entities';
 import {
   ciclosDeClases,
   indiceCicloInicial,
 } from '../../domain/validations/clases.validations';
+import {
+  cancelarClaseUseCase,
+  vistaPreviaCancelacionUseCase,
+} from '../cancelarClase/cancelarClase';
 import { obtenerClasesUseCase } from '../obtenerClases/obtenerClases';
 
 /** Cada cuánto se recalcula «la próxima» (sin volver a pedir datos). */
@@ -23,7 +29,36 @@ export type EstadoClases =
   | { tipo: 'error'; msg: string }
   | { tipo: 'listo'; ciclos: ICicloClases[] };
 
+/** La hoja de cancelar: cerrada, pidiendo la vista previa a Leap, o lista para confirmar. */
+export type EstadoCancelacion =
+  | { tipo: 'cerrada' }
+  | { tipo: 'cargando'; idClase: string }
+  | {
+      tipo: 'lista';
+      idClase: string;
+      vista: VistaPreviaCancelacion;
+      enviando: boolean;
+      /** Error de la última confirmación (p. ej. la clase ya empezó). */
+      error: string | null;
+    };
+
+/** Aviso al terminar: según el estado en que Leap dejó la clase (puede diferir del esperado). */
+function avisoDeCancelacion(estadoFinal: string): string {
+  if (estadoFinal === 'to_reschedule') {
+    return mensajesClases.canceladaReagendar;
+  }
+  return estadoFinal === 'cancelled_no_impact'
+    ? mensajesClases.cancelada
+    : mensajesClases.canceladaTomada;
+}
+
 export interface IClasesController {
+  cancelacion: EstadoCancelacion;
+  /** Pide a Leap qué pasaría y abre la hoja de confirmación. */
+  _abrirCancelacion(idClase: string): Promise<void>;
+  _cerrarCancelacion(): void;
+  /** Confirma; `opcion` es obligatoria si Leap dejó elegir. */
+  _confirmarCancelacion(opcion?: OpcionCancelacion): Promise<void>;
   estado: EstadoClases;
   /** Ciclo que se está viendo (posición en `ciclos`, 0 = el más reciente). */
   indice: number;
@@ -62,6 +97,10 @@ export function useClasesController({
   >({ tipo: 'cargando' });
   const [indice, setIndice] = useState(0);
   const [refrescando, setRefrescando] = useState(false);
+  const [cancelacion, setCancelacion] = useState<EstadoCancelacion>({
+    tipo: 'cerrada',
+  });
+  const enCancelacion = useRef(false);
   const [ahoraMs, setAhoraMs] = useState(ahora);
   const generacion = useRef(0);
   const montado = useRef(true);
@@ -147,6 +186,78 @@ export function useClasesController({
     [],
   );
 
+  const _abrirCancelacion = useCallback(
+    async (idClase: string) => {
+      if (enCancelacion.current) {
+        return;
+      }
+      enCancelacion.current = true;
+      setCancelacion({ tipo: 'cargando', idClase });
+      const r = await vistaPreviaCancelacionUseCase(repo, idClase);
+      enCancelacion.current = false;
+      if (!montado.current) {
+        return;
+      }
+      if (r.error || !r.response) {
+        setCancelacion({ tipo: 'cerrada' });
+        notify.error(
+          mensajesClases.noSeCancelo,
+          r.msg ?? textosComunes.errores.desconocido,
+        );
+        return;
+      }
+      setCancelacion({
+        tipo: 'lista',
+        idClase,
+        vista: r.response,
+        enviando: false,
+        error: null,
+      });
+    },
+    [repo],
+  );
+
+  const _cerrarCancelacion = useCallback(() => {
+    // Mientras se envía no se cierra: no se sabría si la clase se canceló.
+    setCancelacion(c =>
+      c.tipo === 'lista' && c.enviando ? c : { tipo: 'cerrada' },
+    );
+  }, []);
+
+  const _confirmarCancelacion = useCallback(
+    async (opcion?: OpcionCancelacion) => {
+      if (cancelacion.tipo !== 'lista' || enCancelacion.current) {
+        return;
+      }
+      const { idClase, vista } = cancelacion;
+      enCancelacion.current = true;
+      setCancelacion({ ...cancelacion, enviando: true, error: null });
+      const r = await cancelarClaseUseCase(repo, { idClase, opcion }, vista);
+      enCancelacion.current = false;
+      if (!montado.current) {
+        return;
+      }
+      if (r.error || !r.response) {
+        setCancelacion({
+          tipo: 'lista',
+          idClase,
+          vista,
+          enviando: false,
+          error: r.msg ?? textosComunes.errores.desconocido,
+        });
+        // Un 409 es que la clase cambió desde que se abrió la hoja: se refresca la lista.
+        if (r.code === 409) {
+          await leer();
+        }
+        return;
+      }
+      setCancelacion({ tipo: 'cerrada' });
+      notify.success(avisoDeCancelacion(r.response.estadoFinal));
+      await leer();
+    },
+    [cancelacion, repo, leer],
+  );
+
   const _abrirClase = useCallback(
     async (enlace: string) => {
       const abierto = await enlaces.abrir(enlace);
@@ -161,6 +272,10 @@ export function useClasesController({
   );
 
   return {
+    cancelacion,
+    _abrirCancelacion,
+    _cerrarCancelacion,
+    _confirmarCancelacion,
     estado,
     indice: indiceSeguro,
     refrescando,
