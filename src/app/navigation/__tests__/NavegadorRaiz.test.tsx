@@ -34,6 +34,7 @@ import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.en
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
+import { crearMemoriaPerfilRepository } from '@/modules/perfil/infrastructure/perfilRepositories';
 import { crearMemoriaTareasRepository } from '@/modules/tareas/infrastructure/memoriaTareasRepository';
 import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
 import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
@@ -596,6 +597,7 @@ function contenedorConApi(
       agenda: crearMemoriaAgendaRepository(),
       mensajes: crearMemoriaMensajesRepository(),
       tareas: crearMemoriaTareasRepository(),
+      perfil: crearMemoriaPerfilRepository(),
       notificaciones: crearMemoriaNotificacionesRepository(),
     },
     nativos: {

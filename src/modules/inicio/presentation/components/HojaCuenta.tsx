@@ -14,6 +14,8 @@ export interface IPropsHojaCuenta {
   nombre: string;
   alCerrar: () => void;
   alCerrarSesion: () => Promise<void>;
+  /** Abre el perfil (cambiar PIN y tema). El admin no lo tiene. */
+  alVerPerfil?: () => void;
   /** Solo se pasa en desarrollo: abre el escaparate del sistema de diseño. */
   alVerSistemaDiseno?: () => void;
 }
@@ -55,6 +57,7 @@ export function HojaCuenta({
   nombre,
   alCerrar,
   alCerrarSesion,
+  alVerPerfil,
   alVerSistemaDiseno,
 }: IPropsHojaCuenta) {
   const estilos = useEstilos(crearEstilos);
@@ -102,6 +105,14 @@ export function HojaCuenta({
               {nombre}
             </Texto>
           </View>
+          {alVerPerfil ? (
+            <Boton
+              testID="cuenta-perfil"
+              variante="secundario"
+              titulo={textos.cuenta.verPerfil}
+              onPress={alVerPerfil}
+            />
+          ) : null}
           {__DEV__ && alVerSistemaDiseno ? (
             <Boton
               variante="secundario"

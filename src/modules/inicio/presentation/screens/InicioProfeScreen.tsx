@@ -31,6 +31,8 @@ export interface IPropsInicioProfeScreen {
   /** Profe de la sesión (lo pasa la composición de `src/app`). */
   usuario: { id: string; nombre: string };
   alCerrarSesion: () => Promise<void>;
+  /** Abre el perfil (F1-03b). */
+  alVerPerfil?: () => void;
   /** Solo en `__DEV__`. */
   alVerSistemaDiseno?: () => void;
   alIrA?: (destino: DestinoInicio) => void;
@@ -59,6 +61,7 @@ const crearEstilos = (tema: ITema) =>
 export function InicioProfeScreen({
   usuario,
   alCerrarSesion,
+  alVerPerfil,
   alVerSistemaDiseno,
   alIrA,
   alCambiarNoLeidos,
@@ -141,6 +144,14 @@ export function InicioProfeScreen({
         nombre={usuario.nombre}
         alCerrar={() => setCuentaAbierta(false)}
         alCerrarSesion={alCerrarSesion}
+        alVerPerfil={
+          alVerPerfil
+            ? () => {
+                setCuentaAbierta(false);
+                alVerPerfil();
+              }
+            : undefined
+        }
         alVerSistemaDiseno={
           __DEV__ && alVerSistemaDiseno
             ? () => {

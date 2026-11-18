@@ -5,6 +5,8 @@ import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepo
 import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
+import type { PerfilRepository } from '@/modules/perfil/domain/perfil.dominio';
+import { crearApiPerfilRepository } from '@/modules/perfil/infrastructure/perfilRepositories';
 import type { TareasRepository } from '@/modules/tareas/domain/models/TareasRepository';
 import { crearApiTareasRepository } from '@/modules/tareas/infrastructure/apiTareasRepository';
 import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
@@ -55,6 +57,8 @@ export interface IRepositorios {
   notificaciones: NotificacionesRepository;
   /** Tareas y feedback (F3-02). */
   tareas: TareasRepository;
+  /** Perfil y cambio de PIN (F1-03b). */
+  perfil: PerfilRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -108,6 +112,7 @@ export function crearDependencias(): IDependencias {
       agenda: crearApiAgendaRepository(api),
       mensajes: crearApiMensajesRepository(api),
       tareas: crearApiTareasRepository(api),
+      perfil: crearApiPerfilRepository(api),
       notificaciones: crearApiNotificacionesRepository(api, {
         etiquetaDispositivo: etiquetaDispositivo(),
       }),

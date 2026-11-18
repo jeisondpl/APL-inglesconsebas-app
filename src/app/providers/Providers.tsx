@@ -6,6 +6,7 @@ import { HostNotificaciones } from '@/shared/components';
 import { TemaProvider, type PreferenciaTema } from '@/shared/theme';
 
 import { LimiteDeErrores } from './LimiteDeErrores';
+import { TemaPersistente } from './TemaPersistente';
 
 interface IPropsProviders {
   children: ReactNode;
@@ -28,6 +29,7 @@ export function Providers({
     <SafeAreaProvider>
       <TemaProvider preferenciaInicial={preferenciaTema}>
         <DependenciasProvider valor={dependencias}>
+          <TemaPersistente />
           <LimiteDeErrores>{children}</LimiteDeErrores>
         </DependenciasProvider>
         <HostNotificaciones />

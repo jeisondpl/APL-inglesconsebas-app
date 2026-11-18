@@ -58,6 +58,7 @@ function PestanaInicio({
     <Inicio
       usuario={usuario}
       alCerrarSesion={_cerrarSesion}
+      alVerPerfil={() => navegacion.navigate('Perfil')}
       alVerSistemaDiseno={
         __DEV__ ? () => navegacion.navigate('SistemaDiseno') : undefined
       }

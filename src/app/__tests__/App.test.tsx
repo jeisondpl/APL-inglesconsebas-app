@@ -89,7 +89,14 @@ describe('Providers (CA11, CA16)', () => {
   it('inyecta el contenedor recibido en dependencias', async () => {
     const dependencias = {
       repositorios: { inventado: { nombre: 'repo falso' } },
-      nativos: {},
+      // TemaPersistente (F1-03b) recuerda el tema en el almacén seguro.
+      nativos: {
+        almacenSeguro: {
+          leer: jest.fn().mockResolvedValue(null),
+          guardar: jest.fn().mockResolvedValue(true),
+          borrar: jest.fn(),
+        },
+      },
       api: { get: jest.fn(), post: jest.fn() },
     } as unknown as IDependencias;
     await render(

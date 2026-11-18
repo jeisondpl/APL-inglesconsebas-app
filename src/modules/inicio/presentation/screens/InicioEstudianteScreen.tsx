@@ -32,6 +32,8 @@ export interface IPropsInicioEstudianteScreen {
   usuario: { id: string; nombre: string };
   /** Cierra la sesión con el caso de uso del módulo de sesión. */
   alCerrarSesion: () => Promise<void>;
+  /** Abre el perfil (F1-03b). */
+  alVerPerfil?: () => void;
   /** Abre el escaparate del sistema de diseño. Solo se usa en `__DEV__`. */
   alVerSistemaDiseno?: () => void;
   /** Cambia de pestaña (tareas, mensajes…). */
@@ -65,6 +67,7 @@ const crearEstilos = (tema: ITema) =>
 export function InicioEstudianteScreen({
   usuario,
   alCerrarSesion,
+  alVerPerfil,
   alVerSistemaDiseno,
   alIrA,
   alCambiarNoLeidos,
@@ -162,6 +165,14 @@ export function InicioEstudianteScreen({
         nombre={usuario.nombre}
         alCerrar={() => setCuentaAbierta(false)}
         alCerrarSesion={alCerrarSesion}
+        alVerPerfil={
+          alVerPerfil
+            ? () => {
+                setCuentaAbierta(false);
+                alVerPerfil();
+              }
+            : undefined
+        }
         alVerSistemaDiseno={
           __DEV__ && alVerSistemaDiseno
             ? () => {

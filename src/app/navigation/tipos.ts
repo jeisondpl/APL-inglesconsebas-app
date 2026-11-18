@@ -6,6 +6,8 @@ export type AppParamList = {
   InicioEstudiante: undefined;
   InicioProfe: undefined;
   InicioAdmin: undefined;
+  /** Perfil (F1-03b, 1.14): estudiante y profe. */
+  Perfil: undefined;
   /** Escaparate del sistema de diseño (F1-01b). Solo en __DEV__. */
   SistemaDiseno: undefined;
 };

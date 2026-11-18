@@ -5,6 +5,7 @@ import { StatusBar } from 'react-native';
 
 import { useNative } from '@/app/di';
 import { textosEscaparate } from '@/app/escaparate/escaparate.textos';
+import { PantallaPerfil } from './PantallaPerfil';
 import { SistemaDisenoScreen } from '@/app/escaparate/SistemaDisenoScreen';
 import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
 import { useArranqueOnboarding } from '@/modules/onboarding/aplications/controllers/Onboarding.controller';
@@ -73,6 +74,9 @@ export function NavegadorRaiz() {
                   : InicioProvisionalScreen
               }
             />
+            {rutaInicio !== 'InicioAdmin' ? (
+              <Pila.Screen name="Perfil" component={PantallaPerfil} />
+            ) : null}
             {__DEV__ ? (
               <Pila.Screen
                 name="SistemaDiseno"

@@ -53,6 +53,7 @@ export const textosInicio = {
   abrirCuenta: 'Abrir el menú de tu cuenta',
   cuenta: {
     titulo: 'Tu cuenta',
+    verPerfil: 'Mi perfil',
     cerrarSesion: 'Cerrar sesión',
     verSistemaDiseno: 'Ver sistema de diseño',
     cerrar: 'Cerrar el menú',
