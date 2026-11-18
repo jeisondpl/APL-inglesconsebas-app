@@ -71,6 +71,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Inglés con Sebas usa el micrófono para grabar tus notas de voz en el chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Inglés con Sebas usa la cámara para que envíes fotos en el chat.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Inglés con Sebas accede a tus fotos para que envíes una en el chat.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Nohemi-Medium.otf</string>

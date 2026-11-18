@@ -52,6 +52,8 @@ export interface IResponseBandeja {
 export interface IResponseMedia {
   imagen: string | null;
   voz: string | null;
+  /** Duración de la nota si se conoce (la que acabo de grabar). */
+  duracionMs?: number;
 }
 
 export interface IArgsHilo {
@@ -85,6 +87,10 @@ export interface IMensajeChat extends IResponseMensaje {
   envio: EnvioMensaje;
   /** Imagen propia aún sin subir: se muestra sin pedirla al servidor. */
   imagenLocal?: string;
+  /** Nota de voz propia aún sin subir. */
+  vozLocal?: string;
+  /** Duración conocida de la nota recién grabada (ms). */
+  duracionVozMs?: number;
 }
 
 export interface IReaccionResumen {

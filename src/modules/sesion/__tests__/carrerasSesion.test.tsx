@@ -10,6 +10,7 @@ import { DependenciasProvider, type IDependencias } from '@/app/di';
 import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
+  crearAudioNoDisponible,
   crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
 import {
@@ -413,6 +414,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       splash: { ocultar: () => Promise.resolve() },
       almacenSeguro: almacen,
       enlaces: { abrir: () => Promise.resolve(true) },
+      audio: crearAudioNoDisponible(),
       imagenes: { elegir: () => Promise.resolve({ tipo: 'cancelado' }) },
       google: crearGoogleNoDisponible(),
     },

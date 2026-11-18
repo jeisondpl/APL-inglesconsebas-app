@@ -2,19 +2,28 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Texto } from '@/shared/components/Texto';
-import { IconoEnviar, IconoFlecha, IconoImagen } from '@/shared/iconos';
+import {
+  IconoCerrar,
+  IconoEnviar,
+  IconoFlecha,
+  IconoImagen,
+  IconoMicrofono,
+} from '@/shared/iconos';
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
+import type { EstadoGrabacion } from '../../aplications/controllers/Hilo.controller';
 import type {
   IMensajeChat,
   IResponseConversacion,
 } from '../../domain/entities/Mensajes.entities';
 import {
+  duracionDeVoz,
   MAX_TEXTO,
   resumenReacciones,
 } from '../../domain/validations/mensajes.validations';
 import { textosMensajes as textos } from '../mensajes.textos';
 import { ImagenMensaje } from './ImagenMensaje';
+import { NotaVoz } from './NotaVoz';
 
 const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
@@ -99,6 +108,20 @@ const crearEstilos = (tema: ITema) =>
       backgroundColor: tema.colores.marca,
     },
     botonInactivo: { backgroundColor: tema.colores.pista },
+    grabando: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: tema.espaciado.s,
+      minHeight: 44,
+    },
+    puntoGrabando: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: tema.colores.peligro,
+    },
     botonSecundario: {
       width: 44,
       height: 44,
@@ -227,9 +250,7 @@ export function BurbujaMensaje({
           <ImagenMensaje mensaje={m} alMantener={() => alMantener(m.id)} />
         ) : null}
         {m.tieneVoz ? (
-          <Texto variante="cuerpoFuerte" color={colorTexto}>
-            {textos.mensaje.voz}
-          </Texto>
+          <NotaVoz mensaje={m} alMantener={() => alMantener(m.id)} />
         ) : null}
         <View style={estilos.meta}>
           <Texto
@@ -307,6 +328,10 @@ export interface IPropsBarraEscribir {
   alEnviar: () => void;
   /** Abre la hoja para elegir o tomar una foto. */
   alAdjuntar: () => void;
+  grabacion: EstadoGrabacion;
+  alGrabar: () => void;
+  alCancelarGrabacion: () => void;
+  alEnviarGrabacion: () => void;
   /** Espacio inferior (la barra de pestañas cuando el teclado está cerrado). */
   espacioInferior: number;
 }
@@ -317,12 +342,53 @@ export function BarraEscribir({
   alCambiar,
   alEnviar,
   alAdjuntar,
+  grabacion,
+  alGrabar,
+  alCancelarGrabacion,
+  alEnviarGrabacion,
   espacioInferior,
 }: IPropsBarraEscribir) {
   const { tema } = useTema();
   const estilos = useEstilos(crearEstilos);
   const [enfocado, setEnfocado] = useState(false);
   const puede = texto.trim().length > 0;
+  if (grabacion.tipo === 'grabando') {
+    return (
+      <View
+        style={[estilos.barra, { paddingBottom: espacioInferior }]}
+        testID="chat-grabando"
+      >
+        <Pressable
+          testID="chat-grabar-cancelar"
+          accessibilityRole="button"
+          accessibilityLabel={textos.voz.cancelar}
+          onPress={() => {
+            alCancelarGrabacion();
+          }}
+          style={estilos.botonSecundario}
+        >
+          <IconoCerrar color={tema.colores.texto} />
+        </Pressable>
+        <View style={estilos.grabando} accessibilityLiveRegion="polite">
+          <View style={estilos.puntoGrabando} />
+          <Texto variante="cuerpoFuerte">
+            {`${textos.voz.grabando} ${duracionDeVoz(grabacion.ms)}`}
+          </Texto>
+        </View>
+        <Pressable
+          testID="chat-grabar-enviar"
+          accessibilityRole="button"
+          accessibilityLabel={textos.voz.enviar}
+          onPress={() => {
+            alEnviarGrabacion();
+          }}
+          style={estilos.boton}
+        >
+          <IconoEnviar color={tema.colores.sobreMarca} />
+        </Pressable>
+      </View>
+    );
+  }
   return (
     <View style={[estilos.barra, { paddingBottom: espacioInferior }]}>
       <Pressable
@@ -349,21 +415,31 @@ export function BarraEscribir({
         multiline
         maxLength={MAX_TEXTO}
       />
-      <Pressable
-        testID="chat-enviar"
-        accessibilityRole="button"
-        accessibilityLabel={textos.escribir.enviar}
-        accessibilityState={{ disabled: !puede }}
-        disabled={!puede}
-        onPress={() => {
-          alEnviar();
-        }}
-        style={[estilos.boton, !puede && estilos.botonInactivo]}
-      >
-        <IconoEnviar
-          color={puede ? tema.colores.sobreMarca : tema.colores.textoTenue}
-        />
-      </Pressable>
+      {puede ? (
+        <Pressable
+          testID="chat-enviar"
+          accessibilityRole="button"
+          accessibilityLabel={textos.escribir.enviar}
+          onPress={() => {
+            alEnviar();
+          }}
+          style={estilos.boton}
+        >
+          <IconoEnviar color={tema.colores.sobreMarca} />
+        </Pressable>
+      ) : (
+        <Pressable
+          testID="chat-grabar"
+          accessibilityRole="button"
+          accessibilityLabel={textos.voz.grabar}
+          onPress={() => {
+            alGrabar();
+          }}
+          style={estilos.boton}
+        >
+          <IconoMicrofono color={tema.colores.sobreMarca} />
+        </Pressable>
+      )}
     </View>
   );
 }

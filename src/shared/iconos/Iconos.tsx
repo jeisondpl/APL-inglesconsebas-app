@@ -98,12 +98,47 @@ export function IconoFlecha(props: IPropsIcono) {
   );
 }
 
+export function IconoCerrar(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Path d="M18 6 6 18" />
+      <Path d="m6 6 12 12" />
+    </Base>
+  );
+}
+
 export function IconoImagen(props: IPropsIcono) {
   return (
     <Base {...props}>
       <Rect x="3" y="3" width="18" height="18" rx="2" />
       <Circle cx="9" cy="9" r="2" />
       <Path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+    </Base>
+  );
+}
+
+export function IconoMicrofono(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Rect x="9" y="2" width="6" height="12" rx="3" />
+      <Path d="M5 11a7 7 0 0 0 14 0" />
+      <Path d="M12 18v4" />
+    </Base>
+  );
+}
+
+export function IconoReproducir(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Path d="M7 4.5v15l12-7.5z" />
+    </Base>
+  );
+}
+
+export function IconoDetener(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Rect x="6" y="6" width="12" height="12" rx="1.5" />
     </Base>
   );
 }

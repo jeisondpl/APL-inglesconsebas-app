@@ -95,6 +95,15 @@ jest.mock('react-native-keychain', () => {
   return { __esModule: true, default: Keychain, ...Keychain };
 });
 
+// Chat con voz (F3-01): sin módulos nativos en Jest. Un test del adaptador los vuelve a mockear.
+jest.mock('react-native-nitro-sound', () => ({
+  __esModule: true,
+  default: {},
+  AudioEncoderAndroidType: { AAC: 3 },
+  OutputFormatAndroidType: { MPEG_4: 2 },
+}));
+jest.mock('react-native-blob-util', () => ({ __esModule: true, default: {} }));
+
 // react-native-reanimated 4 (F1-04): mock oficial. Las animaciones resuelven al instante a su valor
 // final, `useAnimatedStyle` se calcula en cada render y `Animated.View` es un View normal.
 // react-native-worklets no tiene runtime de UI en Jest: se usa su mock oficial.

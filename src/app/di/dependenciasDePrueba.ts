@@ -14,6 +14,7 @@ import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
 import type { EstadoSesion } from '@/modules/sesion/domain/entities/Sesion.entities';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
+import type { AudioPort } from '@/native/ports/AudioPort';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
 import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
@@ -53,6 +54,16 @@ export const crearGoogleNoDisponible = (): GoogleSignInPort => ({
   cerrarSesion: () => Promise.resolve(),
 });
 
+/** Audio sin micrófono: grabar devuelve «denegado» y reproducir falla con un mensaje. */
+export const crearAudioNoDisponible = (): AudioPort => ({
+  empezarGrabacion: () => Promise.resolve({ tipo: 'denegado' }),
+  terminarGrabacion: () =>
+    Promise.resolve({ tipo: 'error', msg: 'Sin audio.' }),
+  cancelarGrabacion: () => Promise.resolve(),
+  reproducir: () => Promise.resolve({ tipo: 'error', msg: 'Sin audio.' }),
+  detener: () => Promise.resolve(),
+});
+
 export interface IOpcionesDependenciasDePrueba {
   /** Contenido inicial del almacén seguro (p. ej. `{ sesion: '<json>' }`). */
   almacenInicial?: Record<string, string>;
@@ -72,6 +83,8 @@ export interface IOpcionesDependenciasDePrueba {
   enlaces?: EnlacesPort;
   /** Selector de fotos (F3-01). Por defecto cancela. */
   imagenes?: SelectorImagenPort;
+  /** Audio del chat (F3-01). Por defecto, sin permiso de micrófono. */
+  audio?: AudioPort;
   /** Login con Google. Por defecto no disponible (el botón no aparece). */
   google?: GoogleSignInPort;
   almacen?: SecureStoragePort;
@@ -115,6 +128,7 @@ export function crearDependenciasDePrueba(
       imagenes: opciones.imagenes ?? {
         elegir: () => Promise.resolve({ tipo: 'cancelado' }),
       },
+      audio: opciones.audio ?? crearAudioNoDisponible(),
       google: opciones.google ?? crearGoogleNoDisponible(),
     },
     api,

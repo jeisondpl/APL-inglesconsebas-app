@@ -82,6 +82,16 @@ export const textosMensajes = {
     galeria: 'Elegir de la galería',
     camara: 'Tomar una foto',
   },
+  voz: {
+    grabar: 'Grabar una nota de voz',
+    grabando: 'Grabando',
+    cancelar: 'Cancelar la grabación',
+    enviar: 'Enviar la nota de voz',
+    reproducir: 'Reproducir la nota de voz',
+    detener: 'Detener la nota de voz',
+    cargando: 'Cargando la nota de voz…',
+    reintentar: 'No se pudo cargar la nota. Toca para reintentar',
+  },
   reacciones: {
     titulo: 'Reaccionar',
     cerrar: 'Cerrar',

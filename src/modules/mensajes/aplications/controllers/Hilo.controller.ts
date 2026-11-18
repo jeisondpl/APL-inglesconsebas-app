@@ -11,7 +11,10 @@ import type {
 } from '../../domain/entities/Mensajes.entities';
 import {
   combinarHilo,
+  MAX_GRABACION_MS,
   MAX_IMAGEN,
+  MAX_VOZ,
+  MIN_GRABACION_MS,
   marcaDeInstante,
   noLeidosDelOtro,
   problemaDelTexto,
@@ -34,10 +37,21 @@ export type EstadoHilo =
   | { tipo: 'error'; msg: string }
   | { tipo: 'listo' };
 
-interface IPendiente {
+/** Lo que se envía junto al texto. */
+interface IAdjunto {
+  imagen?: string;
+  voz?: string;
+  /** Duración de la nota recién grabada, para mostrarla sin descargarla. */
+  duracionMs?: number;
+}
+
+export type EstadoGrabacion =
+  | { tipo: 'inactiva' }
+  | { tipo: 'grabando'; ms: number };
+
+interface IPendiente extends IAdjunto {
   clave: number;
   texto: string;
-  imagen?: string;
   envio: 'enviando' | 'fallido';
   creado: string;
 }
@@ -49,11 +63,17 @@ export interface IHiloController {
   texto: string;
   /** Mensaje cuya hoja de reacciones está abierta (id del servidor), o null. */
   seleccion: IMensajeChat | null;
+  grabacion: EstadoGrabacion;
   _cargar(): Promise<void>;
   _cambiarTexto(texto: string): void;
   _enviar(): Promise<void>;
   /** Elige o toma una foto y la envía con el texto escrito como pie. */
   _adjuntarImagen(origen: OrigenFoto): Promise<void>;
+  /** Empieza a grabar una nota de voz (pide el micrófono la primera vez). */
+  _grabar(): Promise<void>;
+  _cancelarGrabacion(): Promise<void>;
+  /** Termina la grabación y la envía. */
+  _enviarGrabacion(): Promise<void>;
   _reintentar(clave: number): Promise<void>;
   _descartar(clave: number): void;
   _abrirReacciones(id: number): void;
@@ -86,11 +106,16 @@ export function useHiloController({
 }: IOpcionesHiloController): IHiloController {
   const repo = useRepository('mensajes');
   const imagenes = useNative('imagenes');
+  const audio = useNative('audio');
   const [estado, setEstado] = useState<EstadoHilo>({ tipo: 'cargando' });
   const [servidor, setServidor] = useState<IResponseMensaje[]>([]);
   const [pendientes, setPendientes] = useState<IPendiente[]>([]);
   const [texto, setTexto] = useState('');
   const [seleccionId, setSeleccionId] = useState<number | null>(null);
+  const [grabacion, setGrabacion] = useState<EstadoGrabacion>({
+    tipo: 'inactiva',
+  });
+  const grabando = useRef(false);
   const montado = useRef(true);
   const listo = useRef(false);
   const sondeando = useRef(false);
@@ -172,17 +197,30 @@ export function useHiloController({
   }, [activo, sinLeer, repo, idEstudiante]);
 
   const enviarContenido = useCallback(
-    async (contenido: string, imagen?: string, claveExistente?: number) => {
+    async (
+      contenido: string,
+      { imagen, voz, duracionMs }: IAdjunto = {},
+      claveExistente?: number,
+    ) => {
       const clave = claveExistente ?? ++contador.current;
       const creado = marcaDeInstante(ahora());
       setPendientes(p => [
         ...p.filter(x => x.clave !== clave),
-        { clave, texto: contenido, imagen, envio: 'enviando', creado },
+        {
+          clave,
+          texto: contenido,
+          imagen,
+          voz,
+          duracionMs,
+          envio: 'enviando',
+          creado,
+        },
       ]);
       const r = await enviarMensajeUseCase(repo, {
         idEstudiante,
         texto: contenido,
         imagen,
+        voz,
       });
       if (!montado.current) {
         return;
@@ -195,8 +233,12 @@ export function useHiloController({
         return;
       }
       const enviado = r.response;
-      if (imagen) {
-        recordarMedia(repo, enviado.id, { imagen, voz: null });
+      if (imagen || voz) {
+        recordarMedia(repo, enviado.id, {
+          imagen: imagen ?? null,
+          voz: voz ?? null,
+          duracionMs,
+        });
       }
       setPendientes(p => p.filter(x => x.clave !== clave));
       setServidor(s => combinarHilo(s, [enviado]));
@@ -239,16 +281,97 @@ export function useHiloController({
       }
       const pie = texto.trim();
       setTexto('');
-      await enviarContenido(pie, foto.dataUrl);
+      await enviarContenido(pie, { imagen: foto.dataUrl });
     },
     [imagenes, texto, enviarContenido],
+  );
+
+  const _cancelarGrabacion = useCallback(async () => {
+    if (!grabando.current) {
+      return;
+    }
+    grabando.current = false;
+    setGrabacion({ tipo: 'inactiva' });
+    await audio.cancelarGrabacion();
+  }, [audio]);
+
+  const _enviarGrabacion = useCallback(async () => {
+    if (!grabando.current) {
+      return;
+    }
+    grabando.current = false;
+    setGrabacion({ tipo: 'inactiva' });
+    const r = await audio.terminarGrabacion();
+    if (!montado.current) {
+      return;
+    }
+    if (r.tipo === 'error') {
+      notify.error(mensajesChat.noSePudoGrabar, r.msg);
+      return;
+    }
+    if (r.duracionMs < MIN_GRABACION_MS) {
+      notify.error(mensajesChat.noSeEnvio, mensajesChat.vozCorta);
+      return;
+    }
+    if (r.dataUrl.length > MAX_VOZ) {
+      notify.error(mensajesChat.noSeEnvio, mensajesChat.vozGrande);
+      return;
+    }
+    await enviarContenido('', { voz: r.dataUrl, duracionMs: r.duracionMs });
+  }, [audio, enviarContenido]);
+
+  const enviarGrabacionRef = useRef(_enviarGrabacion);
+  enviarGrabacionRef.current = _enviarGrabacion;
+
+  const _grabar = useCallback(async () => {
+    if (grabando.current) {
+      return;
+    }
+    grabando.current = true;
+    const r = await audio.empezarGrabacion(ms => {
+      if (!montado.current || !grabando.current) {
+        return;
+      }
+      setGrabacion({ tipo: 'grabando', ms });
+      // A los 2 minutos la nota se corta y se envía sola.
+      if (ms >= MAX_GRABACION_MS) {
+        enviarGrabacionRef.current();
+      }
+    });
+    if (!montado.current) {
+      return;
+    }
+    if (r.tipo !== 'ok') {
+      grabando.current = false;
+      notify.error(
+        mensajesChat.noSePudoGrabar,
+        r.tipo === 'denegado' ? mensajesChat.sinMicrofono : r.msg,
+      );
+      return;
+    }
+    setGrabacion({ tipo: 'grabando', ms: 0 });
+  }, [audio]);
+
+  // Salir del hilo con una grabación abierta la descarta.
+  useEffect(
+    () => () => {
+      if (grabando.current) {
+        grabando.current = false;
+        audio.cancelarGrabacion();
+      }
+    },
+    [audio],
   );
 
   const _reintentar = useCallback(
     async (clave: number) => {
       const p = pendientes.find(x => x.clave === clave);
       if (p && p.envio === 'fallido') {
-        await enviarContenido(p.texto, p.imagen, clave);
+        await enviarContenido(
+          p.texto,
+          { imagen: p.imagen, voz: p.voz, duracionMs: p.duracionMs },
+          clave,
+        );
       }
     },
     [pendientes, enviarContenido],
@@ -270,7 +393,9 @@ export function useHiloController({
         texto: p.texto,
         tieneImagen: Boolean(p.imagen),
         imagenLocal: p.imagen,
-        tieneVoz: false,
+        tieneVoz: Boolean(p.voz),
+        vozLocal: p.voz,
+        duracionVozMs: p.duracionMs,
         leido: false,
         editado: false,
         reacciones: {},
@@ -321,10 +446,14 @@ export function useHiloController({
     mensajes,
     texto,
     seleccion,
+    grabacion,
     _cargar,
     _cambiarTexto: setTexto,
     _enviar,
     _adjuntarImagen,
+    _grabar,
+    _cancelarGrabacion,
+    _enviarGrabacion,
     _reintentar,
     _descartar,
     _abrirReacciones,

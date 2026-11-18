@@ -160,12 +160,13 @@ describe('hilo del estudiante', () => {
     expect(repo.mensajes[3].texto).toBe('Nuevo mensaje');
   });
 
-  it('sin texto el botón de enviar no hace nada; con demasiado texto avisa', async () => {
+  it('sin texto aparece el micrófono y no el de enviar; con demasiado texto avisa', async () => {
     const repo = hilo();
     const enviar = jest.spyOn(repo, 'enviar');
     await montar(repo);
     await screen.findByTestId('chat-lista');
-    await fireEvent.press(screen.getByTestId('chat-enviar'));
+    expect(screen.queryByTestId('chat-enviar')).toBeNull();
+    expect(screen.getByTestId('chat-grabar')).toBeOnTheScreen();
     expect(enviar).not.toHaveBeenCalled();
     // `maxLength` impide escribirlo a mano; el controller igual lo valida.
     await fireEvent.changeText(

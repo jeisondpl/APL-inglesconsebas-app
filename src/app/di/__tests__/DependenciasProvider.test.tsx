@@ -111,6 +111,7 @@ describe('crearDependencias (CA11)', () => {
       'almacenSeguro',
       'enlaces',
       'imagenes',
+      'audio',
       'google',
     ]);
     expect(dependencias.sesionActiva.obtener()).toEqual({

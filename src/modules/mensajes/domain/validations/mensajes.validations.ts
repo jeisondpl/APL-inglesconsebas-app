@@ -13,6 +13,20 @@ import type {
 /** Tope de la foto como data URL (el servidor rechaza más de 2 000 000 caracteres). */
 export const MAX_IMAGEN = 2000000;
 
+/** Tope de la nota de voz como data URL (Leap rechaza más de 3 000 000 caracteres). */
+export const MAX_VOZ = 3000000;
+/** Una nota se corta y se envía sola a los 2 minutos. */
+export const MAX_GRABACION_MS = 120000;
+/** Menos que esto es un toque sin querer: no se envía. */
+export const MIN_GRABACION_MS = 700;
+
+/** `0:07`, `1:05`: duración de una nota. */
+export function duracionDeVoz(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const s = total % 60;
+  return `${Math.floor(total / 60)}:${s < 10 ? '0' : ''}${s}`;
+}
+
 /** Largo máximo del texto: el mismo que impone Leap (`CHAT_MAX_TEXTO`). */
 export const MAX_TEXTO = 2000;
 

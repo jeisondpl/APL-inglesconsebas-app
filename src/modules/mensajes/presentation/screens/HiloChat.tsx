@@ -167,6 +167,10 @@ export function HiloChat({
             alCambiar={c._cambiarTexto}
             alEnviar={c._enviar}
             alAdjuntar={() => setAdjuntando(true)}
+            grabacion={c.grabacion}
+            alGrabar={c._grabar}
+            alCancelarGrabacion={c._cancelarGrabacion}
+            alEnviarGrabacion={c._enviarGrabacion}
             espacioInferior={tecladoVisible ? 8 : ESPACIO_BARRA_PESTANAS + 16}
           />
         ) : null}
