@@ -105,6 +105,7 @@ describe('crearDependencias (CA11)', () => {
       'clases',
       'agenda',
       'mensajes',
+      'notificaciones',
     ]);
     expect(Object.keys(dependencias.nativos)).toEqual([
       'splash',
@@ -112,6 +113,7 @@ describe('crearDependencias (CA11)', () => {
       'enlaces',
       'imagenes',
       'audio',
+      'push',
       'google',
     ]);
     expect(dependencias.sesionActiva.obtener()).toEqual({

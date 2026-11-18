@@ -23,6 +23,7 @@ import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
   crearAudioNoDisponible,
+  crearPushNoDisponible,
   crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
 import { NavegadorRaiz, temaNavegacion } from '@/app/navigation';
@@ -33,6 +34,7 @@ import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.en
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
+import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
 import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
 import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
@@ -592,6 +594,7 @@ function contenedorConApi(
       clases: crearMemoriaClasesRepository(),
       agenda: crearMemoriaAgendaRepository(),
       mensajes: crearMemoriaMensajesRepository(),
+      notificaciones: crearMemoriaNotificacionesRepository(),
     },
     nativos: {
       splash: { ocultar: () => Promise.resolve() },
@@ -600,6 +603,7 @@ function contenedorConApi(
       audio: crearAudioNoDisponible(),
       imagenes: { elegir: () => Promise.resolve({ tipo: 'cancelado' }) },
       google: crearGoogleNoDisponible(),
+      push: crearPushNoDisponible(),
     },
     api,
     sesionActiva,

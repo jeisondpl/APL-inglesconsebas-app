@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Chat (F3-01): notas de voz. Se pide en ejecución la primera vez que se graba. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Push (F2-03): Android 13+ lo pide en ejecución al registrar el dispositivo. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Chat (F3-01): react-native-image-picker abre la cámara por intent (sin permiso CAMERA). -->
     <queries>

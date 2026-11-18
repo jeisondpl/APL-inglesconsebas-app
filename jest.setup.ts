@@ -95,6 +95,17 @@ jest.mock('react-native-keychain', () => {
   return { __esModule: true, default: Keychain, ...Keychain };
 });
 
+// Push (F2-03): Firebase no existe en Jest. Los tests del adaptador y de la app lo reemplazan.
+jest.mock('@react-native-firebase/messaging', () => ({
+  getMessaging: jest.fn(() => ({})),
+  getToken: jest.fn(() => Promise.resolve('')),
+  requestPermission: jest.fn(() => Promise.resolve(0)),
+  onTokenRefresh: jest.fn(() => () => undefined),
+  onNotificationOpenedApp: jest.fn(() => () => undefined),
+  getInitialNotification: jest.fn(() => Promise.resolve(null)),
+  AuthorizationStatus: { DENIED: 0, AUTHORIZED: 1, PROVISIONAL: 2 },
+}));
+
 // Chat con voz (F3-01): sin módulos nativos en Jest. Un test del adaptador los vuelve a mockear.
 jest.mock('react-native-nitro-sound', () => ({
   __esModule: true,

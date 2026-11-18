@@ -1,5 +1,7 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
 import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
+import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
 import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
 import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
@@ -16,6 +18,7 @@ import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepo
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
 import type { AudioPort } from '@/native/ports/AudioPort';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { PushPort } from '@/native/ports/PushPort';
 import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
@@ -64,6 +67,13 @@ export const crearAudioNoDisponible = (): AudioPort => ({
   detener: () => Promise.resolve(),
 });
 
+/** Push sin Firebase, como una compilación sin google-services.json. */
+export const crearPushNoDisponible = (): PushPort => ({
+  registrar: () => Promise.resolve({ tipo: 'no_disponible' }),
+  alRenovarToken: () => () => undefined,
+  alAbrirAviso: () => () => undefined,
+});
+
 export interface IOpcionesDependenciasDePrueba {
   /** Contenido inicial del almacén seguro (p. ej. `{ sesion: '<json>' }`). */
   almacenInicial?: Record<string, string>;
@@ -79,6 +89,10 @@ export interface IOpcionesDependenciasDePrueba {
   agenda?: AgendaRepository;
   /** Chat (F3-01). Por defecto, en memoria y vacío. */
   mensajes?: MensajesRepository;
+  /** Dispositivos push (F2-03). Por defecto, en memoria. */
+  notificaciones?: NotificacionesRepository;
+  /** Push (F2-03). Por defecto, sin Firebase. */
+  push?: PushPort;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   /** Selector de fotos (F3-01). Por defecto cancela. */
@@ -119,6 +133,8 @@ export function crearDependenciasDePrueba(
       clases: opciones.clases ?? crearMemoriaClasesRepository(),
       agenda: opciones.agenda ?? crearMemoriaAgendaRepository(),
       mensajes: opciones.mensajes ?? crearMemoriaMensajesRepository(),
+      notificaciones:
+        opciones.notificaciones ?? crearMemoriaNotificacionesRepository(),
     },
     nativos: {
       splash: opciones.splash ?? { ocultar: () => Promise.resolve() },
@@ -130,6 +146,7 @@ export function crearDependenciasDePrueba(
       },
       audio: opciones.audio ?? crearAudioNoDisponible(),
       google: opciones.google ?? crearGoogleNoDisponible(),
+      push: opciones.push ?? crearPushNoDisponible(),
     },
     api,
     sesionActiva,

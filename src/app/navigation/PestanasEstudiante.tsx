@@ -8,6 +8,7 @@ import { AgendaScreen } from '@/modules/agenda/presentation/screens/AgendaScreen
 import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
 import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
+import { useNotificaciones } from '@/modules/notificaciones/aplications/controllers/Notificaciones.controller';
 import { MensajesScreen } from '@/modules/mensajes/presentation/screens/MensajesScreen';
 import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
 import {
@@ -144,6 +145,9 @@ function Estructura({ rol }: { rol: RolPestanas }) {
     },
     [estadoBarra],
   );
+
+  // Push (F2-03): registra el dispositivo y lleva a la pestaña del aviso que se toca.
+  useNotificaciones(irAPestana);
 
   const pestanas = useMemo<IPestanaBarra<PestanaEstudiante>[]>(
     () => [

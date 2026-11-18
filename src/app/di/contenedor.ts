@@ -5,6 +5,8 @@ import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepo
 import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
+import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
+import { crearApiNotificacionesRepository } from '@/modules/notificaciones/infrastructure/apiNotificacionesRepository';
 import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
 import { crearApiMensajesRepository } from '@/modules/mensajes/infrastructure/apiMensajesRepository';
 import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
@@ -16,6 +18,7 @@ import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import { crearFirebasePushAdapter } from '@/native/adapters/FirebasePushAdapter';
 import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
 import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
 import { crearKeychainSecureStorageAdapter } from '@/native/adapters/KeychainSecureStorageAdapter';
@@ -24,6 +27,7 @@ import { crearImagePickerSelectorImagenAdapter } from '@/native/adapters/ImagePi
 import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
 import type { AudioPort } from '@/native/ports/AudioPort';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { PushPort } from '@/native/ports/PushPort';
 import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
@@ -45,6 +49,8 @@ export interface IRepositorios {
   agenda: AgendaRepository;
   /** Chat estudiante–profe (F3-01). */
   mensajes: MensajesRepository;
+  /** Dispositivos push (F2-03). */
+  notificaciones: NotificacionesRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -58,6 +64,8 @@ export interface INativos {
   audio: AudioPort;
   /** Login con Google (F1-06). */
   google: GoogleSignInPort;
+  /** Notificaciones push por FCM (F2-03). */
+  push: PushPort;
 }
 
 export interface IDependencias {
@@ -95,6 +103,9 @@ export function crearDependencias(): IDependencias {
       clases: crearApiClasesRepository(api),
       agenda: crearApiAgendaRepository(api),
       mensajes: crearApiMensajesRepository(api),
+      notificaciones: crearApiNotificacionesRepository(api, {
+        etiquetaDispositivo: etiquetaDispositivo(),
+      }),
     },
     nativos: {
       splash: crearBootSplashAdapter(),
@@ -102,6 +113,7 @@ export function crearDependencias(): IDependencias {
       enlaces: crearLinkingEnlacesAdapter(),
       imagenes: crearImagePickerSelectorImagenAdapter(),
       audio: crearNitroSoundAudioAdapter(),
+      push: crearFirebasePushAdapter(),
       // Con client ID real, Google de verdad; sin él, el simulado si el build lo pide (F1-06).
       google:
         !entorno.googleWebClientId && entorno.googleSimuladoCorreo
