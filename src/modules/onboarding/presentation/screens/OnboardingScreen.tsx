@@ -46,6 +46,8 @@ const LADO_ATRAS = 48;
 /** Retrasos de la entrada de O1 (plan F1-04): logo 100 ms y pie 600 ms. */
 const RETRASO_LOGO = 100;
 const RETRASO_PIE = 600;
+/** Centro vertical del isotipo de fondo: el del bloque ilustración + texto (Sebas, 2026-11-18). */
+const ALTURA_ISOTIPO = 0.45;
 
 const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
@@ -184,7 +186,12 @@ export function OnboardingScreen() {
   const enPrimera = indice === 0;
   return (
     <Pantalla style={estilos.contenido}>
-      <FondoMarca progreso={progreso} total={total} alturaHalo={0.38} />
+      <FondoMarca
+        progreso={progreso}
+        total={total}
+        alturaHalo={0.38}
+        alturaIsotipo={ALTURA_ISOTIPO}
+      />
       <View style={estilos.cabecera}>
         <Revelar retraso={RETRASO_LOGO}>
           <LogoMarca

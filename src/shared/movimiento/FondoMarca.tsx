@@ -34,6 +34,8 @@ export interface IPropsFondoMarca {
   total?: number;
   /** Altura del centro del halo como fracción del alto de la ventana. Por defecto, 0.36. */
   alturaHalo?: number;
+  /** Altura del centro del isotipo (fracción del alto). Por defecto, la del halo. */
+  alturaIsotipo?: number;
   /**
    * Dónde va el isotipo grande de fondo. `centro` (por defecto): centrado detrás del contenido.
    * `lateral`: medio fuera por la derecha, para pantallas cuyo hero ya es el logo con la mano
@@ -62,6 +64,7 @@ export function FondoMarca({
   progreso,
   total = 1,
   alturaHalo = 0.36,
+  alturaIsotipo = alturaHalo,
   posicionIsotipo = 'centro',
   testID,
 }: IPropsFondoMarca) {
@@ -170,10 +173,10 @@ export function FondoMarca({
           },
           posicionIsotipo === 'lateral'
             ? { right: -ladoIsotipo * 0.38, top: alto * 0.06 }
-            : // Centrado en horizontal y a la altura del halo, detrás del contenido principal.
+            : // Centrado en horizontal y a `alturaIsotipo`, detrás del contenido principal.
               {
                 left: (ancho - ladoIsotipo) / 2,
-                top: alto * alturaHalo - ladoIsotipo / 2,
+                top: alto * alturaIsotipo - ladoIsotipo / 2,
               },
           estiloIsotipo,
         ]}
