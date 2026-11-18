@@ -8,6 +8,7 @@ import { AgendaScreen } from '@/modules/agenda/presentation/screens/AgendaScreen
 import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
 import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
+import { MensajesScreen } from '@/modules/mensajes/presentation/screens/MensajesScreen';
 import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
 import {
   IconoClases,
@@ -78,6 +79,27 @@ function PestanaClases({ rol }: { rol: RolPestanas }) {
   );
 }
 
+/** Chat con el id y el nombre de la sesión: el hilo del estudiante o la bandeja del profe. */
+function PestanaMensajes({
+  rol,
+  alCambiarNoLeidos,
+}: {
+  rol: RolPestanas;
+  alCambiarNoLeidos: (n: number) => void;
+}) {
+  const { usuario } = useSesionController();
+  if (!usuario) {
+    return null;
+  }
+  return (
+    <MensajesScreen
+      usuario={usuario}
+      rol={rol}
+      alCambiarNoLeidos={alCambiarNoLeidos}
+    />
+  );
+}
+
 function Contenido({
   rol,
   activa,
@@ -96,10 +118,7 @@ function Contenido({
       return <PestanaClases rol={rol} />;
     case 'mensajes':
       return (
-        <PantallaProximamente
-          testID="pestana-contenido-mensajes"
-          {...pantallas.mensajes}
-        />
+        <PestanaMensajes rol={rol} alCambiarNoLeidos={alCambiarNoLeidos} />
       );
     case 'tareas':
       return (
@@ -175,7 +194,7 @@ export function PestanasEstudiante() {
   );
 }
 
-/** Inicio del profe con las mismas cuatro pestañas (F1-07); Clases, Mensajes y Tareas, próximamente. */
+/** Inicio del profe con las mismas cuatro pestañas (F1-07); Tareas, próximamente. */
 export function PestanasProfe() {
   return (
     <ProveedorBarraPestanas>

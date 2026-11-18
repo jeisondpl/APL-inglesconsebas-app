@@ -1,5 +1,7 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
 import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
+import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
 import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
@@ -63,6 +65,8 @@ export interface IOpcionesDependenciasDePrueba {
   /** Clases del estudiante (F2-01). Por defecto, en memoria y vacío. */
   clases?: ClasesRepository;
   agenda?: AgendaRepository;
+  /** Chat (F3-01). Por defecto, en memoria y vacío. */
+  mensajes?: MensajesRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
   /** Login con Google. Por defecto no disponible (el botón no aparece). */
@@ -98,6 +102,7 @@ export function crearDependenciasDePrueba(
       inicioProfe: opciones.inicioProfe ?? crearMemoriaInicioProfeRepository(),
       clases: opciones.clases ?? crearMemoriaClasesRepository(),
       agenda: opciones.agenda ?? crearMemoriaAgendaRepository(),
+      mensajes: opciones.mensajes ?? crearMemoriaMensajesRepository(),
     },
     nativos: {
       splash: opciones.splash ?? { ocultar: () => Promise.resolve() },

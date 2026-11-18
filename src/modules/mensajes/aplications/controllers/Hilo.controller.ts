@@ -1,0 +1,294 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useRepository } from '@/app/di';
+import { notify } from '@/shared/lib/notify';
+
+import { mensajesChat } from '../../domain/mensajes.mensajes';
+import type {
+  IMensajeChat,
+  IResponseMensaje,
+} from '../../domain/entities/Mensajes.entities';
+import {
+  combinarHilo,
+  marcaDeInstante,
+  noLeidosDelOtro,
+  problemaDelTexto,
+  textoDeError,
+  ultimoIdServidor,
+} from '../../domain/validations/mensajes.validations';
+import {
+  enviarMensajeUseCase,
+  marcarLeidoUseCase,
+  obtenerHiloUseCase,
+  reaccionarUseCase,
+} from '../hilo/hilo';
+
+/** Cada cuánto se piden los mensajes nuevos con el chat abierto (sondeo liviano, 3.6). */
+export const INTERVALO_SONDEO_HILO_MS = 4000;
+
+export type EstadoHilo =
+  | { tipo: 'cargando' }
+  | { tipo: 'error'; msg: string }
+  | { tipo: 'listo' };
+
+interface IPendiente {
+  clave: number;
+  texto: string;
+  envio: 'enviando' | 'fallido';
+  creado: string;
+}
+
+export interface IHiloController {
+  estado: EstadoHilo;
+  /** Orden cronológico: los del servidor y, al final, los propios que aún no llegan. */
+  mensajes: IMensajeChat[];
+  texto: string;
+  /** Mensaje cuya hoja de reacciones está abierta (id del servidor), o null. */
+  seleccion: IMensajeChat | null;
+  _cargar(): Promise<void>;
+  _cambiarTexto(texto: string): void;
+  _enviar(): Promise<void>;
+  _reintentar(clave: number): Promise<void>;
+  _descartar(clave: number): void;
+  _abrirReacciones(id: number): void;
+  _cerrarReacciones(): void;
+  _reaccionar(emoji: string): Promise<void>;
+}
+
+export interface IOpcionesHiloController {
+  /** Hilo (id del estudiante). */
+  idEstudiante: string;
+  rol: 'estudiante' | 'profe';
+  /** Con false (otra pestaña, hilo cerrado) no se sondea. */
+  activo?: boolean;
+  /** Se llama tras marcar como leídos los mensajes del otro lado (baja la insignia). */
+  alLeer?: () => void;
+  ahora?: () => number;
+}
+
+/**
+ * Hilo del chat (F3-01): carga los últimos mensajes, sondea solo lo nuevo, envía con mensaje
+ * optimista (con reintento si falla), marca como leído lo que llega y reacciona. Leap decide el
+ * remitente y el «leído»; la App solo muestra.
+ */
+export function useHiloController({
+  idEstudiante,
+  rol,
+  activo = true,
+  alLeer,
+  ahora = Date.now,
+}: IOpcionesHiloController): IHiloController {
+  const repo = useRepository('mensajes');
+  const [estado, setEstado] = useState<EstadoHilo>({ tipo: 'cargando' });
+  const [servidor, setServidor] = useState<IResponseMensaje[]>([]);
+  const [pendientes, setPendientes] = useState<IPendiente[]>([]);
+  const [texto, setTexto] = useState('');
+  const [seleccionId, setSeleccionId] = useState<number | null>(null);
+  const montado = useRef(true);
+  const listo = useRef(false);
+  const sondeando = useRef(false);
+  const marcando = useRef(false);
+  const contador = useRef(0);
+  const servidorRef = useRef<IResponseMensaje[]>([]);
+  servidorRef.current = servidor;
+  const alLeerRef = useRef(alLeer);
+  alLeerRef.current = alLeer;
+
+  const _cargar = useCallback(async () => {
+    listo.current = false;
+    setEstado({ tipo: 'cargando' });
+    const r = await obtenerHiloUseCase(repo, { idEstudiante, despuesDe: 0 });
+    if (!montado.current) {
+      return;
+    }
+    if (r.error || !r.response) {
+      setEstado({
+        tipo: 'error',
+        msg: textoDeError(r.msg),
+      });
+      return;
+    }
+    listo.current = true;
+    setServidor(combinarHilo([], r.response.mensajes, r.response.estados));
+    setEstado({ tipo: 'listo' });
+  }, [repo, idEstudiante]);
+
+  useEffect(() => {
+    montado.current = true;
+    _cargar();
+    return () => {
+      montado.current = false;
+    };
+  }, [_cargar]);
+
+  // Sondeo: solo mensajes con id mayor al último y el estado de los últimos. Un fallo se calla:
+  // el siguiente intento lo recupera y no se llena la pantalla de avisos.
+  const sondear = useCallback(async () => {
+    if (sondeando.current || !listo.current) {
+      return;
+    }
+    sondeando.current = true;
+    const r = await obtenerHiloUseCase(repo, {
+      idEstudiante,
+      despuesDe: ultimoIdServidor(servidorRef.current),
+    });
+    sondeando.current = false;
+    if (montado.current && !r.error && r.response) {
+      const { mensajes, estados } = r.response;
+      setServidor(s => combinarHilo(s, mensajes, estados));
+    }
+  }, [repo, idEstudiante]);
+
+  useEffect(() => {
+    if (!activo) {
+      return undefined;
+    }
+    const intervalo = setInterval(sondear, INTERVALO_SONDEO_HILO_MS);
+    return () => clearInterval(intervalo);
+  }, [activo, sondear]);
+
+  // Lo que el otro lado escribió se marca como leído mientras el hilo está abierto.
+  const sinLeer = noLeidosDelOtro(servidor);
+  useEffect(() => {
+    if (!activo || sinLeer === 0 || marcando.current) {
+      return;
+    }
+    marcando.current = true;
+    marcarLeidoUseCase(repo, idEstudiante).then(r => {
+      marcando.current = false;
+      if (montado.current && !r.error) {
+        setServidor(s => s.map(m => (m.mio ? m : { ...m, leido: true })));
+        alLeerRef.current?.();
+      }
+    });
+  }, [activo, sinLeer, repo, idEstudiante]);
+
+  const enviarTexto = useCallback(
+    async (contenido: string, claveExistente?: number) => {
+      const clave = claveExistente ?? ++contador.current;
+      const creado = marcaDeInstante(ahora());
+      setPendientes(p => [
+        ...p.filter(x => x.clave !== clave),
+        { clave, texto: contenido, envio: 'enviando', creado },
+      ]);
+      const r = await enviarMensajeUseCase(repo, {
+        idEstudiante,
+        texto: contenido,
+      });
+      if (!montado.current) {
+        return;
+      }
+      if (r.error || !r.response) {
+        setPendientes(p =>
+          p.map(x => (x.clave === clave ? { ...x, envio: 'fallido' } : x)),
+        );
+        notify.error(mensajesChat.noSeEnvio, textoDeError(r.msg));
+        return;
+      }
+      const enviado = r.response;
+      setPendientes(p => p.filter(x => x.clave !== clave));
+      setServidor(s => combinarHilo(s, [enviado]));
+    },
+    [repo, idEstudiante, ahora],
+  );
+
+  const _enviar = useCallback(async () => {
+    const problema = problemaDelTexto(texto);
+    if (problema === 'largo') {
+      notify.error(mensajesChat.noSeEnvio, mensajesChat.textoLargo(2000));
+      return;
+    }
+    if (problema) {
+      return;
+    }
+    const contenido = texto.trim();
+    setTexto('');
+    await enviarTexto(contenido);
+  }, [texto, enviarTexto]);
+
+  const _reintentar = useCallback(
+    async (clave: number) => {
+      const p = pendientes.find(x => x.clave === clave);
+      if (p && p.envio === 'fallido') {
+        await enviarTexto(p.texto, clave);
+      }
+    },
+    [pendientes, enviarTexto],
+  );
+
+  const _descartar = useCallback((clave: number) => {
+    setPendientes(p => p.filter(x => x.clave !== clave));
+  }, []);
+
+  const mensajes = useMemo<IMensajeChat[]>(
+    () => [
+      ...servidor.map(m => ({ ...m, envio: 'enviado' as const })),
+      ...pendientes.map(p => ({
+        id: -p.clave,
+        idEstudiante,
+        remitente:
+          rol === 'profe' ? ('teacher' as const) : ('student' as const),
+        nombre: null,
+        texto: p.texto,
+        tieneImagen: false,
+        tieneVoz: false,
+        leido: false,
+        editado: false,
+        reacciones: {},
+        creado: p.creado,
+        mio: true,
+        envio: p.envio,
+      })),
+    ],
+    [servidor, pendientes, idEstudiante, rol],
+  );
+
+  const seleccion = useMemo(
+    () => mensajes.find(m => m.id === seleccionId) ?? null,
+    [mensajes, seleccionId],
+  );
+
+  const _abrirReacciones = useCallback((id: number) => {
+    // Solo mensajes que ya están en el servidor admiten reacción.
+    if (id > 0) {
+      setSeleccionId(id);
+    }
+  }, []);
+  const _cerrarReacciones = useCallback(() => setSeleccionId(null), []);
+
+  const _reaccionar = useCallback(
+    async (emoji: string) => {
+      const id = seleccionId;
+      setSeleccionId(null);
+      if (id === null) {
+        return;
+      }
+      const r = await reaccionarUseCase(repo, { id, emoji });
+      if (!montado.current) {
+        return;
+      }
+      if (r.error || !r.response) {
+        notify.error(mensajesChat.noSeActualizo, textoDeError(r.msg));
+        return;
+      }
+      const reacciones = r.response;
+      setServidor(s => s.map(m => (m.id === id ? { ...m, reacciones } : m)));
+    },
+    [repo, seleccionId],
+  );
+
+  return {
+    estado,
+    mensajes,
+    texto,
+    seleccion,
+    _cargar,
+    _cambiarTexto: setTexto,
+    _enviar,
+    _reintentar,
+    _descartar,
+    _abrirReacciones,
+    _cerrarReacciones,
+    _reaccionar,
+  };
+}

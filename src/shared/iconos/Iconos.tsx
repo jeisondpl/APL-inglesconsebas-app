@@ -97,3 +97,12 @@ export function IconoFlecha(props: IPropsIcono) {
     </Base>
   );
 }
+
+export function IconoEnviar(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Path d="M21.5 2.5 10.5 13.5" />
+      <Path d="M21.5 2.5 14.5 21.5l-4-8-8-4 19-7z" />
+    </Base>
+  );
+}

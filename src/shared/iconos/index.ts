@@ -1,6 +1,7 @@
 export {
   GROSOR_ICONO,
   IconoClases,
+  IconoEnviar,
   IconoFlecha,
   IconoInicio,
   IconoMensajes,

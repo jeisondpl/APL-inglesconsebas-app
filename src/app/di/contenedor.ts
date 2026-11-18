@@ -5,6 +5,8 @@ import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepo
 import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
 import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
+import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
+import { crearApiMensajesRepository } from '@/modules/mensajes/infrastructure/apiMensajesRepository';
 import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
 import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
 import type { BanderaOnboarding } from '@/modules/onboarding/domain/models/BanderaOnboarding';
@@ -37,6 +39,8 @@ export interface IRepositorios {
   /** Clases del estudiante (F2-01). */
   clases: ClasesRepository;
   agenda: AgendaRepository;
+  /** Chat estudiante–profe (F3-01). */
+  mensajes: MensajesRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -82,6 +86,7 @@ export function crearDependencias(): IDependencias {
       inicioProfe: crearApiInicioProfeRepository(api),
       clases: crearApiClasesRepository(api),
       agenda: crearApiAgendaRepository(api),
+      mensajes: crearApiMensajesRepository(api),
     },
     nativos: {
       splash: crearBootSplashAdapter(),

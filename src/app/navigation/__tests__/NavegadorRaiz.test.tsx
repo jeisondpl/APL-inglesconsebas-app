@@ -32,6 +32,7 @@ import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.en
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
+import { crearMemoriaMensajesRepository } from '@/modules/mensajes/infrastructure/memoriaMensajesRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
 import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
 import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
@@ -589,6 +590,7 @@ function contenedorConApi(
       inicioProfe: crearMemoriaInicioProfeRepository(),
       clases: crearMemoriaClasesRepository(),
       agenda: crearMemoriaAgendaRepository(),
+      mensajes: crearMemoriaMensajesRepository(),
     },
     nativos: {
       splash: { ocultar: () => Promise.resolve() },

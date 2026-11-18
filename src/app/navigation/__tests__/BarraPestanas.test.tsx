@@ -338,7 +338,8 @@ describe('PestanasEstudiante', () => {
     await fireEvent.press(
       await screen.findByRole('button', { name: 'Último mensaje de Meli' }),
     );
-    expect(screen.getByTestId('pestana-contenido-mensajes')).toBeOnTheScreen();
+    // Mensajes ya es el chat (F3-01): el estudiante ve su hilo, no «Próximamente».
+    expect(await screen.findByTestId('chat-hilo')).toBeOnTheScreen();
   });
 
   it('«Ver sistema de diseño» de la hoja navega al escaparate', async () => {
