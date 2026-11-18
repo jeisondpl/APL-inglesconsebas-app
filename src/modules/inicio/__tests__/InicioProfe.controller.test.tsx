@@ -114,17 +114,6 @@ describe('useInicioProfeController', () => {
     );
   });
 
-  it('«Marcar» avisa que llega pronto', async () => {
-    const { result } = await montar();
-    act(() => result.current._marcarAsistencia());
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text1: mensajesInicio.proximamente,
-        text2: mensajesInicio.asistenciaProximamente,
-      }),
-    );
-  });
-
   it('una carga que llega después de desmontar no actualiza nada', async () => {
     let soltar: () => void = () => {};
     const base = crearMemoriaInicioProfeRepository();

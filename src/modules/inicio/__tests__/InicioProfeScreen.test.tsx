@@ -1,7 +1,6 @@
 // F1-07: pantalla de inicio del profe con el controller real y el repositorio en memoria.
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
 
 import { DependenciasProvider } from '@/app/di';
 import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
@@ -131,8 +130,9 @@ describe('InicioProfeScreen (F1-07)', () => {
     expect(enlaces.abrir).toHaveBeenCalledWith('https://zoom.us/j/meli');
   });
 
-  it('asistencias por marcar: «Marcar» avisa que llega pronto', async () => {
-    await montar();
+  it('asistencias por marcar: «Marcar» lleva a la pestaña Clases (agenda del profe)', async () => {
+    const alIrA = jest.fn();
+    await montar({ alIrA });
     expect(await screen.findByText('Sofía Ramírez')).toBeOnTheScreen();
     expect(screen.getByText('1 sin marcar')).toBeOnTheScreen();
     await fireEvent.press(
@@ -140,9 +140,7 @@ describe('InicioProfeScreen (F1-07)', () => {
         name: 'Marcar la asistencia de Sofía Ramírez',
       }),
     );
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({ text1: 'Próximamente' }),
-    );
+    expect(alIrA).toHaveBeenLastCalledWith('clases');
   });
 
   it('tareas por revisar y mensajes llevan a sus pestañas; avisa los no leídos', async () => {

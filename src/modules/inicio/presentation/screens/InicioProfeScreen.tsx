@@ -67,15 +67,8 @@ export function InicioProfeScreen({
   const estilos = useEstilos(crearEstilos);
   const alDesplazar = useOcultarBarraAlDesplazar();
   const [cuentaAbierta, setCuentaAbierta] = useState(false);
-  const {
-    estado,
-    ahoraMs,
-    refrescando,
-    _cargar,
-    _refrescar,
-    _abrirClase,
-    _marcarAsistencia,
-  } = useInicioProfeController({ idProfe: usuario.id, alCambiarNoLeidos });
+  const { estado, ahoraMs, refrescando, _cargar, _refrescar, _abrirClase } =
+    useInicioProfeController({ idProfe: usuario.id, alCambiarNoLeidos });
 
   const avisoSeccion = (testID: string) => (
     <AvisoEnLinea
@@ -137,7 +130,7 @@ export function InicioProfeScreen({
             vista={estado.vista}
             avisoSeccion={avisoSeccion}
             alAbrirZoom={_abrirClase}
-            alMarcar={_marcarAsistencia}
+            alMarcar={() => alIrA?.('clases')}
             alIrA={alIrA}
           />
         ) : null}

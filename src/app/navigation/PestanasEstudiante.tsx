@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { PantallaProximamente } from '@/app/pestanas/PantallaProximamente';
 import { textosPestanas as textos } from '@/app/pestanas/pestanas.textos';
+import { AgendaScreen } from '@/modules/agenda/presentation/screens/AgendaScreen';
 import { ClasesScreen } from '@/modules/clases/presentation/screens/ClasesScreen';
 import { InicioEstudianteScreen } from '@/modules/inicio/presentation/screens/InicioEstudianteScreen';
 import { InicioProfeScreen } from '@/modules/inicio/presentation/screens/InicioProfeScreen';
@@ -64,10 +65,17 @@ function PestanaInicio({
   );
 }
 
-/** Clases del estudiante con el id de la sesión. */
-function PestanaClases() {
+/** Clases con el id de la sesión: el historial del estudiante o la agenda del profe. */
+function PestanaClases({ rol }: { rol: RolPestanas }) {
   const { usuario } = useSesionController();
-  return usuario ? <ClasesScreen usuario={usuario} /> : null;
+  if (!usuario) {
+    return null;
+  }
+  return rol === 'profe' ? (
+    <AgendaScreen usuario={usuario} />
+  ) : (
+    <ClasesScreen usuario={usuario} />
+  );
 }
 
 function Contenido({
@@ -85,14 +93,7 @@ function Contenido({
     case 'inicio':
       return <PestanaInicio rol={rol} alCambiarNoLeidos={alCambiarNoLeidos} />;
     case 'clases':
-      return rol === 'estudiante' ? (
-        <PestanaClases />
-      ) : (
-        <PantallaProximamente
-          testID="pestana-contenido-clases"
-          {...pantallas.clases}
-        />
-      );
+      return <PestanaClases rol={rol} />;
     case 'mensajes':
       return (
         <PantallaProximamente

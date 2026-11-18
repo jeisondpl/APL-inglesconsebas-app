@@ -26,6 +26,7 @@ import type {
 } from '@/modules/sesion/domain/entities/Sesion.entities';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
+import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
 import { crearMemoriaClasesRepository } from '@/modules/clases/infrastructure/memoriaClasesRepository';
 import { crearMemoriaInicioProfeRepository } from '@/modules/inicio/infrastructure/memoriaInicioProfeRepository';
 import { crearMemoriaInicioRepository } from '@/modules/inicio/infrastructure/memoriaInicioRepository';
@@ -404,6 +405,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       inicio: crearMemoriaInicioRepository(),
       inicioProfe: crearMemoriaInicioProfeRepository(),
       clases: crearMemoriaClasesRepository(),
+      agenda: crearMemoriaAgendaRepository(),
     },
     nativos: {
       splash: { ocultar: () => Promise.resolve() },

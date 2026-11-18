@@ -1,4 +1,6 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import { crearApiAgendaRepository } from '@/modules/agenda/infrastructure/apiAgendaRepository';
 import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
 import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
 import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
@@ -34,6 +36,7 @@ export interface IRepositorios {
   inicioProfe: InicioProfeRepository;
   /** Clases del estudiante (F2-01). */
   clases: ClasesRepository;
+  agenda: AgendaRepository;
 }
 
 /** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
@@ -78,6 +81,7 @@ export function crearDependencias(): IDependencias {
       inicio: crearApiInicioRepository(api),
       inicioProfe: crearApiInicioProfeRepository(api),
       clases: crearApiClasesRepository(api),
+      agenda: crearApiAgendaRepository(api),
     },
     nativos: {
       splash: crearBootSplashAdapter(),

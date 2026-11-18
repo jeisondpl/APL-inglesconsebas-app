@@ -26,8 +26,6 @@ export interface IInicioProfeController {
   _refrescar(): Promise<void>;
   /** Abre el Zoom de una clase. */
   _abrirClase(enlace: string): Promise<void>;
-  /** Marcar asistencia llega en F2-02: por ahora avisa «Próximamente». */
-  _marcarAsistencia(): void;
 }
 
 export interface IOpcionesInicioProfeController {
@@ -151,13 +149,6 @@ export function useInicioProfeController({
     [enlaces],
   );
 
-  const _marcarAsistencia = useCallback(() => {
-    notify.info(
-      mensajesInicio.proximamente,
-      mensajesInicio.asistenciaProximamente,
-    );
-  }, []);
-
   return {
     estado,
     ahoraMs,
@@ -165,6 +156,5 @@ export function useInicioProfeController({
     _cargar,
     _refrescar,
     _abrirClase,
-    _marcarAsistencia,
   };
 }

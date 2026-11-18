@@ -103,6 +103,7 @@ describe('crearDependencias (CA11)', () => {
       'inicio',
       'inicioProfe',
       'clases',
+      'agenda',
     ]);
     expect(Object.keys(dependencias.nativos)).toEqual([
       'splash',
