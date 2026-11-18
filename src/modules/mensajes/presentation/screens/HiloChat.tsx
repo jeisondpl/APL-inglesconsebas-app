@@ -3,7 +3,6 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
@@ -107,10 +106,7 @@ export function HiloChat({
         subtitulo={subtitulo}
         alVolver={alVolver}
       />
-      <KeyboardAvoidingView
-        style={estilos.teclado}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={estilos.teclado} behavior="padding">
         {c.estado.tipo === 'cargando' ? (
           <View style={estilos.centro}>
             <PulsoCarga etiqueta={textos.cargando} tamano={56} />
@@ -168,7 +164,7 @@ export function HiloChat({
             texto={c.texto}
             alCambiar={c._cambiarTexto}
             alEnviar={c._enviar}
-            espacioInferior={tecladoVisible ? 8 : ESPACIO_BARRA_PESTANAS - 40}
+            espacioInferior={tecladoVisible ? 8 : ESPACIO_BARRA_PESTANAS + 16}
           />
         ) : null}
       </KeyboardAvoidingView>

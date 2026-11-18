@@ -66,6 +66,8 @@ export const textosMensajes = {
         .filter(Boolean)
         .join(', '),
     academia: 'Inglés con Sebas',
+    foto: 'Foto',
+    voz: 'Nota de voz',
     tu: 'Tú',
   },
   reacciones: {

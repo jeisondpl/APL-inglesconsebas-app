@@ -212,6 +212,16 @@ export function BurbujaMensaje({
           </Texto>
         ) : null}
         {m.texto ? <Texto color={colorTexto}>{m.texto}</Texto> : null}
+        {m.tieneImagen ? (
+          <Texto variante="cuerpoFuerte" color={colorTexto}>
+            {textos.mensaje.foto}
+          </Texto>
+        ) : null}
+        {m.tieneVoz ? (
+          <Texto variante="cuerpoFuerte" color={colorTexto}>
+            {textos.mensaje.voz}
+          </Texto>
+        ) : null}
         <View style={estilos.meta}>
           <Texto
             variante="insignia"
