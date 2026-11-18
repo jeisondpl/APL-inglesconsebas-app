@@ -10,6 +10,9 @@ import type {
   Reacciones,
 } from '../entities/Mensajes.entities';
 
+/** Tope de la foto como data URL (el servidor rechaza más de 2 000 000 caracteres). */
+export const MAX_IMAGEN = 2000000;
+
 /** Largo máximo del texto: el mismo que impone Leap (`CHAT_MAX_TEXTO`). */
 export const MAX_TEXTO = 2000;
 

@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useRepository } from '@/app/di';
+import { useNative, useRepository } from '@/app/di';
 import { notify } from '@/shared/lib/notify';
 
 import { mensajesChat } from '../../domain/mensajes.mensajes';
 import type {
   IMensajeChat,
   IResponseMensaje,
+  OrigenFoto,
 } from '../../domain/entities/Mensajes.entities';
 import {
   combinarHilo,
+  MAX_IMAGEN,
   marcaDeInstante,
   noLeidosDelOtro,
   problemaDelTexto,
   textoDeError,
   ultimoIdServidor,
 } from '../../domain/validations/mensajes.validations';
+import { recordarMedia } from './Media.controller';
 import {
   enviarMensajeUseCase,
   marcarLeidoUseCase,
@@ -34,6 +37,7 @@ export type EstadoHilo =
 interface IPendiente {
   clave: number;
   texto: string;
+  imagen?: string;
   envio: 'enviando' | 'fallido';
   creado: string;
 }
@@ -48,6 +52,8 @@ export interface IHiloController {
   _cargar(): Promise<void>;
   _cambiarTexto(texto: string): void;
   _enviar(): Promise<void>;
+  /** Elige o toma una foto y la envía con el texto escrito como pie. */
+  _adjuntarImagen(origen: OrigenFoto): Promise<void>;
   _reintentar(clave: number): Promise<void>;
   _descartar(clave: number): void;
   _abrirReacciones(id: number): void;
@@ -79,6 +85,7 @@ export function useHiloController({
   ahora = Date.now,
 }: IOpcionesHiloController): IHiloController {
   const repo = useRepository('mensajes');
+  const imagenes = useNative('imagenes');
   const [estado, setEstado] = useState<EstadoHilo>({ tipo: 'cargando' });
   const [servidor, setServidor] = useState<IResponseMensaje[]>([]);
   const [pendientes, setPendientes] = useState<IPendiente[]>([]);
@@ -88,6 +95,7 @@ export function useHiloController({
   const listo = useRef(false);
   const sondeando = useRef(false);
   const marcando = useRef(false);
+  const eligiendo = useRef(false);
   const contador = useRef(0);
   const servidorRef = useRef<IResponseMensaje[]>([]);
   servidorRef.current = servidor;
@@ -163,17 +171,18 @@ export function useHiloController({
     });
   }, [activo, sinLeer, repo, idEstudiante]);
 
-  const enviarTexto = useCallback(
-    async (contenido: string, claveExistente?: number) => {
+  const enviarContenido = useCallback(
+    async (contenido: string, imagen?: string, claveExistente?: number) => {
       const clave = claveExistente ?? ++contador.current;
       const creado = marcaDeInstante(ahora());
       setPendientes(p => [
         ...p.filter(x => x.clave !== clave),
-        { clave, texto: contenido, envio: 'enviando', creado },
+        { clave, texto: contenido, imagen, envio: 'enviando', creado },
       ]);
       const r = await enviarMensajeUseCase(repo, {
         idEstudiante,
         texto: contenido,
+        imagen,
       });
       if (!montado.current) {
         return;
@@ -186,6 +195,9 @@ export function useHiloController({
         return;
       }
       const enviado = r.response;
+      if (imagen) {
+        recordarMedia(repo, enviado.id, { imagen, voz: null });
+      }
       setPendientes(p => p.filter(x => x.clave !== clave));
       setServidor(s => combinarHilo(s, [enviado]));
     },
@@ -203,17 +215,43 @@ export function useHiloController({
     }
     const contenido = texto.trim();
     setTexto('');
-    await enviarTexto(contenido);
-  }, [texto, enviarTexto]);
+    await enviarContenido(contenido);
+  }, [texto, enviarContenido]);
+
+  const _adjuntarImagen = useCallback(
+    async (origen: OrigenFoto) => {
+      if (eligiendo.current) {
+        return;
+      }
+      eligiendo.current = true;
+      const foto = await imagenes.elegir(origen);
+      eligiendo.current = false;
+      if (!montado.current || foto.tipo === 'cancelado') {
+        return;
+      }
+      if (foto.tipo === 'error') {
+        notify.error(mensajesChat.noSePudoFoto, foto.msg);
+        return;
+      }
+      if (foto.dataUrl.length > MAX_IMAGEN) {
+        notify.error(mensajesChat.noSeEnvio, mensajesChat.imagenGrande);
+        return;
+      }
+      const pie = texto.trim();
+      setTexto('');
+      await enviarContenido(pie, foto.dataUrl);
+    },
+    [imagenes, texto, enviarContenido],
+  );
 
   const _reintentar = useCallback(
     async (clave: number) => {
       const p = pendientes.find(x => x.clave === clave);
       if (p && p.envio === 'fallido') {
-        await enviarTexto(p.texto, clave);
+        await enviarContenido(p.texto, p.imagen, clave);
       }
     },
-    [pendientes, enviarTexto],
+    [pendientes, enviarContenido],
   );
 
   const _descartar = useCallback((clave: number) => {
@@ -230,7 +268,8 @@ export function useHiloController({
           rol === 'profe' ? ('teacher' as const) : ('student' as const),
         nombre: null,
         texto: p.texto,
-        tieneImagen: false,
+        tieneImagen: Boolean(p.imagen),
+        imagenLocal: p.imagen,
         tieneVoz: false,
         leido: false,
         editado: false,
@@ -285,6 +324,7 @@ export function useHiloController({
     _cargar,
     _cambiarTexto: setTexto,
     _enviar,
+    _adjuntarImagen,
     _reintentar,
     _descartar,
     _abrirReacciones,

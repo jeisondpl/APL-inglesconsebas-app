@@ -70,6 +70,18 @@ export const textosMensajes = {
     voz: 'Nota de voz',
     tu: 'Tú',
   },
+  imagen: {
+    cargando: 'Cargando foto…',
+    reintentar: 'No se pudo cargar la foto. Toca para reintentar',
+    abrir: 'Abrir la foto',
+    cerrar: 'Cerrar',
+  },
+  adjuntar: {
+    boton: 'Adjuntar una foto',
+    titulo: 'Enviar una foto',
+    galeria: 'Elegir de la galería',
+    camara: 'Tomar una foto',
+  },
   reacciones: {
     titulo: 'Reaccionar',
     cerrar: 'Cerrar',

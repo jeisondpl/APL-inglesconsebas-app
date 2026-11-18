@@ -6,6 +6,7 @@ import type {
   IArgsReaccion,
   IResponseBandeja,
   IResponseHilo,
+  IResponseMedia,
   IResponseMensaje,
   Reacciones,
 } from '../entities/Mensajes.entities';
@@ -21,6 +22,8 @@ export interface MensajesRepository {
   ): Promise<HttpResponse<{ marcados: number }>>;
   /** Pone o quita (mismo emoji) la reacción de quien tiene la sesión. */
   reaccionar(args: IArgsReaccion): Promise<HttpResponse<Reacciones>>;
+  /** Imagen y voz de un mensaje (no vienen en la lista). */
+  media(id: number): Promise<HttpResponse<IResponseMedia>>;
   /** Solo profe: sus estudiantes con el último mensaje y los no leídos. */
   bandeja(): Promise<HttpResponse<IResponseBandeja>>;
 }

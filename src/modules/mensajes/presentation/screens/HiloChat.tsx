@@ -23,6 +23,7 @@ import {
   EncabezadoChat,
   SeparadorDia,
 } from '../components/ComponentesMensajes';
+import { HojaAdjuntar } from '../components/HojaAdjuntar';
 import { HojaReacciones } from '../components/HojaReacciones';
 import { textosMensajes as textos } from '../mensajes.textos';
 
@@ -74,6 +75,7 @@ export function HiloChat({
   const estilos = useEstilos(crearEstilos);
   const c = useHiloController({ idEstudiante, rol, activo, alLeer });
   const [tecladoVisible, setTecladoVisible] = useState(false);
+  const [adjuntando, setAdjuntando] = useState(false);
 
   useEffect(() => {
     const abre = Keyboard.addListener('keyboardDidShow', () =>
@@ -164,11 +166,20 @@ export function HiloChat({
             texto={c.texto}
             alCambiar={c._cambiarTexto}
             alEnviar={c._enviar}
+            alAdjuntar={() => setAdjuntando(true)}
             espacioInferior={tecladoVisible ? 8 : ESPACIO_BARRA_PESTANAS + 16}
           />
         ) : null}
       </KeyboardAvoidingView>
 
+      <HojaAdjuntar
+        visible={adjuntando}
+        alElegir={origen => {
+          setAdjuntando(false);
+          c._adjuntarImagen(origen);
+        }}
+        alCerrar={() => setAdjuntando(false)}
+      />
       <HojaReacciones
         mensaje={c.seleccion}
         miReactor={miReactor}

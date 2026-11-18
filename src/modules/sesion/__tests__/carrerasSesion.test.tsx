@@ -413,6 +413,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       splash: { ocultar: () => Promise.resolve() },
       almacenSeguro: almacen,
       enlaces: { abrir: () => Promise.resolve(true) },
+      imagenes: { elegir: () => Promise.resolve({ tipo: 'cancelado' }) },
       google: crearGoogleNoDisponible(),
     },
     api,

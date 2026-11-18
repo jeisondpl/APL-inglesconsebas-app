@@ -7,6 +7,7 @@ import type {
   IArgsHilo,
   IArgsReaccion,
   IResponseHilo,
+  IResponseMedia,
   IResponseMensaje,
   Reacciones,
 } from '../../domain/entities/Mensajes.entities';
@@ -77,4 +78,15 @@ export async function reaccionarUseCase(
     return respuestaError(mensajesChat.reaccionInvalida);
   }
   return conMensaje(await repo.reaccionar({ id: args.id, emoji }));
+}
+
+/** Imagen y voz de un mensaje: la lista solo trae banderas. */
+export async function obtenerMediaUseCase(
+  repo: MensajesRepository,
+  id: number,
+): Promise<HttpResponse<IResponseMedia>> {
+  if (!(id > 0)) {
+    return respuestaError(mensajesChat.sinMensaje);
+  }
+  return conMensaje(await repo.media(id));
 }

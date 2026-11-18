@@ -48,6 +48,12 @@ export interface IResponseBandeja {
   noLeidos: number;
 }
 
+/** Imagen y voz de un mensaje (data URL), pedidas aparte de la lista. */
+export interface IResponseMedia {
+  imagen: string | null;
+  voz: string | null;
+}
+
 export interface IArgsHilo {
   idEstudiante: string;
   /** Solo mensajes con id mayor. 0 = los últimos 50. */
@@ -68,12 +74,17 @@ export interface IArgsReaccion {
   emoji: string;
 }
 
+/** De dónde sale la foto que se envía. */
+export type OrigenFoto = 'galeria' | 'camara';
+
 /** Estado de envío de un mensaje propio en pantalla. */
 export type EnvioMensaje = 'enviando' | 'enviado' | 'fallido';
 
 /** Mensaje en pantalla: los del servidor y los propios que aún no llegan (id negativo). */
 export interface IMensajeChat extends IResponseMensaje {
   envio: EnvioMensaje;
+  /** Imagen propia aún sin subir: se muestra sin pedirla al servidor. */
+  imagenLocal?: string;
 }
 
 export interface IReaccionResumen {

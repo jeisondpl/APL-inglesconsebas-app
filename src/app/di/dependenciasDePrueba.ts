@@ -15,6 +15,7 @@ import type { EstadoSesion } from '@/modules/sesion/domain/entities/Sesion.entit
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
@@ -69,6 +70,8 @@ export interface IOpcionesDependenciasDePrueba {
   mensajes?: MensajesRepository;
   splash?: SplashPort;
   enlaces?: EnlacesPort;
+  /** Selector de fotos (F3-01). Por defecto cancela. */
+  imagenes?: SelectorImagenPort;
   /** Login con Google. Por defecto no disponible (el botón no aparece). */
   google?: GoogleSignInPort;
   almacen?: SecureStoragePort;
@@ -109,6 +112,9 @@ export function crearDependenciasDePrueba(
       almacenSeguro:
         opciones.almacen ?? crearAlmacenEnMemoria(opciones.almacenInicial),
       enlaces: opciones.enlaces ?? { abrir: () => Promise.resolve(true) },
+      imagenes: opciones.imagenes ?? {
+        elegir: () => Promise.resolve({ tipo: 'cancelado' }),
+      },
       google: opciones.google ?? crearGoogleNoDisponible(),
     },
     api,

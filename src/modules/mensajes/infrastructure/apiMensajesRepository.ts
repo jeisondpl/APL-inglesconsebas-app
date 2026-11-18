@@ -180,6 +180,26 @@ export function crearApiMensajesRepository(
         : formatoInvalido(r);
     },
 
+    async media(id) {
+      const r = await api.get<unknown>(API, {
+        endpoint: ENDPOINT,
+        view: 'media',
+        id: String(id),
+      });
+      if (r.error) {
+        return fallo(r);
+      }
+      return esObjeto(r.response)
+        ? respuestaOk(
+            {
+              imagen: textoDe(r.response.imagen),
+              voz: textoDe(r.response.voz),
+            },
+            r.code,
+          )
+        : formatoInvalido(r);
+    },
+
     async bandeja() {
       const r = await api.get<unknown>(API, {
         endpoint: ENDPOINT,

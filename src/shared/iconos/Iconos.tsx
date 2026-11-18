@@ -98,6 +98,16 @@ export function IconoFlecha(props: IPropsIcono) {
   );
 }
 
+export function IconoImagen(props: IPropsIcono) {
+  return (
+    <Base {...props}>
+      <Rect x="3" y="3" width="18" height="18" rx="2" />
+      <Circle cx="9" cy="9" r="2" />
+      <Path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+    </Base>
+  );
+}
+
 export function IconoEnviar(props: IPropsIcono) {
   return (
     <Base {...props}>

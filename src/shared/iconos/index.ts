@@ -3,6 +3,7 @@ export {
   IconoClases,
   IconoEnviar,
   IconoFlecha,
+  IconoImagen,
   IconoInicio,
   IconoMensajes,
   IconoReloj,

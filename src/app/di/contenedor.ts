@@ -19,8 +19,10 @@ import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
 import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
 import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
 import { crearKeychainSecureStorageAdapter } from '@/native/adapters/KeychainSecureStorageAdapter';
+import { crearImagePickerSelectorImagenAdapter } from '@/native/adapters/ImagePickerSelectorImagenAdapter';
 import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
@@ -48,6 +50,8 @@ export interface INativos {
   splash: SplashPort;
   almacenSeguro: SecureStoragePort;
   enlaces: EnlacesPort;
+  /** Foto de la galería o la cámara para el chat (F3-01). */
+  imagenes: SelectorImagenPort;
   /** Login con Google (F1-06). */
   google: GoogleSignInPort;
 }
@@ -92,6 +96,7 @@ export function crearDependencias(): IDependencias {
       splash: crearBootSplashAdapter(),
       almacenSeguro,
       enlaces: crearLinkingEnlacesAdapter(),
+      imagenes: crearImagePickerSelectorImagenAdapter(),
       // Con client ID real, Google de verdad; sin él, el simulado si el build lo pide (F1-06).
       google:
         !entorno.googleWebClientId && entorno.googleSimuladoCorreo

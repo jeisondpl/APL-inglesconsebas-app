@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Texto } from '@/shared/components/Texto';
-import { IconoEnviar, IconoFlecha } from '@/shared/iconos';
+import { IconoEnviar, IconoFlecha, IconoImagen } from '@/shared/iconos';
 import { useEstilos, useTema, type ITema } from '@/shared/theme';
 
 import type {
@@ -14,6 +14,7 @@ import {
   resumenReacciones,
 } from '../../domain/validations/mensajes.validations';
 import { textosMensajes as textos } from '../mensajes.textos';
+import { ImagenMensaje } from './ImagenMensaje';
 
 const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
@@ -98,6 +99,16 @@ const crearEstilos = (tema: ITema) =>
       backgroundColor: tema.colores.marca,
     },
     botonInactivo: { backgroundColor: tema.colores.pista },
+    botonSecundario: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.colores.superficieAlterna,
+      borderWidth: 1,
+      borderColor: tema.colores.borde,
+    },
     conversacion: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -213,9 +224,7 @@ export function BurbujaMensaje({
         ) : null}
         {m.texto ? <Texto color={colorTexto}>{m.texto}</Texto> : null}
         {m.tieneImagen ? (
-          <Texto variante="cuerpoFuerte" color={colorTexto}>
-            {textos.mensaje.foto}
-          </Texto>
+          <ImagenMensaje mensaje={m} alMantener={() => alMantener(m.id)} />
         ) : null}
         {m.tieneVoz ? (
           <Texto variante="cuerpoFuerte" color={colorTexto}>
@@ -296,6 +305,8 @@ export interface IPropsBarraEscribir {
   texto: string;
   alCambiar: (texto: string) => void;
   alEnviar: () => void;
+  /** Abre la hoja para elegir o tomar una foto. */
+  alAdjuntar: () => void;
   /** Espacio inferior (la barra de pestañas cuando el teclado está cerrado). */
   espacioInferior: number;
 }
@@ -305,6 +316,7 @@ export function BarraEscribir({
   texto,
   alCambiar,
   alEnviar,
+  alAdjuntar,
   espacioInferior,
 }: IPropsBarraEscribir) {
   const { tema } = useTema();
@@ -313,6 +325,17 @@ export function BarraEscribir({
   const puede = texto.trim().length > 0;
   return (
     <View style={[estilos.barra, { paddingBottom: espacioInferior }]}>
+      <Pressable
+        testID="chat-adjuntar"
+        accessibilityRole="button"
+        accessibilityLabel={textos.adjuntar.boton}
+        onPress={() => {
+          alAdjuntar();
+        }}
+        style={estilos.botonSecundario}
+      >
+        <IconoImagen color={tema.colores.texto} />
+      </Pressable>
       <TextInput
         testID="chat-entrada"
         style={[estilos.entrada, enfocado && estilos.entradaFoco]}

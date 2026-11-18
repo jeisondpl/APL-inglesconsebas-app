@@ -2,6 +2,7 @@ import { respuestaError, respuestaOk } from '@/shared/lib/HttpResponse';
 
 import type {
   IResponseConversacion,
+  IResponseMedia,
   IResponseMensaje,
 } from '../domain/entities/Mensajes.entities';
 import type { MensajesRepository } from '../domain/models/MensajesRepository';
@@ -14,10 +15,12 @@ export interface IOpcionesMemoriaMensajes {
   /** Fuerza el error de la siguiente operación indicada (p. ej. sin red). */
   falla?: Partial<
     Record<
-      'hilo' | 'enviar' | 'marcarLeido' | 'reaccionar' | 'bandeja',
+      'hilo' | 'enviar' | 'marcarLeido' | 'reaccionar' | 'bandeja' | 'media',
       { msg: string; code?: number }
     >
   >;
+  /** Imagen y voz por id de mensaje (lo que enviar guarda también queda aquí). */
+  media?: Record<number, IResponseMedia>;
   /** Datos de la bandeja del profe. */
   conversaciones?: IResponseConversacion[];
 }
@@ -31,6 +34,7 @@ export function crearMemoriaMensajesRepository(
   opciones: IOpcionesMemoriaMensajes = {},
 ): MensajesRepository & { mensajes: IResponseMensaje[] } {
   const mensajes = [...inicial];
+  const media: Record<number, IResponseMedia> = { ...opciones.media };
   const rol = opciones.rol ?? 'student';
   const error = (k: keyof NonNullable<IOpcionesMemoriaMensajes['falla']>) =>
     opciones.falla?.[k];
@@ -55,7 +59,7 @@ export function crearMemoriaMensajesRepository(
         })),
       });
     },
-    async enviar({ idEstudiante, texto }) {
+    async enviar({ idEstudiante, texto, imagen, voz }) {
       const f = error('enviar');
       if (f) {
         return respuestaError(f.msg, f.code);
@@ -67,8 +71,8 @@ export function crearMemoriaMensajesRepository(
         remitente: rol,
         nombre: opciones.nombre ?? null,
         texto,
-        tieneImagen: false,
-        tieneVoz: false,
+        tieneImagen: Boolean(imagen),
+        tieneVoz: Boolean(voz),
         leido: false,
         editado: false,
         reacciones: {},
@@ -76,6 +80,9 @@ export function crearMemoriaMensajesRepository(
         mio: true,
       };
       mensajes.push(nuevo);
+      if (imagen || voz) {
+        media[id] = { imagen: imagen ?? null, voz: voz ?? null };
+      }
       return respuestaOk(nuevo);
     },
     async marcarLeido() {
@@ -113,6 +120,15 @@ export function crearMemoriaMensajesRepository(
       }
       mensajes[i] = { ...mensajes[i], reacciones };
       return respuestaOk(reacciones);
+    },
+    async media(id) {
+      const f = error('media');
+      if (f) {
+        return respuestaError(f.msg, f.code);
+      }
+      return media[id]
+        ? respuestaOk(media[id])
+        : respuestaError('Mensaje no encontrado.', 404);
     },
     async bandeja() {
       const f = error('bandeja');
