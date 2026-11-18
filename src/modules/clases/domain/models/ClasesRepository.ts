@@ -2,7 +2,9 @@ import type { HttpResponse } from '@/shared/lib/HttpResponse';
 
 import type {
   IArgsCancelar,
+  IArgsAgendar,
   IArgsClases,
+  EstadoAgendar,
   IArgsReagendar,
   IResponseCancelacion,
   IResponseClase,
@@ -28,4 +30,12 @@ export interface ClasesRepository {
   ): Promise<HttpResponse<EspaciosReagendar>>;
   /** Escoge el espacio. Leap vuelve a validar y crea el evento. */
   reagendarClase(args: IArgsReagendar): Promise<HttpResponse<{ ok: true }>>;
+  /** Si el estudiante Flex puede agendar y cuántas clases le quedan (liviano: sin espacios). */
+  estadoAgendar(idEstudiante: string): Promise<HttpResponse<EstadoAgendar>>;
+  /** Espacios que puede escoger para agendar una clase nueva (Leap ya los filtró). */
+  espaciosParaAgendar(
+    idEstudiante: string,
+  ): Promise<HttpResponse<EspaciosReagendar>>;
+  /** Agenda la clase. Leap vuelve a validar y crea el evento. */
+  agendarClase(args: IArgsAgendar): Promise<HttpResponse<{ ok: true }>>;
 }

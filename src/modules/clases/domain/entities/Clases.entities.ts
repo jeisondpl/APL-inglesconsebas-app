@@ -168,3 +168,31 @@ export interface IArgsReagendar {
   hora: string;
   idProfe: string;
 }
+
+// ── Agendar una clase (estudiante Flex, ítem 2.4) ───────────────────────────────────────────
+// Leap decide si puede y qué espacios ve (flex_estado / flex_slots / student_flex_book). Un plan que
+// no es Flex no ve nada de esto.
+
+/** Por qué no puede agendar ahora (la App pone el texto). */
+export type MotivoNoAgendar = 'pago_pendiente' | 'sin_cupo' | 'sin_ciclo';
+
+export type EstadoAgendar =
+  | { aplica: false }
+  | {
+      aplica: true;
+      puede: boolean;
+      motivo: MotivoNoAgendar | string | null;
+      /** Clases que aún puede agendar en el ciclo en curso. */
+      clasesRestantes: number;
+      minimo: number;
+      /** Último día del ciclo (`Y-m-d`): hasta ahí puede agendar. */
+      finCiclo: string | null;
+      diasRestantes: number;
+    };
+
+export interface IArgsAgendar {
+  idEstudiante: string;
+  fecha: string;
+  hora: string;
+  idProfe: string;
+}

@@ -13,8 +13,6 @@ import type { IEspacioReagendar } from '../../domain/entities/Clases.entities';
 import { espaciosPorDia } from '../../domain/validations/clases.validations';
 import { textosClases as textos } from '../clases.textos';
 
-const t = textos.reagendar;
-
 export interface IPropsHojaReagendar {
   estado: EstadoReagendacion;
   alCerrar: () => void;
@@ -69,6 +67,10 @@ export function HojaReagendar({
   alConfirmar,
 }: IPropsHojaReagendar) {
   const estilos = useEstilos(crearEstilos);
+  // La misma hoja sirve para reagendar una clase y para agendar una nueva (Flex).
+  const modo = estado.tipo === 'cerrada' ? 'reagendar' : estado.modo;
+  const t = modo === 'agendar' ? textos.agendar : textos.reagendar;
+  const id = modo;
   const insets = useSafeAreaInsets();
   const reducido = useReducedMotion();
   const visible = estado.tipo !== 'cerrada';
@@ -86,14 +88,14 @@ export function HojaReagendar({
     >
       <View style={estilos.contenedor}>
         <Pressable
-          testID="velo-reagendar"
+          testID={`velo-${id}`}
           style={estilos.velo}
           accessibilityRole="button"
           accessibilityLabel={t.cerrar}
           onPress={alCerrar}
         />
         <View
-          testID="hoja-reagendar"
+          testID={`hoja-${id}`}
           accessibilityViewIsModal
           style={[estilos.hoja, { paddingBottom: insets.bottom + 24 }]}
         >
@@ -112,7 +114,7 @@ export function HojaReagendar({
                 </Texto>
                 <Texto color="textoSecundario">{t.motivo(datos.motivo)}</Texto>
                 <Boton
-                  testID="reagendar-entendido"
+                  testID={`${id}-entendido`}
                   titulo={t.entendido}
                   onPress={alCerrar}
                 />
@@ -140,7 +142,7 @@ export function HojaReagendar({
                 ) : null}
 
                 {datos.espacios.length === 0 ? (
-                  <Texto testID="reagendar-vacio" color="aviso">
+                  <Texto testID={`${id}-vacio`} color="aviso">
                     {t.vacio}
                   </Texto>
                 ) : (
@@ -184,7 +186,7 @@ export function HojaReagendar({
                 <Texto
                   variante="detalle"
                   color="textoSecundario"
-                  testID="reagendar-elegido"
+                  testID={`${id}-elegido`}
                 >
                   {t.confirmarElegido(
                     lista.elegido.fecha,
@@ -194,14 +196,14 @@ export function HojaReagendar({
                 </Texto>
               ) : null}
               <Boton
-                testID="reagendar-confirmar"
+                testID={`${id}-confirmar`}
                 titulo={lista.elegido ? t.confirmar : t.elegirPrimero}
                 onPress={alConfirmar}
                 cargando={lista.enviando}
                 deshabilitado={!lista.elegido || lista.enviando}
               />
               <Boton
-                testID="reagendar-volver"
+                testID={`${id}-volver`}
                 variante="secundario"
                 titulo={t.volver}
                 onPress={alCerrar}

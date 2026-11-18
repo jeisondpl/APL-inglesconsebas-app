@@ -9,6 +9,7 @@ import { textosComunes } from '@/shared/lib/textos';
 import type {
   EscenarioCancelacion,
   EspaciosReagendar,
+  EstadoAgendar,
   IEspacioReagendar,
   IOpcionCancelacion,
   IResponseClase,
@@ -19,6 +20,7 @@ import type {
   ILeapCancelacion,
   ILeapClase,
   ILeapEspacios,
+  ILeapFlex,
   ILeapVistaPrevia,
 } from './leapClases.tipos';
 
@@ -112,6 +114,41 @@ export function vistaPreviaDe(
     minimo: numeroDe(c.minimo) ?? 0,
     enGrupo: c.enGrupo === true,
   };
+}
+
+/** Estado de agendar a partir de la respuesta de Leap; `null` si el formato no es el esperado. */
+export function estadoAgendarDe(c: ILeapFlex): EstadoAgendar | null {
+  if (c.motivo === 'no_flex') {
+    return { aplica: false };
+  }
+  if (typeof c.puede !== 'boolean') {
+    return null;
+  }
+  return {
+    aplica: true,
+    puede: c.puede,
+    motivo: textoDe(c.motivo),
+    clasesRestantes: numeroDe(c.clasesRestantes) ?? 0,
+    minimo: numeroDe(c.minimo) ?? 0,
+    finCiclo: textoDe(c.finCiclo),
+    diasRestantes: numeroDe(c.diasRestantes) ?? 0,
+  };
+}
+
+/** Lo que se puede escoger al agendar, con la misma forma que al reagendar (hasta = fin del ciclo). */
+export function espaciosAgendarDe(c: ILeapFlex): EspaciosReagendar | null {
+  if (c.puede === false) {
+    return { puede: false, motivo: textoDe(c.motivo) ?? 'sin_cupo' };
+  }
+  const base = espaciosDe({ puede: c.puede, espacios: c.espacios });
+  return base && base.puede
+    ? {
+        ...base,
+        hasta: textoDe(c.finCiclo),
+        fechaOriginal: '',
+        anticipacionHoras: 6,
+      }
+    : base;
 }
 
 /** Espacios del dominio a partir de la respuesta de Leap; `null` si el formato no es el esperado. */
@@ -237,6 +274,71 @@ export function crearApiClasesRepository(api: ClienteApi): ClasesRepository {
           : null;
       return espacios
         ? respuestaOk(espacios, r.code)
+        : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
+    },
+
+    async estadoAgendar(idEstudiante) {
+      const r = await api.post<ILeapFlex>(
+        'api.php',
+        { action: 'flex_estado', studentId: idEstudiante },
+        { endpoint: 'class_sessions' },
+      );
+      if (r.error) {
+        return respuestaError(
+          r.msg ?? textosComunes.errores.desconocido,
+          r.code,
+        );
+      }
+      const estado =
+        r.response && typeof r.response === 'object'
+          ? estadoAgendarDe(r.response)
+          : null;
+      return estado
+        ? respuestaOk(estado, r.code)
+        : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
+    },
+
+    async espaciosParaAgendar(idEstudiante) {
+      const r = await api.post<ILeapFlex>(
+        'api.php',
+        { action: 'flex_slots', studentId: idEstudiante },
+        { endpoint: 'class_sessions' },
+      );
+      if (r.error) {
+        return respuestaError(
+          r.msg ?? textosComunes.errores.desconocido,
+          r.code,
+        );
+      }
+      const espacios =
+        r.response && typeof r.response === 'object'
+          ? espaciosAgendarDe(r.response)
+          : null;
+      return espacios
+        ? respuestaOk(espacios, r.code)
+        : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
+    },
+
+    async agendarClase({ idEstudiante, fecha, hora, idProfe }) {
+      const r = await api.post<{ ok?: boolean }>(
+        'api.php',
+        {
+          action: 'student_flex_book',
+          studentId: idEstudiante,
+          date: fecha,
+          time: hora,
+          teacherId: idProfe,
+        },
+        { endpoint: 'class_sessions' },
+      );
+      if (r.error) {
+        return respuestaError(
+          r.msg ?? textosComunes.errores.desconocido,
+          r.code,
+        );
+      }
+      return r.response?.ok === true
+        ? respuestaOk({ ok: true as const }, r.code)
         : respuestaError(textosComunes.errores.respuestaInvalida, r.code);
     },
 

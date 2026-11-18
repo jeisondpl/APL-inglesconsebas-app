@@ -16,6 +16,7 @@ import { useEstilos, useTema, type ITema } from '@/shared/theme';
 import { useClasesController } from '../../aplications/controllers/Clases.controller';
 import { HojaCancelacion } from '../components/HojaCancelacion';
 import { HojaReagendar } from '../components/HojaReagendar';
+import { TarjetaAgendar } from '../components/TarjetaAgendar';
 import {
   ListaClases,
   ResumenCiclo,
@@ -58,6 +59,8 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
     refrescando,
     ahoraMs,
     cancelacion,
+    agenda,
+    _abrirAgendar,
     reagendacion,
     _abrirReagendar,
     _cerrarReagendar,
@@ -133,6 +136,9 @@ export function ClasesScreen({ usuario }: IPropsClasesScreen) {
 
         {ciclo ? (
           <>
+            <Revelar retraso={PASO_ENTRADA}>
+              <TarjetaAgendar estado={agenda} alAgendar={_abrirAgendar} />
+            </Revelar>
             <Revelar retraso={PASO_ENTRADA}>
               <SelectorCiclo
                 ciclo={ciclo}

@@ -7,6 +7,7 @@ import { textosComunes } from '@/shared/lib/textos';
 import { mensajesClases } from '../../domain/clases.mensajes';
 import type {
   EspaciosReagendar,
+  EstadoAgendar,
   ICicloClases,
   IEspacioReagendar,
   IResponseClase,
@@ -22,6 +23,11 @@ import {
   vistaPreviaCancelacionUseCase,
 } from '../cancelarClase/cancelarClase';
 import { obtenerClasesUseCase } from '../obtenerClases/obtenerClases';
+import {
+  agendarClaseUseCase,
+  espaciosParaAgendarUseCase,
+  estadoAgendarUseCase,
+} from '../agendarClase/agendarClase';
 import {
   espaciosParaReagendarUseCase,
   reagendarClaseUseCase,
@@ -49,11 +55,16 @@ export type EstadoCancelacion =
     };
 
 /** La hoja de reagendar: cerrada, pidiendo los espacios a Leap, o lista para escoger y confirmar. */
+export type ModoEspacios = 'reagendar' | 'agendar';
+
 export type EstadoReagendacion =
   | { tipo: 'cerrada' }
-  | { tipo: 'cargando'; idClase: string }
+  | { tipo: 'cargando'; modo: ModoEspacios; idClase: string }
   | {
       tipo: 'lista';
+      /** Reagendar una clase por reagendar, o agendar una nueva (Flex): la hoja es la misma. */
+      modo: ModoEspacios;
+      /** Vacío al agendar. */
       idClase: string;
       datos: EspaciosReagendar;
       elegido: IEspacioReagendar | null;
@@ -73,6 +84,10 @@ function avisoDeCancelacion(estadoFinal: string): string {
 }
 
 export interface IClasesController {
+  /** Estado de agendar (Flex); `null` mientras no se sabe. */
+  agenda: EstadoAgendar | null;
+  /** Pide a Leap los espacios y abre la hoja para agendar una clase nueva. */
+  _abrirAgendar(): Promise<void>;
   reagendacion: EstadoReagendacion;
   /** Pide a Leap los espacios y abre la hoja para escoger. */
   _abrirReagendar(idClase: string): Promise<void>;
@@ -131,6 +146,7 @@ export function useClasesController({
     tipo: 'cerrada',
   });
   const enReagendar = useRef(false);
+  const [agenda, setAgenda] = useState<EstadoAgendar | null>(null);
   const [ahoraMs, setAhoraMs] = useState(ahora);
   const generacion = useRef(0);
   const montado = useRef(true);
@@ -161,6 +177,11 @@ export function useClasesController({
     }
     yaListo.current = true;
     setResultado({ tipo: 'listo', clases: r.response });
+    // Aparte y sin avisar si falla: es solo para mostrar (o no) la tarjeta de agendar.
+    const a = await estadoAgendarUseCase(repo, idEstudiante);
+    if (mia === generacion.current && montado.current) {
+      setAgenda(a.response ?? null);
+    }
   }, [repo, idEstudiante]);
 
   const _cargar = useCallback(async () => {
@@ -294,7 +315,7 @@ export function useClasesController({
         return;
       }
       enReagendar.current = true;
-      setReagendacion({ tipo: 'cargando', idClase });
+      setReagendacion({ tipo: 'cargando', modo: 'reagendar', idClase });
       const r = await espaciosParaReagendarUseCase(repo, idClase);
       enReagendar.current = false;
       if (!montado.current) {
@@ -310,6 +331,7 @@ export function useClasesController({
       }
       setReagendacion({
         tipo: 'lista',
+        modo: 'reagendar',
         idClase,
         datos: r.response,
         elegido: null,
@@ -319,6 +341,36 @@ export function useClasesController({
     },
     [repo],
   );
+
+  const _abrirAgendar = useCallback(async () => {
+    if (enReagendar.current) {
+      return;
+    }
+    enReagendar.current = true;
+    setReagendacion({ tipo: 'cargando', modo: 'agendar', idClase: '' });
+    const r = await espaciosParaAgendarUseCase(repo, idEstudiante);
+    enReagendar.current = false;
+    if (!montado.current) {
+      return;
+    }
+    if (r.error || !r.response) {
+      setReagendacion({ tipo: 'cerrada' });
+      notify.error(
+        mensajesClases.noSeCargaronEspacios,
+        r.msg ?? textosComunes.errores.desconocido,
+      );
+      return;
+    }
+    setReagendacion({
+      tipo: 'lista',
+      modo: 'agendar',
+      idClase: '',
+      datos: r.response,
+      elegido: null,
+      enviando: false,
+      error: null,
+    });
+  }, [repo, idEstudiante]);
 
   const _cerrarReagendar = useCallback(() => {
     // Mientras se envía no se cierra: no se sabría si la clase se reagendó.
@@ -343,19 +395,18 @@ export function useClasesController({
     ) {
       return;
     }
-    const { idClase, datos, elegido } = reagendacion;
+    const { modo, idClase, datos, elegido } = reagendacion;
     enReagendar.current = true;
     setReagendacion({ ...reagendacion, enviando: true, error: null });
-    const r = await reagendarClaseUseCase(
-      repo,
-      {
-        idClase,
-        fecha: elegido.fecha,
-        hora: elegido.hora,
-        idProfe: elegido.idProfe,
-      },
-      datos,
-    );
+    const cuando = {
+      fecha: elegido.fecha,
+      hora: elegido.hora,
+      idProfe: elegido.idProfe,
+    };
+    const r =
+      modo === 'agendar'
+        ? await agendarClaseUseCase(repo, { idEstudiante, ...cuando }, datos)
+        : await reagendarClaseUseCase(repo, { idClase, ...cuando }, datos);
     enReagendar.current = false;
     if (!montado.current) {
       return;
@@ -363,6 +414,7 @@ export function useClasesController({
     if (r.error || !r.response) {
       setReagendacion({
         tipo: 'lista',
+        modo,
         idClase,
         datos,
         elegido: null,
@@ -375,9 +427,11 @@ export function useClasesController({
       return;
     }
     setReagendacion({ tipo: 'cerrada' });
-    notify.success(mensajesClases.reagendada);
+    notify.success(
+      modo === 'agendar' ? mensajesClases.agendada : mensajesClases.reagendada,
+    );
     await leer();
-  }, [reagendacion, repo, leer]);
+  }, [reagendacion, repo, leer, idEstudiante]);
 
   const _abrirClase = useCallback(
     async (enlace: string) => {
@@ -393,6 +447,8 @@ export function useClasesController({
   );
 
   return {
+    agenda,
+    _abrirAgendar,
     reagendacion,
     _abrirReagendar,
     _cerrarReagendar,

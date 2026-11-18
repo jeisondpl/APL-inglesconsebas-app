@@ -53,3 +53,14 @@ export interface ILeapEspacios {
     esMiProfe?: boolean;
   }[];
 }
+
+/** Respuesta de POST class_sessions {action:'flex_estado' | 'flex_slots'} (flex.php de Leap). */
+export interface ILeapFlex {
+  puede?: boolean;
+  motivo?: string;
+  clasesRestantes?: number | string;
+  minimo?: number | string;
+  finCiclo?: string | null;
+  diasRestantes?: number | string;
+  espacios?: ILeapEspacios['espacios'];
+}

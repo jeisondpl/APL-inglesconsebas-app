@@ -32,7 +32,7 @@ const quedarian = (v: VistaCancelable) =>
   Math.max(0, v.tokensMaximos - v.tokensUsados - 1);
 
 const PRONTO_AGENDAR =
-  'Agendar otra clase desde la App llegará pronto; por ahora hazlo desde la web.';
+  'Después puedes agendar otra desde «Agendar una clase», aquí en Clases.';
 const PRONTO_ESCOGER =
   'Después lo escoges aquí mismo, en Clases, con «Escoger nuevo espacio».';
 
@@ -131,6 +131,13 @@ const MOTIVOS_NO_CANCELABLE: Record<string, string> = {
   fecha_invalida: 'Esta clase no tiene una fecha válida.',
 };
 
+const MOTIVOS_NO_AGENDAR: Record<string, string> = {
+  pago_pendiente:
+    'Tienes un pago pendiente. Regulariza tu pago para agendar nuevas clases.',
+  sin_cupo: 'Ya agendaste todas las clases de tu plan en este ciclo.',
+  sin_ciclo: 'No hay un ciclo activo para agendar. Escríbele a Sebas.',
+};
+
 const MOTIVOS_NO_REAGENDABLE: Record<string, string> = {
   no_reagendable: 'Esta clase no está pendiente de reagendar.',
   vencida: 'El plazo para reagendar esta clase ya venció.',
@@ -195,6 +202,45 @@ export const textosClases = {
               ? 'Gasta 1 cancelación y no se recupera.'
               : 'No gasta tokens.',
           },
+  },
+  agendar: {
+    tarjeta: {
+      titulo: 'Agendar una clase',
+      quedan: (n: number) =>
+        n === 1
+          ? 'Puedes agendar 1 clase más en este ciclo.'
+          : `Puedes agendar ${n} clases más en este ciclo.`,
+      cierra: (dias: number) =>
+        `Tu ciclo termina ${
+          dias === 0 ? 'hoy' : dias === 1 ? 'en 1 día' : `en ${dias} días`
+        }: las clases que no agendes se pierden.`,
+      motivo: (motivo: string | null): string =>
+        MOTIVOS_NO_AGENDAR[motivo ?? ''] ?? MOTIVOS_NO_AGENDAR.sin_cupo,
+      boton: 'Agendar una clase',
+    },
+    revisando: 'Buscando espacios',
+    titulo: 'Escoge un espacio',
+    plazo: (hasta: string | null) =>
+      hasta
+        ? `Puedes agendar hasta el ${fechaConDia(
+            hasta,
+          )}, el último día de tu ciclo.`
+        : 'Escoge el espacio que más te convenga.',
+    regla: (horas: number) =>
+      `El espacio debe empezar con al menos ${horas} horas de anticipación. Puedes cancelar con 24 horas o más y recuperas el cupo.`,
+    vacio:
+      'Ahora mismo no hay espacios disponibles. Intenta de nuevo más tarde.',
+    conProfe: (hora: string, profe: string) => `${hora12(hora)} · ${profe}`,
+    confirmar: 'Agendar este espacio',
+    confirmarElegido: (fecha: string, hora: string, profe: string) =>
+      `${fechaConDia(fecha)} a las ${hora12(hora)} con ${profe}`,
+    elegirPrimero: 'Escoge un espacio',
+    cerrar: 'Cerrar',
+    volver: 'Volver',
+    entendido: 'Entendido',
+    noSePuede: 'No puedes agendar ahora',
+    motivo: (motivo: string): string =>
+      MOTIVOS_NO_AGENDAR[motivo] ?? MOTIVOS_NO_AGENDAR.sin_cupo,
   },
   reagendar: {
     boton: 'Escoger nuevo espacio',

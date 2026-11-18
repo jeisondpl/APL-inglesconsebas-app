@@ -42,7 +42,6 @@ cliente modificado podía cancelar sin costo). Decisión acordada con el usuario
   calcula estado ni tokens; muestra el `finalStatus` real.
 - **Power cobra un solo token.** La web hoy cobra doble en la cancelación tardía (<12 h): el
   servidor ya descuenta y la web llama además a `deduct_token`. Avisar a Sebas.
-- Agendar otra clase en Flex (2.4) aún no está (la hoja lo dice: «por ahora, desde la web»).
 - No se envía el mensaje automático de `chispa` que manda la web al cancelar (el servidor no lo hace).
 
 ## 2.3 Reagendar (escoger espacio)
@@ -59,6 +58,20 @@ cliente modificado podía cancelar sin costo). Decisión acordada con el usuario
   por día (su profe primero) y confirmación. Un 409 (espacio ocupado) deja el error visible y vuelve
   a leer las clases.
 - No se envían los mensajes de `chispa` ni el aviso al admin (`todos`) que manda la web.
+
+## 2.4 Agendar una clase (Flex)
+
+- Backend (`app/api/flex.php`, solo en la copia de desarrollo): `flex_estado {studentId}` (liviano:
+  cuántas clases le quedan en el ciclo en curso, fin del ciclo, pago pendiente), `flex_slots` (lo
+  mismo + espacios filtrados: profes excluidas o exclusivas, desde 6 h, sin pasar el fin del ciclo,
+  sin repetir fecha y hora) y `student_flex_book {studentId,date,time,teacherId}`, que exige que el
+  espacio esté en esa lista, crea el evento y deja que `add_manual` inserte la clase. Solo planes
+  `Flex*`; el resto recibe `no_flex` y la App no muestra la tarjeta. **Pendiente: portarlo al Leap de
+  Hostinger.**
+- App: tarjeta «Agendar una clase» (cuántas quedan, aviso si el ciclo termina en ≤ 7 días, motivo si
+  no puede) y la misma hoja de espacios que reagendar, en modo `agendar`. Los estados `no_flex`,
+  `pago_pendiente`, `sin_cupo` y `sin_ciclo` los decide Leap.
+- No se envían el mensaje de `chispa` ni el aviso al admin (`todos`) que manda la web.
 
 ## Fuera de alcance
 

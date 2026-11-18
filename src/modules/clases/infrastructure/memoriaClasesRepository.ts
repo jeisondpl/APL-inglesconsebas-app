@@ -2,6 +2,7 @@ import { respuestaError, respuestaOk } from '@/shared/lib/HttpResponse';
 
 import type {
   EspaciosReagendar,
+  EstadoAgendar,
   IResponseCancelacion,
   IResponseClase,
   VistaPreviaCancelacion,
@@ -15,6 +16,12 @@ export interface IOpcionesMemoriaClases {
   cancelacion?: IResponseCancelacion;
   /** Espacios para reagendar por id de clase. Sin dato: «no se puede reagendar». */
   espacios?: Record<string, EspaciosReagendar>;
+  /** Estado de agendar (Flex). Por defecto: el plan no es Flex. */
+  estadoAgendar?: EstadoAgendar;
+  /** Espacios para agendar. Por defecto: sin cupo. */
+  espaciosAgendar?: EspaciosReagendar;
+  /** Fuerza el error de agendar. */
+  agendarError?: { msg: string; code?: number };
   /** Fuerza el error de reagendar (p. ej. el espacio se ocupó). */
   reagendarError?: { msg: string; code?: number };
 }
@@ -49,6 +56,29 @@ export function crearMemoriaClasesRepository(
           motivo: 'no_reagendable',
         },
       ),
+    estadoAgendar: async () =>
+      respuestaOk(opciones.estadoAgendar ?? { aplica: false }),
+    espaciosParaAgendar: async () =>
+      respuestaOk(
+        opciones.espaciosAgendar ?? { puede: false, motivo: 'sin_cupo' },
+      ),
+    agendarClase: async ({ fecha, hora, idProfe }) => {
+      if (opciones.agendarError) {
+        return respuestaError(
+          opciones.agendarError.msg,
+          opciones.agendarError.code,
+        );
+      }
+      const datos = opciones.espaciosAgendar;
+      const existe =
+        datos?.puede === true &&
+        datos.espacios.some(
+          e => e.fecha === fecha && e.hora === hora && e.idProfe === idProfe,
+        );
+      return existe
+        ? respuestaOk({ ok: true as const })
+        : respuestaError('Ese espacio ya no está disponible. Elige otro.', 409);
+    },
     reagendarClase: async ({ idClase, fecha, hora, idProfe }) => {
       if (opciones.reagendarError) {
         return respuestaError(

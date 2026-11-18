@@ -14,5 +14,7 @@ export const mensajesClases = {
   eligeEspacio: 'Escoge un espacio para tu clase.',
   reagendada: 'Clase reagendada',
   noSeReagendo: 'No se pudo reagendar la clase',
+  agendada: 'Clase agendada',
+  noSeAgendo: 'No se pudo agendar la clase',
   noSeCargaronEspacios: 'No se pudieron cargar los espacios',
 } as const;
