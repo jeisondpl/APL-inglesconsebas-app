@@ -54,7 +54,7 @@ const crearEstilos = (tema: ITema) =>
     dia: { gap: tema.espaciado.s },
     horas: { flexDirection: 'row', flexWrap: 'wrap', gap: tema.espaciado.s },
     hora: { flexGrow: 1, minWidth: '45%' },
-    acciones: { gap: tema.espaciado.m, marginTop: tema.espaciado.s },
+    acciones: { gap: tema.espaciado.m, paddingTop: tema.espaciado.m },
   });
 
 /**
@@ -175,39 +175,40 @@ export function HojaReagendar({
                     </View>
                   ))
                 )}
-
-                <View style={estilos.acciones}>
-                  {lista.elegido ? (
-                    <Texto
-                      variante="detalle"
-                      color="textoSecundario"
-                      testID="reagendar-elegido"
-                    >
-                      {t.confirmarElegido(
-                        lista.elegido.fecha,
-                        lista.elegido.hora,
-                        lista.elegido.profe,
-                      )}
-                    </Texto>
-                  ) : null}
-                  <Boton
-                    testID="reagendar-confirmar"
-                    titulo={lista.elegido ? t.confirmar : t.elegirPrimero}
-                    onPress={alConfirmar}
-                    cargando={lista.enviando}
-                    deshabilitado={!lista.elegido || lista.enviando}
-                  />
-                  <Boton
-                    testID="reagendar-volver"
-                    variante="secundario"
-                    titulo={t.volver}
-                    onPress={alCerrar}
-                    deshabilitado={lista.enviando}
-                  />
-                </View>
               </>
             ) : null}
           </ScrollView>
+          {lista && datos && datos.puede ? (
+            <View style={estilos.acciones}>
+              {lista.elegido ? (
+                <Texto
+                  variante="detalle"
+                  color="textoSecundario"
+                  testID="reagendar-elegido"
+                >
+                  {t.confirmarElegido(
+                    lista.elegido.fecha,
+                    lista.elegido.hora,
+                    lista.elegido.profe,
+                  )}
+                </Texto>
+              ) : null}
+              <Boton
+                testID="reagendar-confirmar"
+                titulo={lista.elegido ? t.confirmar : t.elegirPrimero}
+                onPress={alConfirmar}
+                cargando={lista.enviando}
+                deshabilitado={!lista.elegido || lista.enviando}
+              />
+              <Boton
+                testID="reagendar-volver"
+                variante="secundario"
+                titulo={t.volver}
+                onPress={alCerrar}
+                deshabilitado={lista.enviando}
+              />
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>

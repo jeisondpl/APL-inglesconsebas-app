@@ -57,16 +57,19 @@ export function useEstadoBarraPestanas(): IEstadoBarraPestanas | null {
 export function direccionDesplazamiento(
   y: number,
   anterior: number,
-  umbral = UMBRAL_DIRECCION,
+  umbral?: number,
 ): DireccionDesplazamiento {
   'worklet';
+  // Dentro del cuerpo: el valor por defecto de un parámetro no lo captura el plugin de worklets y
+  // en el hilo de UI la constante no existe («Property 'UMBRAL_DIRECCION' doesn't exist»).
+  const limite = umbral ?? UMBRAL_DIRECCION;
   if (y <= 0) {
     return -1;
   }
-  if (y > anterior + umbral) {
+  if (y > anterior + limite) {
     return 1;
   }
-  if (y < anterior - umbral) {
+  if (y < anterior - limite) {
     return -1;
   }
   return 0;

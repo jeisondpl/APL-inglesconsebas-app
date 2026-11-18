@@ -369,10 +369,9 @@ export function useClasesController({
         enviando: false,
         error: r.msg ?? textosComunes.errores.desconocido,
       });
-      // Un 409 es que el espacio o la clase cambiaron: se vuelve a pedir la lista.
-      if (r.code === 409) {
-        await leer();
-      }
+      // Ante cualquier error se vuelven a leer las clases: un 409 es que el espacio o la clase
+      // cambiaron, y un timeout deja incierto si Leap alcanzó a reagendar.
+      await leer();
       return;
     }
     setReagendacion({ tipo: 'cerrada' });
