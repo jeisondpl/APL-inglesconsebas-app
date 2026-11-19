@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useNative, useRepository } from '@/app/di';
+import {
+  useBloqueo,
+  useEstadoBloqueo,
+  useNative,
+  useRepository,
+} from '@/app/di';
 import { entorno } from '@/shared/lib/entorno';
 import { notify } from '@/shared/lib/notify';
 
 import { mensajesPerfil, soloPin } from '../../domain/perfil.dominio';
+import {
+  activarBloqueoUseCase,
+  desactivarBloqueoUseCase,
+} from '../bloqueo/bloqueo';
 import { abrirWebUseCase } from '../abrirWeb/abrirWeb';
 import { cambiarPinUseCase } from '../cambiarPin/cambiarPin';
 
@@ -22,6 +31,11 @@ export interface IPerfilController {
   abriendoWeb: boolean;
   /** Abre la web con la sesión de la App (1.16). */
   _abrirWeb(): Promise<void>;
+  /** El equipo tiene huella o rostro configurados (si no, no se ofrece el desbloqueo). */
+  biometriaDisponible: boolean;
+  bloqueoActivo: boolean;
+  /** Activa o desactiva el desbloqueo con huella o rostro (1.13). */
+  _alternarBloqueo(activar: boolean): Promise<void>;
 }
 
 /** Cambio del PIN propio (F1-03b, 1.14): tres campos de 4 dígitos y un envío. */
@@ -29,6 +43,11 @@ export function usePerfilController(): IPerfilController {
   const repo = useRepository('perfil');
   const enlaces = useNative('enlaces');
   const [abriendoWeb, setAbriendoWeb] = useState(false);
+  const biometria = useNative('biometria');
+  const almacen = useNative('almacenSeguro');
+  const bloqueo = useBloqueo();
+  const { activo: bloqueoActivo } = useEstadoBloqueo();
+  const [biometriaDisponible, setBiometriaDisponible] = useState(false);
   const [actual, setActual] = useState('');
   const [nuevo, setNuevo] = useState('');
   const [confirmar, setConfirmar] = useState('');
@@ -70,6 +89,30 @@ export function usePerfilController(): IPerfilController {
     );
   }, [repo, actual, nuevo, confirmar]);
 
+  useEffect(() => {
+    biometria.disponible().then(d => {
+      if (montado.current) {
+        setBiometriaDisponible(d);
+      }
+    });
+  }, [biometria]);
+
+  const _alternarBloqueo = useCallback(
+    async (activar: boolean) => {
+      if (!activar) {
+        await desactivarBloqueoUseCase(biometria, almacen, bloqueo);
+        return;
+      }
+      const r = await activarBloqueoUseCase(biometria, almacen, bloqueo);
+      if (r === 'no_disponible') {
+        notify.error(mensajesPerfil.sinBiometria);
+      } else if (r === 'cancelado') {
+        notify.error(mensajesPerfil.bloqueoNoActivado);
+      }
+    },
+    [biometria, almacen, bloqueo],
+  );
+
   const _abrirWeb = useCallback(async () => {
     setAbriendoWeb(true);
     const r = await abrirWebUseCase(repo, enlaces, entorno.webUrl);
@@ -80,6 +123,9 @@ export function usePerfilController(): IPerfilController {
   }, [repo, enlaces]);
 
   return {
+    biometriaDisponible,
+    bloqueoActivo,
+    _alternarBloqueo,
     abriendoWeb,
     _abrirWeb,
     actual,

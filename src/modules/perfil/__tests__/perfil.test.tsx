@@ -13,6 +13,9 @@ import Toast from 'react-native-toast-message';
 import { DependenciasProvider } from '@/app/di';
 import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
 import { abrirWebUseCase } from '@/modules/perfil/aplications/abrirWeb/abrirWeb';
+import type { BiometriaPort } from '@/native/ports/BiometriaPort';
+import { CLAVE_BLOQUEO_BIOMETRICO, crearBloqueo } from '@/shared/lib/bloqueo';
+import { crearAlmacenEnMemoria } from '@/app/di/dependenciasDePrueba';
 import { cambiarPinUseCase } from '@/modules/perfil/aplications/cambiarPin/cambiarPin';
 import {
   problemaDelPin,
@@ -341,5 +344,90 @@ describe('abrir la web con la sesión (1.16)', () => {
     expect((await repo.codigoWeb()).msg).toMatch(/formato/);
     expect((await repo.codigoWeb()).msg).toBe('Inicia sesión');
     expect((await repo.codigoWeb()).msg).toMatch(/inesperado/);
+  });
+});
+
+describe('desbloqueo con huella o rostro (1.13)', () => {
+  const montarPerfil = async (
+    biometria: BiometriaPort,
+    bloqueo = crearBloqueo(),
+  ) => {
+    const almacen = crearAlmacenEnMemoria();
+    const dependencias = crearDependenciasDePrueba({
+      biometria,
+      bloqueo,
+      almacen,
+    });
+    await render(
+      <SafeAreaProvider>
+        <TemaProvider preferenciaInicial="oscuro">
+          <DependenciasProvider valor={dependencias}>
+            <PerfilScreen
+              usuario={{ nombre: 'Ana', usuario: 'ana', rol: 'estudiante' }}
+              alVolver={jest.fn()}
+            />
+          </DependenciasProvider>
+        </TemaProvider>
+      </SafeAreaProvider>,
+    );
+    return { almacen, bloqueo };
+  };
+  const bio = (o: { disponible?: boolean; activar?: string } = {}) =>
+    ({
+      disponible: jest.fn().mockResolvedValue(o.disponible ?? true),
+      activar: jest.fn().mockResolvedValue({ tipo: o.activar ?? 'ok' }),
+      desactivar: jest.fn().mockResolvedValue(undefined),
+      autenticar: jest.fn().mockResolvedValue({ tipo: 'ok' }),
+    } as unknown as BiometriaPort);
+
+  beforeEach(() => (Toast.show as jest.Mock).mockClear());
+
+  it('sin biometría en el equipo no se ofrece', async () => {
+    await montarPerfil(bio({ disponible: false }));
+    await screen.findByTestId('perfil');
+    expect(screen.queryByTestId('perfil-bloqueo')).toBeNull();
+  });
+
+  it('activarlo lo recuerda y desactivarlo lo olvida', async () => {
+    const { almacen, bloqueo } = await montarPerfil(bio());
+    const interruptor = await screen.findByTestId('perfil-bloqueo-interruptor');
+    await fireEvent(interruptor, 'valueChange', true);
+    await waitFor(() => expect(bloqueo.obtener().activo).toBe(true));
+    expect(almacen.datos.get(CLAVE_BLOQUEO_BIOMETRICO)).toBe('1');
+    expect(bloqueo.obtener().bloqueada).toBe(false);
+    await fireEvent(
+      screen.getByTestId('perfil-bloqueo-interruptor'),
+      'valueChange',
+      false,
+    );
+    await waitFor(() => expect(bloqueo.obtener().activo).toBe(false));
+    expect(almacen.datos.has(CLAVE_BLOQUEO_BIOMETRICO)).toBe(false);
+  });
+
+  it('si no se verifica o el equipo no puede, no se activa y se avisa', async () => {
+    const a = await montarPerfil(bio({ activar: 'cancelado' }));
+    const interruptor = await screen.findByTestId('perfil-bloqueo-interruptor');
+    await fireEvent(interruptor, 'valueChange', true);
+    await waitFor(() =>
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text1: expect.stringContaining('No se activó'),
+        }),
+      ),
+    );
+    expect(a.bloqueo.obtener().activo).toBe(false);
+  });
+
+  it('si el equipo ya no tiene biometría al activar, lo dice', async () => {
+    await montarPerfil(bio({ activar: 'no_disponible' }));
+    const interruptor = await screen.findByTestId('perfil-bloqueo-interruptor');
+    await fireEvent(interruptor, 'valueChange', true);
+    await waitFor(() =>
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text1: expect.stringContaining('huella ni rostro'),
+        }),
+      ),
+    );
   });
 });

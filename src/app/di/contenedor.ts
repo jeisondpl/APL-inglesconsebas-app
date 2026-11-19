@@ -22,6 +22,7 @@ import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import { crearKeychainBiometriaAdapter } from '@/native/adapters/KeychainBiometriaAdapter';
 import { crearBlobUtilCacheLocalAdapter } from '@/native/adapters/BlobUtilCacheLocalAdapter';
 import { crearFirebasePushAdapter } from '@/native/adapters/FirebasePushAdapter';
 import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
@@ -32,12 +33,14 @@ import { crearImagePickerSelectorImagenAdapter } from '@/native/adapters/ImagePi
 import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
 import type { AudioPort } from '@/native/ports/AudioPort';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { BiometriaPort } from '@/native/ports/BiometriaPort';
 import type { PushPort } from '@/native/ports/PushPort';
 import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import { crearClienteApi, type ClienteApi } from '@/shared/lib/api';
+import { crearBloqueo, type Bloqueo } from '@/shared/lib/bloqueo';
 import {
   crearEstadoConexion,
   type EstadoConexion,
@@ -80,6 +83,8 @@ export interface INativos {
   google: GoogleSignInPort;
   /** Notificaciones push por FCM (F2-03). */
   push: PushPort;
+  /** Desbloqueo con huella o rostro (F1-03b, 1.13). */
+  biometria: BiometriaPort;
 }
 
 export interface IDependencias {
@@ -92,6 +97,8 @@ export interface IDependencias {
   banderaOnboarding: BanderaOnboarding;
   /** Si hay conexión con Leap, deducido de las peticiones (F1-03b, 1.15). Opcional en los tests. */
   conexion?: EstadoConexion;
+  /** Estado del desbloqueo biométrico (1.13). Opcional en los tests. */
+  bloqueo?: Bloqueo;
 }
 
 /**
@@ -149,6 +156,7 @@ export function crearDependencias(): IDependencias {
       imagenes: crearImagePickerSelectorImagenAdapter(),
       audio: crearNitroSoundAudioAdapter(),
       push: crearFirebasePushAdapter(),
+      biometria: crearKeychainBiometriaAdapter(),
       // Con client ID real, Google de verdad; sin él, el simulado si el build lo pide (F1-06).
       google:
         !entorno.googleWebClientId && entorno.googleSimuladoCorreo
@@ -161,6 +169,7 @@ export function crearDependencias(): IDependencias {
     api,
     sesionActiva,
     conexion,
+    bloqueo: crearBloqueo(),
     // Empieza en `cargando`: el navegador raíz la lee del almacén al arrancar.
     banderaOnboarding: crearBanderaOnboarding(),
   };

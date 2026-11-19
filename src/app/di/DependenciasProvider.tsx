@@ -7,6 +7,11 @@ import {
 } from 'react';
 
 import {
+  crearBloqueo,
+  type Bloqueo,
+  type IEstadoBloqueo,
+} from '@/shared/lib/bloqueo';
+import {
   crearEstadoConexion,
   type IEstadoConexion,
 } from '@/shared/lib/conexion';
@@ -105,4 +110,18 @@ export function useEstadoConexion(): IEstadoConexion {
   const { conexion } = useDependencias('useEstadoConexion');
   const store = conexion ?? SIN_CONEXION_OPCIONAL;
   return useSyncExternalStore(store.suscribir, store.obtener);
+}
+
+/** Bloqueo biométrico del contenedor (1.13). Sin él, uno propio que nunca bloquea. */
+const BLOQUEO_OPCIONAL = crearBloqueo();
+
+export function useBloqueo(): Bloqueo {
+  const { bloqueo } = useDependencias('useBloqueo');
+  return bloqueo ?? BLOQUEO_OPCIONAL;
+}
+
+/** Estado del bloqueo suscrito a sus cambios. */
+export function useEstadoBloqueo(): IEstadoBloqueo {
+  const bloqueo = useBloqueo();
+  return useSyncExternalStore(bloqueo.suscribir, bloqueo.obtener);
 }

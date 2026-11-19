@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Push (F2-03): Android 13+ lo pide en ejecución al registrar el dispositivo. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Desbloqueo con huella o rostro (F1-03b, 1.13): react-native-keychain con control de acceso biométrico. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <!-- Chat (F3-01): react-native-image-picker abre la cámara por intent (sin permiso CAMERA). -->
     <queries>

@@ -23,6 +23,7 @@ import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
   crearAudioNoDisponible,
+  crearBiometriaNoDisponible,
   crearPushNoDisponible,
   crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
@@ -47,6 +48,7 @@ import {
   tokenMemoria,
 } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
 import { crearClienteApi } from '@/shared/lib/api';
+import { CLAVE_BLOQUEO_BIOMETRICO, crearBloqueo } from '@/shared/lib/bloqueo';
 import { respuestaError, respuestaOk } from '@/shared/lib/HttpResponse';
 import {
   TemaProvider,
@@ -608,6 +610,7 @@ function contenedorConApi(
       imagenes: { elegir: () => Promise.resolve({ tipo: 'cancelado' }) },
       google: crearGoogleNoDisponible(),
       push: crearPushNoDisponible(),
+      biometria: crearBiometriaNoDisponible(),
     },
     api,
     sesionActiva,
@@ -721,5 +724,44 @@ describe('NavegadorRaiz: cliente HTTP real (tester F1-03)', () => {
     await fireEvent.press(await botonDeCuenta('Cerrar sesión'));
     expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(almacen.datos.has('sesion')).toBe(false);
+  });
+});
+
+describe('NavegadorRaiz: desbloqueo con huella o rostro (F1-03b, 1.13)', () => {
+  const conBloqueo = (autenticar: 'ok' | 'cancelado') => {
+    const bloqueo = crearBloqueo();
+    const biometria = {
+      disponible: jest.fn().mockResolvedValue(true),
+      activar: jest.fn().mockResolvedValue({ tipo: 'ok' }),
+      desactivar: jest.fn().mockResolvedValue(undefined),
+      autenticar: jest.fn().mockResolvedValue({ tipo: autenticar }),
+    };
+    const dependencias = crearDependenciasDePrueba({
+      almacenInicial: { ...almacenConAna(), [CLAVE_BLOQUEO_BIOMETRICO]: '1' },
+      bloqueo,
+      biometria,
+    });
+    return { bloqueo, biometria, dependencias };
+  };
+
+  it('con el bloqueo activo, tapa el inicio hasta que la verificación pasa', async () => {
+    const { bloqueo, dependencias, biometria } = conBloqueo('ok');
+    await montarCon(dependencias);
+    await waitFor(() => expect(biometria.autenticar).toHaveBeenCalled());
+    await waitFor(() => expect(bloqueo.obtener().bloqueada).toBe(false));
+    expect(await screen.findByText('Hola, Ana')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pantalla-bloqueo')).toBeNull();
+  });
+
+  it('si no pasa, la pantalla de bloqueo sigue y se puede cerrar sesión', async () => {
+    const { bloqueo, dependencias } = conBloqueo('cancelado');
+    await montarCon(dependencias);
+    expect(await screen.findByTestId('pantalla-bloqueo')).toBeOnTheScreen();
+    expect(bloqueo.obtener().bloqueada).toBe(true);
+    await fireEvent.press(screen.getByTestId('bloqueo-cerrar-sesion'));
+    await waitFor(() =>
+      expect(screen.queryByTestId('pantalla-bloqueo')).toBeNull(),
+    );
+    expect(bloqueo.obtener().activo).toBe(false);
   });
 });

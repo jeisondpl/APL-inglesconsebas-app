@@ -1,5 +1,13 @@
 /** Textos de la pantalla de login. Los mensajes de dominio están en domain/sesion.mensajes.ts. */
 export const textosSesion = {
+  /** Pantalla de bloqueo con huella o rostro (F1-03b, 1.13). */
+  bloqueo: {
+    titulo: 'App bloqueada',
+    ayuda: 'Usa tu huella o rostro para continuar.',
+    fallo: 'No pudimos verificarte. Inténtalo de nuevo.',
+    desbloquear: 'Desbloquear',
+    cerrarSesion: 'Cerrar sesión',
+  },
   /** Cabecera del login rediseñado (F1-04). */
   hero: {
     saludo: 'Hola de nuevo',

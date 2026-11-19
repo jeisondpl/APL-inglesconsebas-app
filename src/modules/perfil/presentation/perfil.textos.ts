@@ -12,6 +12,12 @@ export const textosPerfil = {
     claro: 'Claro',
     oscuro: 'Oscuro',
   },
+  bloqueo: {
+    titulo: 'Desbloqueo con huella o rostro',
+    ayuda:
+      'Al abrir la app, o si pasa un minuto en segundo plano, te pedimos tu huella o rostro.',
+    activar: 'Activar el desbloqueo con huella o rostro',
+  },
   web: {
     titulo: 'Más funciones en la web',
     ayuda:

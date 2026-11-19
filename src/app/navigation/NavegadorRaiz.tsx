@@ -3,14 +3,19 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useRef } from 'react';
 import { StatusBar } from 'react-native';
 
-import { useNative } from '@/app/di';
+import { useEstadoBloqueo, useNative } from '@/app/di';
 import { textosEscaparate } from '@/app/escaparate/escaparate.textos';
 import { PantallaPerfil } from './PantallaPerfil';
 import { SistemaDisenoScreen } from '@/app/escaparate/SistemaDisenoScreen';
 import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
 import { useArranqueOnboarding } from '@/modules/onboarding/aplications/controllers/Onboarding.controller';
 import { pantallasOnboarding } from '@/modules/onboarding/presentation/navigation';
-import { useArranqueSesion } from '@/modules/sesion/aplications/controllers/Sesion.controller';
+import { useArranqueBloqueo } from '@/modules/sesion/aplications/controllers/Bloqueo.controller';
+import {
+  useArranqueSesion,
+  useSesionController,
+} from '@/modules/sesion/aplications/controllers/Sesion.controller';
+import { PantallaBloqueo } from '@/modules/sesion/presentation/screens/PantallaBloqueo';
 import { pantallasAuth } from '@/modules/sesion/presentation/navigation';
 import { useTema } from '@/shared/theme';
 
@@ -36,6 +41,10 @@ export function NavegadorRaiz() {
   const splash = useNative('splash');
   const estado = useArranqueSesion();
   const onboarding = useArranqueOnboarding(estado.tipo === 'autenticado');
+  // Desbloqueo con huella o rostro (F1-03b, 1.13): tapa la app hasta verificar a la persona.
+  useArranqueBloqueo(estado.tipo === 'autenticado');
+  const { bloqueada } = useEstadoBloqueo();
+  const { _cerrarSesion } = useSesionController();
   const splashOculto = useRef(false);
   // El splash nativo se oculta con fundido cuando la navegación está lista, una sola vez.
   const alEstarLista = useCallback(() => {
@@ -55,46 +64,54 @@ export function NavegadorRaiz() {
       : null;
 
   return (
-    <NavigationContainer theme={temaNav} onReady={alEstarLista}>
-      <StatusBar barStyle={temaNav.dark ? 'light-content' : 'dark-content'} />
-      <Pila.Navigator
-        initialRouteName={rutaInicial}
-        screenOptions={{ headerShown: false }}
-      >
-        {rutaInicio ? (
-          <Pila.Group>
-            {/* Estudiante (F1-05) y profe (F1-07) entran a sus pestañas; el admin, al provisional. */}
-            <Pila.Screen
-              name={rutaInicio}
-              component={
-                rutaInicio === 'InicioEstudiante'
-                  ? PestanasEstudiante
-                  : rutaInicio === 'InicioProfe'
-                  ? PestanasProfe
-                  : InicioProvisionalScreen
-              }
-            />
-            {rutaInicio !== 'InicioAdmin' ? (
-              <Pila.Screen name="Perfil" component={PantallaPerfil} />
-            ) : null}
-            {__DEV__ ? (
+    <>
+      <NavigationContainer theme={temaNav} onReady={alEstarLista}>
+        <StatusBar barStyle={temaNav.dark ? 'light-content' : 'dark-content'} />
+        <Pila.Navigator
+          initialRouteName={rutaInicial}
+          screenOptions={{ headerShown: false }}
+        >
+          {rutaInicio ? (
+            <Pila.Group>
+              {/* Estudiante (F1-05) y profe (F1-07) entran a sus pestañas; el admin, al provisional. */}
               <Pila.Screen
-                name="SistemaDiseno"
-                component={SistemaDisenoScreen}
-                options={{ headerShown: true, title: textosEscaparate.titulo }}
+                name={rutaInicio}
+                component={
+                  rutaInicio === 'InicioEstudiante'
+                    ? PestanasEstudiante
+                    : rutaInicio === 'InicioProfe'
+                    ? PestanasProfe
+                    : InicioProvisionalScreen
+                }
               />
-            ) : null}
-          </Pila.Group>
-        ) : rutaInicial === 'Onboarding' ? (
-          <Pila.Group>{pantallasOnboarding(Pila)}</Pila.Group>
-        ) : (
-          // Al terminar la bienvenida su grupo desaparece y queda Login como única ruta (sin
-          // regreso). Se anima como un avance, no como un «pop» (R3).
-          <Pila.Group screenOptions={{ animationTypeForReplace: 'push' }}>
-            {pantallasAuth(Pila)}
-          </Pila.Group>
-        )}
-      </Pila.Navigator>
-    </NavigationContainer>
+              {rutaInicio !== 'InicioAdmin' ? (
+                <Pila.Screen name="Perfil" component={PantallaPerfil} />
+              ) : null}
+              {__DEV__ ? (
+                <Pila.Screen
+                  name="SistemaDiseno"
+                  component={SistemaDisenoScreen}
+                  options={{
+                    headerShown: true,
+                    title: textosEscaparate.titulo,
+                  }}
+                />
+              ) : null}
+            </Pila.Group>
+          ) : rutaInicial === 'Onboarding' ? (
+            <Pila.Group>{pantallasOnboarding(Pila)}</Pila.Group>
+          ) : (
+            // Al terminar la bienvenida su grupo desaparece y queda Login como única ruta (sin
+            // regreso). Se anima como un avance, no como un «pop» (R3).
+            <Pila.Group screenOptions={{ animationTypeForReplace: 'push' }}>
+              {pantallasAuth(Pila)}
+            </Pila.Group>
+          )}
+        </Pila.Navigator>
+      </NavigationContainer>
+      {estado.tipo === 'autenticado' && bloqueada ? (
+        <PantallaBloqueo alCerrarSesion={_cerrarSesion} />
+      ) : null}
+    </>
   );
 }

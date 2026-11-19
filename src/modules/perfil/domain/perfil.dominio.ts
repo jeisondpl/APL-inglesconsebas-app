@@ -36,6 +36,8 @@ export const mensajesPerfil = {
   pinCambiadoDetalle:
     'Tus otros dispositivos tendrán que iniciar sesión de nuevo.',
   noSeCambio: 'No se cambió el PIN',
+  sinBiometria: 'Este equipo no tiene huella ni rostro configurados.',
+  bloqueoNoActivado: 'No se activó el desbloqueo: no pudimos verificarte.',
   noSePudoWeb: 'No pudimos abrir la web',
   sinNavegador: 'No encontramos un navegador para abrir la web.',
 } as const;

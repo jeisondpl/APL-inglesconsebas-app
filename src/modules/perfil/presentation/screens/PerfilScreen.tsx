@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -43,6 +43,7 @@ const crearEstilos = (tema: ITema) =>
       minHeight: tema.toqueMinimo,
     },
     cuenta: { gap: tema.espaciado.xs },
+    textoFila: { flex: 1, gap: tema.espaciado.xs },
     bloque: { gap: tema.espaciado.m },
     fila: { flexDirection: 'row', gap: tema.espaciado.s },
     opcion: {
@@ -134,6 +135,31 @@ export function PerfilScreen({ usuario, alVolver }: IPropsPerfilScreen) {
             </View>
           </View>
         </Tarjeta>
+
+        {c.biometriaDisponible ? (
+          <Tarjeta testID="perfil-bloqueo">
+            <View style={estilos.fila}>
+              <View style={estilos.textoFila}>
+                <Texto variante="titulo">{textos.bloqueo.titulo}</Texto>
+                <Texto variante="detalle" color="textoSecundario">
+                  {textos.bloqueo.ayuda}
+                </Texto>
+              </View>
+              <Switch
+                testID="perfil-bloqueo-interruptor"
+                accessibilityLabel={textos.bloqueo.activar}
+                value={c.bloqueoActivo}
+                onValueChange={activar => {
+                  c._alternarBloqueo(activar);
+                }}
+                trackColor={{
+                  false: tema.colores.borde,
+                  true: tema.colores.marca,
+                }}
+              />
+            </View>
+          </Tarjeta>
+        ) : null}
 
         <Tarjeta testID="perfil-web">
           <View style={estilos.bloque}>

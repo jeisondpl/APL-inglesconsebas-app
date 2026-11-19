@@ -22,12 +22,14 @@ import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepo
 import { crearMemoriaSesionRepository } from '@/modules/sesion/infrastructure/memoriaSesionRepository';
 import type { AudioPort } from '@/native/ports/AudioPort';
 import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { BiometriaPort } from '@/native/ports/BiometriaPort';
 import type { PushPort } from '@/native/ports/PushPort';
 import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
 import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import type { ClienteApi } from '@/shared/lib/api';
+import { crearBloqueo, type Bloqueo } from '@/shared/lib/bloqueo';
 import {
   crearEstadoConexion,
   type EstadoConexion,
@@ -82,6 +84,14 @@ export const crearPushNoDisponible = (): PushPort => ({
   alAbrirAviso: () => () => undefined,
 });
 
+/** Equipo sin huella ni rostro configurados: no se ofrece el desbloqueo. */
+export const crearBiometriaNoDisponible = (): BiometriaPort => ({
+  disponible: () => Promise.resolve(false),
+  activar: () => Promise.resolve({ tipo: 'no_disponible' }),
+  desactivar: () => Promise.resolve(),
+  autenticar: () => Promise.resolve({ tipo: 'no_disponible' }),
+});
+
 export interface IOpcionesDependenciasDePrueba {
   /** Contenido inicial del almacén seguro (p. ej. `{ sesion: '<json>' }`). */
   almacenInicial?: Record<string, string>;
@@ -99,6 +109,10 @@ export interface IOpcionesDependenciasDePrueba {
   mensajes?: MensajesRepository;
   /** Dispositivos push (F2-03). Por defecto, en memoria. */
   notificaciones?: NotificacionesRepository;
+  /** Biometría (1.13). Por defecto, no disponible. */
+  biometria?: BiometriaPort;
+  /** Estado del bloqueo biométrico (1.13). Por defecto, uno nuevo (sin bloqueo). */
+  bloqueo?: Bloqueo;
   /** Estado de la conexión (1.15). Por defecto, uno nuevo (con conexión). */
   conexion?: EstadoConexion;
   /** Perfil (F1-03b). Por defecto, en memoria con el PIN 1234. */
@@ -163,10 +177,12 @@ export function crearDependenciasDePrueba(
       audio: opciones.audio ?? crearAudioNoDisponible(),
       google: opciones.google ?? crearGoogleNoDisponible(),
       push: opciones.push ?? crearPushNoDisponible(),
+      biometria: opciones.biometria ?? crearBiometriaNoDisponible(),
     },
     api,
     sesionActiva,
     conexion: opciones.conexion ?? crearEstadoConexion(),
+    bloqueo: opciones.bloqueo ?? crearBloqueo(),
     banderaOnboarding: crearBanderaOnboarding(
       opciones.onboardingInicial ?? { tipo: 'visto' },
     ),

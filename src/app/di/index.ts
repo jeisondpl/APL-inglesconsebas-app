@@ -7,6 +7,8 @@ export {
 export {
   DependenciasProvider,
   useBanderaOnboarding,
+  useBloqueo,
+  useEstadoBloqueo,
   useEstadoConexion,
   useNative,
   useRepository,

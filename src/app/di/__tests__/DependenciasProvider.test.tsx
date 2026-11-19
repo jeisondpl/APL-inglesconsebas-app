@@ -116,6 +116,7 @@ describe('crearDependencias (CA11)', () => {
       'imagenes',
       'audio',
       'push',
+      'biometria',
       'google',
     ]);
     expect(dependencias.sesionActiva.obtener()).toEqual({

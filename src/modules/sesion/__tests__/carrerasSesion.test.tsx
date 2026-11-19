@@ -11,6 +11,7 @@ import {
   crearAlmacenEnMemoria,
   crearDependenciasDePrueba,
   crearAudioNoDisponible,
+  crearBiometriaNoDisponible,
   crearPushNoDisponible,
   crearGoogleNoDisponible,
 } from '@/app/di/dependenciasDePrueba';
@@ -425,6 +426,7 @@ function contenedorConFetchDiferido(almacenInicial: Record<string, string>) {
       imagenes: { elegir: () => Promise.resolve({ tipo: 'cancelado' }) },
       google: crearGoogleNoDisponible(),
       push: crearPushNoDisponible(),
+      biometria: crearBiometriaNoDisponible(),
     },
     api,
     sesionActiva,
