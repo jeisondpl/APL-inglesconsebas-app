@@ -85,3 +85,10 @@ dist/
 *.apk
 *.aab
 coverage/
+
+# Worktrees de agentes de Claude Code
+.claude/worktrees/
+
+# Push (F2-03): configuración de Firebase de cada entorno (en CI llega por secret)
+android/app/google-services.json
+ios/GoogleService-Info.plist

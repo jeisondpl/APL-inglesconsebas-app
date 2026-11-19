@@ -1,6 +1,7 @@
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import RNBootSplash
 import UIKit
 
 class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate {
@@ -44,6 +45,13 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
 
   func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
     RCTLinkingManager.scene(scene, continue: userActivity)
+  }
+
+  // react-native-bootsplash (README 7.x, RN >= 0.88): muestra BootSplash.storyboard sobre la vista
+  // raíz hasta que la app lo oculta (SplashPort, en el onReady de la navegación).
+  override func customize(_ rootView: RCTRootView) {
+    super.customize(rootView)
+    RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
   }
 
   override func bundleURL() -> URL? {

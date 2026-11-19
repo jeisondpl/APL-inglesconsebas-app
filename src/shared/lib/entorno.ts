@@ -5,7 +5,19 @@ export type EntornoApp = 'dev' | 'staging' | 'prod';
 
 export interface IEntorno {
   apiUrl: string;
+  /** Web de Leap a la que lleva «Abrir en la web» (1.16). Por defecto, la API sin su `/api` final. */
+  webUrl: string;
   appEnv: EntornoApp;
+  /** Client ID web de Google (login con Google, F1-06). `null` = botón oculto. */
+  googleWebClientId: string | null;
+  /** Client ID de iOS de Google, si existe. */
+  googleIosClientId: string | null;
+  /**
+   * Correo con el que entra el Google simulado mientras no hay client ID: el botón se ve y el
+   * flujo funciona contra la copia de desarrollo de Leap, la única que acepta «simulado:» (con
+   * LEAP_GOOGLE_SIMULADO=1). Si hay client ID real, manda el real. `null` = sin simulación.
+   */
+  googleSimuladoCorreo: string | null;
 }
 
 const ENTORNOS: readonly EntornoApp[] = ['dev', 'staging', 'prod'];
@@ -32,7 +44,16 @@ export function leerEntorno(
       }». Valores admitidos: ${ENTORNOS.join(', ')}.`,
     );
   }
-  return { apiUrl: apiUrl.replace(/\/+$/, ''), appEnv };
+  return {
+    apiUrl: apiUrl.replace(/\/+$/, ''),
+    webUrl: (
+      config.WEB_URL?.trim() || apiUrl.replace(/\/+$/, '').replace(/\/api$/, '')
+    ).replace(/\/+$/, ''),
+    appEnv,
+    googleWebClientId: config.GOOGLE_WEB_CLIENT_ID?.trim() || null,
+    googleIosClientId: config.GOOGLE_IOS_CLIENT_ID?.trim() || null,
+    googleSimuladoCorreo: config.GOOGLE_SIMULADO_CORREO?.trim() || null,
+  };
 }
 
 /** Entorno de este build, leído de react-native-config. */

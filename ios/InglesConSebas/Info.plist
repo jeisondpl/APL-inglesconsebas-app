@@ -28,7 +28,6 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
@@ -54,7 +53,7 @@
 		</dict>
 	</dict>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<string>BootSplash</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
@@ -72,5 +71,20 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Inglés con Sebas usa Face ID para desbloquear la app si lo activas en tu perfil.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Inglés con Sebas usa el micrófono para grabar tus notas de voz en el chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Inglés con Sebas usa la cámara para que envíes fotos en el chat.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Inglés con Sebas accede a tus fotos para que envíes una en el chat.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Nohemi-Medium.otf</string>
+		<string>DMSans-Medium.ttf</string>
+		<string>DMSans-Regular.ttf</string>
+		<string>DMSans-SemiBold.ttf</string>
+	</array>
 </dict>
 </plist>

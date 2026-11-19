@@ -1,23 +1,14 @@
-import Toast, { BaseToast, type ToastConfig } from 'react-native-toast-message';
-
-import { NavegadorRaiz } from '@/app/navigation';
 import { Providers } from '@/app/providers';
+import { RaizConSplash } from '@/app/splash';
 
 /**
- * Host de los toasts de `notify`: el componente de la librería, sin estilos de marca. La librería
- * no trae el tipo `warning`, así que se registra con su toast base.
+ * Raíz de la app: providers (con el host de toasts del tema) y el navegador raíz con el splash
+ * animado encima (F1-04).
  */
-const configuracionToasts: ToastConfig = {
-  warning: props => <BaseToast {...props} />,
-};
-
 export default function App() {
   return (
-    <>
-      <Providers>
-        <NavegadorRaiz />
-      </Providers>
-      <Toast config={configuracionToasts} />
-    </>
+    <Providers>
+      <RaizConSplash />
+    </Providers>
   );
 }

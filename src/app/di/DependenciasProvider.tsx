@@ -1,4 +1,20 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
+
+import {
+  crearBloqueo,
+  type Bloqueo,
+  type IEstadoBloqueo,
+} from '@/shared/lib/bloqueo';
+import {
+  crearEstadoConexion,
+  type IEstadoConexion,
+} from '@/shared/lib/conexion';
 
 import {
   crearDependencias,
@@ -63,4 +79,49 @@ export function useNative<K extends keyof INativos>(clave: K): INativos[K] {
     );
   }
   return nativos[clave];
+}
+
+/** Estado de la sesión en memoria del contenedor (lo comparte con el cliente HTTP). */
+export function useSesionActiva(): IDependencias['sesionActiva'] {
+  const { sesionActiva } = useDependencias('useSesionActiva');
+  if (!sesionActiva) {
+    throw new Error(
+      'useSesionActiva: el contenedor no tiene `sesionActiva` (src/app/di/contenedor.ts).',
+    );
+  }
+  return sesionActiva;
+}
+
+/** Bandera de la bienvenida en memoria del contenedor (EXT-01). */
+export function useBanderaOnboarding(): IDependencias['banderaOnboarding'] {
+  const { banderaOnboarding } = useDependencias('useBanderaOnboarding');
+  if (!banderaOnboarding) {
+    throw new Error(
+      'useBanderaOnboarding: el contenedor no tiene `banderaOnboarding` (src/app/di/contenedor.ts).',
+    );
+  }
+  return banderaOnboarding;
+}
+
+/** Estado de la conexión en memoria del contenedor (1.15). Sin él, siempre «con conexión». */
+const SIN_CONEXION_OPCIONAL = crearEstadoConexion();
+
+export function useEstadoConexion(): IEstadoConexion {
+  const { conexion } = useDependencias('useEstadoConexion');
+  const store = conexion ?? SIN_CONEXION_OPCIONAL;
+  return useSyncExternalStore(store.suscribir, store.obtener);
+}
+
+/** Bloqueo biométrico del contenedor (1.13). Sin él, uno propio que nunca bloquea. */
+const BLOQUEO_OPCIONAL = crearBloqueo();
+
+export function useBloqueo(): Bloqueo {
+  const { bloqueo } = useDependencias('useBloqueo');
+  return bloqueo ?? BLOQUEO_OPCIONAL;
+}
+
+/** Estado del bloqueo suscrito a sus cambios. */
+export function useEstadoBloqueo(): IEstadoBloqueo {
+  const bloqueo = useBloqueo();
+  return useSyncExternalStore(bloqueo.suscribir, bloqueo.obtener);
 }

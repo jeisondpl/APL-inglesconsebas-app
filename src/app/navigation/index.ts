@@ -1,3 +1,5 @@
 export { NavegadorRaiz } from './NavegadorRaiz';
+export { rutaInicialRaiz } from './rutaInicialRaiz';
+export { rutaInicioPorRol, type RutaInicio } from './rutaInicioPorRol';
 export { temaNavegacion } from './temaNavegacion';
-export type { RaizParamList } from './tipos';
+export type { AppParamList, RaizParamList } from './tipos';

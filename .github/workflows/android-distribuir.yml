@@ -107,9 +107,18 @@ jobs:
       - name: Entorno y keystore
         env:
           API_URL: ${{ secrets.API_URL }}
+          # Login con Google (F1-06). Variable del repo, no secret: el client ID no es secreto y
+          # termina en el APK. Vacía = el botón de Google no aparece.
+          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          # Mientras no hay client ID: Google simulado (solo lo acepta la copia de desarrollo de Leap).
+          GOOGLE_SIMULADO_CORREO: ${{ vars.GOOGLE_SIMULADO_CORREO }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          # Push (F2-03): google-services.json de Firebase (secret opcional; sin él la app no tiene push).
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          printf 'API_URL=%s\nAPP_ENV=prod\n' "$API_URL" > .env
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; fi
+          printf 'API_URL=%s\nAPP_ENV=prod\nGOOGLE_WEB_CLIENT_ID=%s\nGOOGLE_SIMULADO_CORREO=%s\n' \
+            "$API_URL" "$GOOGLE_WEB_CLIENT_ID" "$GOOGLE_SIMULADO_CORREO" > .env
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Compilar APK y AAB de release

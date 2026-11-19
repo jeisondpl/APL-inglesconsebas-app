@@ -1,0 +1,17 @@
+export {
+  GROSOR_ICONO,
+  IconoCerrar,
+  IconoClases,
+  IconoEnviar,
+  IconoFlecha,
+  IconoImagen,
+  IconoInicio,
+  IconoMicrofono,
+  IconoReproducir,
+  IconoDetener,
+  IconoMensajes,
+  IconoReloj,
+  IconoTareas,
+  type ComponenteIcono,
+  type IPropsIcono,
+} from './Iconos';

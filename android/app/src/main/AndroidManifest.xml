@@ -1,6 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Chat (F3-01): notas de voz. Se pide en ejecución la primera vez que se graba. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Push (F2-03): Android 13+ lo pide en ejecución al registrar el dispositivo. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Desbloqueo con huella o rostro (F1-03b, 1.13): react-native-keychain con control de acceso biométrico. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- Chat (F3-01): react-native-image-picker abre la cámara por intent (sin permiso CAMERA). -->
+    <queries>
+      <intent>
+        <action android:name="android.media.action.IMAGE_CAPTURE" />
+      </intent>
+    </queries>
 
     <application
       android:name=".MainApplication"
@@ -14,8 +27,10 @@
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
+        android:theme="@style/BootTheme"
         android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
         android:launchMode="singleTask"
+        android:screenOrientation="portrait"
         android:windowSoftInputMode="adjustResize"
         android:exported="true">
         <intent-filter>

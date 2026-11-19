@@ -1,6 +1,9 @@
 // CA16: App monta con todos los providers. CA10: el host de toasts de la librería se renderiza,
 // incluido el tipo `warning` que la librería no trae.
-import { render, screen } from '@testing-library/react-native';
+// F1-03 (constructor): sin sesión guardada, la app arranca en el login (no en el inicio provisional).
+// EXT-01 (constructor): con el contenedor real y el Keychain mockeado vacío, la app arranca en la
+// bienvenida (O1); «Omitir» lleva al login.
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 
@@ -24,15 +27,22 @@ const ToastHost = jest.requireMock('react-native-toast-message')
 beforeEach(() => ToastHost.mockClear());
 
 describe('App (CA16)', () => {
-  it('monta con todos los providers y muestra la pantalla de inicio provisional', async () => {
+  it('monta con todos los providers y, sin sesión ni bandera, muestra la bienvenida', async () => {
     await render(<App />);
+    expect(
+      await screen.findByRole('header', {
+        name: 'Tu inglés, en un solo lugar',
+      }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Inicia sesión')).toBeNull();
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Omitir la bienvenida' }),
+    );
+    expect(await screen.findByText('Inicia sesión')).toBeOnTheScreen();
     expect(
       screen.getByRole('header', { name: 'Inglés con Sebas' }),
     ).toBeOnTheScreen();
-    expect(screen.getByText('Versión 0.1.0')).toBeOnTheScreen();
-    // Entorno del mock global de react-native-config (CA17).
-    expect(screen.getByText('Entorno: dev')).toBeOnTheScreen();
-    expect(screen.getByText('Servidor: localhost:8080')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull();
   });
 
@@ -72,14 +82,21 @@ describe('App (CA16)', () => {
 
 describe('Providers (CA11, CA16)', () => {
   function Consumidor() {
-    const repo = useRepository('clases' as never) as { nombre: string };
+    const repo = useRepository('inventado' as never) as { nombre: string };
     return <Text>{repo.nombre}</Text>;
   }
 
   it('inyecta el contenedor recibido en dependencias', async () => {
     const dependencias = {
-      repositorios: { clases: { nombre: 'repo falso' } },
-      nativos: {},
+      repositorios: { inventado: { nombre: 'repo falso' } },
+      // TemaPersistente (F1-03b) recuerda el tema en el almacén seguro.
+      nativos: {
+        almacenSeguro: {
+          leer: jest.fn().mockResolvedValue(null),
+          guardar: jest.fn().mockResolvedValue(true),
+          borrar: jest.fn(),
+        },
+      },
       api: { get: jest.fn(), post: jest.fn() },
     } as unknown as IDependencias;
     await render(

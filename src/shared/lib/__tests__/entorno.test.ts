@@ -7,13 +7,27 @@ describe('leerEntorno', () => {
         API_URL: 'https://app.inglesconsebas.com/api',
         APP_ENV: 'prod',
       }),
-    ).toEqual({ apiUrl: 'https://app.inglesconsebas.com/api', appEnv: 'prod' });
+    ).toEqual({
+      apiUrl: 'https://app.inglesconsebas.com/api',
+      webUrl: 'https://app.inglesconsebas.com',
+      appEnv: 'prod',
+      googleWebClientId: null,
+      googleIosClientId: null,
+      googleSimuladoCorreo: null,
+    });
   });
 
   it('quita espacios y barras finales de API_URL', () => {
     expect(
       leerEntorno({ API_URL: '  http://h:8080/api//  ', APP_ENV: 'staging' }),
-    ).toEqual({ apiUrl: 'http://h:8080/api', appEnv: 'staging' });
+    ).toEqual({
+      apiUrl: 'http://h:8080/api',
+      webUrl: 'http://h:8080',
+      appEnv: 'staging',
+      googleWebClientId: null,
+      googleIosClientId: null,
+      googleSimuladoCorreo: null,
+    });
   });
 
   it('usa dev si falta APP_ENV o está en blanco', () => {
@@ -48,7 +62,30 @@ describe('entorno', () => {
     // Valores del mock global de jest.setup.ts.
     expect(entorno).toEqual({
       apiUrl: 'http://localhost:8080/api',
+      webUrl: 'http://localhost:8080',
       appEnv: 'dev',
+      googleWebClientId: null,
+      googleIosClientId: null,
+      googleSimuladoCorreo: null,
     });
+  });
+
+  it('lee los client ID de Google (F1-06) y trata el vacío como sin configurar', () => {
+    const conGoogle = leerEntorno({
+      API_URL: 'http://h',
+      GOOGLE_WEB_CLIENT_ID: ' web.apps.googleusercontent.com ',
+      GOOGLE_IOS_CLIENT_ID: '',
+    });
+    expect(conGoogle.googleWebClientId).toBe('web.apps.googleusercontent.com');
+    expect(conGoogle.googleIosClientId).toBeNull();
+  });
+
+  it('WEB_URL manda sobre la deducida de API_URL (sin barras finales)', () => {
+    expect(
+      leerEntorno({
+        API_URL: 'https://api.x.com/api',
+        WEB_URL: ' https://web.x.com// ',
+      }).webUrl,
+    ).toBe('https://web.x.com');
   });
 });

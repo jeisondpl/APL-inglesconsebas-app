@@ -24,6 +24,9 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native(-[^/]+)?|@react-native(-community)?|@react-navigation)/)',
   ],
+  // Resolver oficial de Reanimated 4 (incluye el de worklets): en Jest carga las versiones JS (no
+  // `.native`) de los módulos que necesitan el hilo de UI, para que el mock oficial funcione.
+  resolver: 'react-native-reanimated/jest/resolver',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

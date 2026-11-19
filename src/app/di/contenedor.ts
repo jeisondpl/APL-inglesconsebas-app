@@ -1,33 +1,176 @@
+import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
+import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import { crearApiAgendaRepository } from '@/modules/agenda/infrastructure/apiAgendaRepository';
+import type { ClasesRepository } from '@/modules/clases/domain/models/ClasesRepository';
+import { crearApiClasesRepository } from '@/modules/clases/infrastructure/apiClasesRepository';
+import type { InicioProfeRepository } from '@/modules/inicio/domain/models/InicioProfeRepository';
+import { crearApiInicioProfeRepository } from '@/modules/inicio/infrastructure/apiInicioProfeRepository';
+import type { PerfilRepository } from '@/modules/perfil/domain/perfil.dominio';
+import { crearApiPerfilRepository } from '@/modules/perfil/infrastructure/perfilRepositories';
+import type { TareasRepository } from '@/modules/tareas/domain/models/TareasRepository';
+import { crearApiTareasRepository } from '@/modules/tareas/infrastructure/apiTareasRepository';
+import type { NotificacionesRepository } from '@/modules/notificaciones/domain/models/NotificacionesRepository';
+import { crearApiNotificacionesRepository } from '@/modules/notificaciones/infrastructure/apiNotificacionesRepository';
+import type { MensajesRepository } from '@/modules/mensajes/domain/models/MensajesRepository';
+import { crearApiMensajesRepository } from '@/modules/mensajes/infrastructure/apiMensajesRepository';
+import { crearApiInicioRepository } from '@/modules/inicio/infrastructure/apiInicioRepository';
+import { crearBanderaOnboarding } from '@/modules/onboarding/aplications/banderaOnboarding';
+import type { BanderaOnboarding } from '@/modules/onboarding/domain/models/BanderaOnboarding';
+import { invalidarSesionUseCase } from '@/modules/sesion/aplications/invalidarSesion/invalidarSesion';
+import { crearSesionActiva } from '@/modules/sesion/aplications/sesionActiva';
+import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
+import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
+import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
+import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import { crearKeychainBiometriaAdapter } from '@/native/adapters/KeychainBiometriaAdapter';
+import { crearBlobUtilCacheLocalAdapter } from '@/native/adapters/BlobUtilCacheLocalAdapter';
+import { crearFirebasePushAdapter } from '@/native/adapters/FirebasePushAdapter';
+import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
+import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
+import { crearKeychainSecureStorageAdapter } from '@/native/adapters/KeychainSecureStorageAdapter';
+import { crearNitroSoundAudioAdapter } from '@/native/adapters/NitroSoundAudioAdapter';
+import { crearImagePickerSelectorImagenAdapter } from '@/native/adapters/ImagePickerSelectorImagenAdapter';
+import { crearLinkingEnlacesAdapter } from '@/native/adapters/LinkingEnlacesAdapter';
+import type { AudioPort } from '@/native/ports/AudioPort';
+import type { EnlacesPort } from '@/native/ports/EnlacesPort';
+import type { BiometriaPort } from '@/native/ports/BiometriaPort';
+import type { PushPort } from '@/native/ports/PushPort';
+import type { SelectorImagenPort } from '@/native/ports/SelectorImagenPort';
+import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
+import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
+import type { SplashPort } from '@/native/ports/SplashPort';
 import { crearClienteApi, type ClienteApi } from '@/shared/lib/api';
+import { crearBloqueo, type Bloqueo } from '@/shared/lib/bloqueo';
+import {
+  crearEstadoConexion,
+  type EstadoConexion,
+} from '@/shared/lib/conexion';
 import { entorno } from '@/shared/lib/entorno';
 
-/**
- * Repositorios de los módulos de negocio. Cada módulo añade aquí su puerto cuando se construye
- * (p. ej. `clases: ClasesRepository`). Vacío hasta la primera feature con módulo.
- */
-export interface IRepositorios {}
+import { crearApiConCache } from './apiConCache';
+import { etiquetaDispositivo } from './etiquetaDispositivo';
 
-/**
- * Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. Vacío hasta el primer
- * SDK (el splash se aplazó a la feature de sistema de diseño).
- */
-export interface INativos {}
+/** Repositorios de los módulos de negocio. Cada módulo añade aquí su puerto cuando se construye. */
+export interface IRepositorios {
+  sesion: SesionRepository;
+  /** Inicio del estudiante (F1-05). */
+  inicio: InicioRepository;
+  /** Inicio del profe (F1-07). */
+  inicioProfe: InicioProfeRepository;
+  /** Clases del estudiante (F2-01). */
+  clases: ClasesRepository;
+  agenda: AgendaRepository;
+  /** Chat estudiante–profe (F3-01). */
+  mensajes: MensajesRepository;
+  /** Dispositivos push (F2-03). */
+  notificaciones: NotificacionesRepository;
+  /** Tareas y feedback (F3-02). */
+  tareas: TareasRepository;
+  /** Perfil y cambio de PIN (F1-03b). */
+  perfil: PerfilRepository;
+}
+
+/** Adaptadores de SDK nativos, expuestos por su puerto de src/native/ports. */
+export interface INativos {
+  splash: SplashPort;
+  almacenSeguro: SecureStoragePort;
+  enlaces: EnlacesPort;
+  /** Foto de la galería o la cámara para el chat (F3-01). */
+  imagenes: SelectorImagenPort;
+  /** Grabar y reproducir notas de voz del chat (F3-01, 3.2). */
+  audio: AudioPort;
+  /** Login con Google (F1-06). */
+  google: GoogleSignInPort;
+  /** Notificaciones push por FCM (F2-03). */
+  push: PushPort;
+  /** Desbloqueo con huella o rostro (F1-03b, 1.13). */
+  biometria: BiometriaPort;
+}
 
 export interface IDependencias {
   repositorios: IRepositorios;
   nativos: INativos;
   api: ClienteApi;
+  /** Estado de la sesión en memoria, compartido por el cliente HTTP y React. */
+  sesionActiva: SesionActiva;
+  /** Bandera `hasSeenOnboarding` en memoria (EXT-01), compartida por el navegador y la bienvenida. */
+  banderaOnboarding: BanderaOnboarding;
+  /** Si hay conexión con Leap, deducido de las peticiones (F1-03b, 1.15). Opcional en los tests. */
+  conexion?: EstadoConexion;
+  /** Estado del desbloqueo biométrico (1.13). Opcional en los tests. */
+  bloqueo?: Bloqueo;
 }
 
 /**
  * Único punto donde se instancian el cliente HTTP, los repositorios y los adaptadores
- * (docs/ARQUITECTURA.md § 5). La feature de sesión sustituirá `obtenerToken` y `alNoAutorizado`.
+ * (docs/ARQUITECTURA.md § 5).
  */
 export function crearDependencias(): IDependencias {
-  const api = crearClienteApi({
+  const almacenSeguro = crearKeychainSecureStorageAdapter();
+  const sesionActiva = crearSesionActiva();
+  const cache = crearBlobUtilCacheLocalAdapter();
+  const conexion = crearEstadoConexion();
+  const apiRed = crearClienteApi({
     urlBase: entorno.apiUrl,
-    obtenerToken: () => Promise.resolve(null),
-    alNoAutorizado: () => {},
+    // El token sale de la sesión activa; un 401 con sesión la limpia y vuelve al login (CA9).
+    obtenerToken: () => Promise.resolve(sesionActiva.token()),
+    alNoAutorizado: tokenPeticion => {
+      invalidarSesionUseCase(almacenSeguro, sesionActiva, tokenPeticion);
+    },
   });
-  return { repositorios: {}, nativos: {}, api };
+  // Cada lectura se guarda por persona y, sin conexión, se responde con lo guardado (1.15).
+  const api = crearApiConCache(apiRed, {
+    cache,
+    conexion,
+    usuario: () => {
+      const e = sesionActiva.obtener();
+      return e.tipo === 'autenticado' ? e.sesion.usuario.id : null;
+    },
+  });
+  // Al cerrar o vencer la sesión se borra lo guardado: la caché no pasa de una persona a otra.
+  sesionActiva.suscribir(() => {
+    if (sesionActiva.obtener().tipo === 'sinSesion') {
+      cache.limpiar();
+    }
+  });
+  return {
+    repositorios: {
+      sesion: crearApiSesionRepository(api, {
+        etiquetaDispositivo: etiquetaDispositivo(),
+      }),
+      inicio: crearApiInicioRepository(api),
+      inicioProfe: crearApiInicioProfeRepository(api),
+      clases: crearApiClasesRepository(api),
+      agenda: crearApiAgendaRepository(api),
+      mensajes: crearApiMensajesRepository(api),
+      tareas: crearApiTareasRepository(api),
+      perfil: crearApiPerfilRepository(api),
+      notificaciones: crearApiNotificacionesRepository(api, {
+        etiquetaDispositivo: etiquetaDispositivo(),
+      }),
+    },
+    nativos: {
+      splash: crearBootSplashAdapter(),
+      almacenSeguro,
+      enlaces: crearLinkingEnlacesAdapter(),
+      imagenes: crearImagePickerSelectorImagenAdapter(),
+      audio: crearNitroSoundAudioAdapter(),
+      push: crearFirebasePushAdapter(),
+      biometria: crearKeychainBiometriaAdapter(),
+      // Con client ID real, Google de verdad; sin él, el simulado si el build lo pide (F1-06).
+      google:
+        !entorno.googleWebClientId && entorno.googleSimuladoCorreo
+          ? crearGoogleSimuladoAdapter(entorno.googleSimuladoCorreo)
+          : crearGoogleSignInAdapter({
+              webClientId: entorno.googleWebClientId,
+              iosClientId: entorno.googleIosClientId,
+            }),
+    },
+    api,
+    sesionActiva,
+    conexion,
+    bloqueo: crearBloqueo(),
+    // Empieza en `cargando`: el navegador raíz la lee del almacén al arrancar.
+    banderaOnboarding: crearBanderaOnboarding(),
+  };
 }

@@ -1,10 +1,11 @@
-import { useTheme } from '@react-navigation/native';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import { useSesionController } from '@/modules/sesion/aplications/controllers/Sesion.controller';
+import { Boton, Marca, Pantalla, Texto } from '@/shared/components';
 import { entorno } from '@/shared/lib/entorno';
 
-import { displayName } from '../../../app.json';
 import { version } from '../../../package.json';
 import { textosInicio as textos } from './inicio.textos';
 
@@ -17,46 +18,68 @@ function hostDe(url: string): string {
 }
 
 /**
- * Pantalla inicial provisional, con primitivas de React Native y los colores del tema de
- * navegación. Muestra el nombre, la versión de package.json y el entorno de react-native-config.
- * La sustituye la feature de sesión.
+ * Inicio provisional de los tres roles (InicioEstudiante, InicioProfe e InicioAdmin): saludo con
+ * el nombre, rol, versión, entorno y servidor, y «Cerrar sesión». El escaparate del sistema de
+ * diseño solo aparece en desarrollo. Lo sustituye el inicio real de cada rol (ítem 1.17).
  */
 export function InicioProvisionalScreen() {
-  const { colors } = useTheme();
-  const colorTexto = { color: colors.text };
+  const navegacion = useNavigation();
+  const { usuario, _cerrarSesion } = useSesionController();
+  const [cerrando, setCerrando] = useState(false);
+
+  const cerrarSesion = async () => {
+    setCerrando(true);
+    try {
+      await _cerrarSesion();
+    } finally {
+      setCerrando(false);
+    }
+  };
+
   return (
-    <SafeAreaView
-      style={[estilos.pantalla, { backgroundColor: colors.background }]}
-    >
-      <Text accessibilityRole="header" style={[estilos.titulo, colorTexto]}>
-        {displayName}
-      </Text>
-      <Text style={[estilos.subtitulo, colorTexto]}>{textos.subtitulo}</Text>
+    <Pantalla desplazable style={estilos.contenido}>
+      <Marca esEncabezado ancho={200} />
+      {usuario ? (
+        <View style={estilos.datos}>
+          <Texto variante="h2" style={estilos.centrado}>
+            {textos.saludo(usuario.nombre)}
+          </Texto>
+          <Texto color="textoSecundario">{textos.rol(usuario.rol)}</Texto>
+        </View>
+      ) : null}
+      <Texto color="textoSecundario" style={estilos.centrado}>
+        {textos.subtitulo}
+      </Texto>
       <View style={estilos.datos}>
-        <Text style={[estilos.dato, colorTexto]}>
+        <Texto variante="detalle" color="textoSecundario">
           {textos.version(version)}
-        </Text>
-        <Text style={[estilos.dato, colorTexto]}>
+        </Texto>
+        <Texto variante="detalle" color="textoSecundario">
           {textos.entorno(entorno.appEnv)}
-        </Text>
-        <Text style={[estilos.dato, colorTexto]}>
+        </Texto>
+        <Texto variante="detalle" color="textoSecundario">
           {textos.servidor(hostDe(entorno.apiUrl))}
-        </Text>
+        </Texto>
       </View>
-    </SafeAreaView>
+      <Boton
+        variante="peligro"
+        titulo={textos.cerrarSesion}
+        onPress={cerrarSesion}
+        cargando={cerrando}
+      />
+      {__DEV__ ? (
+        <Boton
+          variante="secundario"
+          titulo={textos.verSistemaDiseno}
+          onPress={() => navegacion.navigate('SistemaDiseno')}
+        />
+      ) : null}
+    </Pantalla>
   );
 }
 
 const estilos = StyleSheet.create({
-  pantalla: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-  },
-  titulo: { fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  subtitulo: { fontSize: 15, textAlign: 'center' },
-  datos: { alignItems: 'center', gap: 4, marginTop: 12 },
-  dato: { fontSize: 13 },
+  contenido: { alignItems: 'center', justifyContent: 'center', gap: 16 },
+  centrado: { textAlign: 'center' },
+  datos: { alignItems: 'center', gap: 4 },
 });
