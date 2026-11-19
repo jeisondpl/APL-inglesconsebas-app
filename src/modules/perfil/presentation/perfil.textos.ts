@@ -12,6 +12,12 @@ export const textosPerfil = {
     claro: 'Claro',
     oscuro: 'Oscuro',
   },
+  web: {
+    titulo: 'Más funciones en la web',
+    ayuda:
+      'Lo que aún no está en la App lo encuentras en la web. Se abre con tu sesión, sin escribir el PIN.',
+    abrir: 'Abrir en la web',
+  },
   pin: {
     titulo: 'Cambiar PIN',
     ayuda:

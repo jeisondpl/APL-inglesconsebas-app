@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useRepository } from '@/app/di';
+import { useNative, useRepository } from '@/app/di';
+import { entorno } from '@/shared/lib/entorno';
 import { notify } from '@/shared/lib/notify';
 
 import { mensajesPerfil, soloPin } from '../../domain/perfil.dominio';
+import { abrirWebUseCase } from '../abrirWeb/abrirWeb';
 import { cambiarPinUseCase } from '../cambiarPin/cambiarPin';
 
 export interface IPerfilController {
@@ -17,11 +19,16 @@ export interface IPerfilController {
   _cambiarNuevo(v: string): void;
   _cambiarConfirmar(v: string): void;
   _cambiarPin(): Promise<void>;
+  abriendoWeb: boolean;
+  /** Abre la web con la sesión de la App (1.16). */
+  _abrirWeb(): Promise<void>;
 }
 
 /** Cambio del PIN propio (F1-03b, 1.14): tres campos de 4 dígitos y un envío. */
 export function usePerfilController(): IPerfilController {
   const repo = useRepository('perfil');
+  const enlaces = useNative('enlaces');
+  const [abriendoWeb, setAbriendoWeb] = useState(false);
   const [actual, setActual] = useState('');
   const [nuevo, setNuevo] = useState('');
   const [confirmar, setConfirmar] = useState('');
@@ -63,7 +70,18 @@ export function usePerfilController(): IPerfilController {
     );
   }, [repo, actual, nuevo, confirmar]);
 
+  const _abrirWeb = useCallback(async () => {
+    setAbriendoWeb(true);
+    const r = await abrirWebUseCase(repo, enlaces, entorno.webUrl);
+    setAbriendoWeb(false);
+    if (r.error) {
+      notify.error(mensajesPerfil.noSePudoWeb, r.msg);
+    }
+  }, [repo, enlaces]);
+
   return {
+    abriendoWeb,
+    _abrirWeb,
     actual,
     nuevo,
     confirmar,

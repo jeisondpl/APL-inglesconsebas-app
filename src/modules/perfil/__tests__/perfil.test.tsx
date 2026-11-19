@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 
 import { DependenciasProvider } from '@/app/di';
 import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
+import { abrirWebUseCase } from '@/modules/perfil/aplications/abrirWeb/abrirWeb';
 import { cambiarPinUseCase } from '@/modules/perfil/aplications/cambiarPin/cambiarPin';
 import {
   problemaDelPin,
@@ -191,6 +192,55 @@ describe('PerfilScreen', () => {
     expect(screen.getByTestId('perfil-pin-actual').props.value).toBe('1234');
   });
 
+  it('«Abrir en la web» abre el navegador con el código', async () => {
+    const abrir = jest.fn().mockResolvedValue(true);
+    const repo = crearMemoriaPerfilRepository();
+    const dependencias = crearDependenciasDePrueba({
+      perfil: repo,
+      enlaces: { abrir },
+    });
+    await render(
+      <SafeAreaProvider>
+        <TemaProvider preferenciaInicial="oscuro">
+          <DependenciasProvider valor={dependencias}>
+            <PerfilScreen
+              usuario={{ nombre: 'Ana', usuario: 'ana', rol: 'estudiante' }}
+              alVolver={jest.fn()}
+            />
+          </DependenciasProvider>
+        </TemaProvider>
+      </SafeAreaProvider>,
+    );
+    await fireEvent.press(screen.getByTestId('perfil-web-abrir'));
+    await waitFor(() => expect(abrir).toHaveBeenCalledTimes(1));
+    expect(abrir.mock.calls[0][0]).toMatch(/\/\?app_code=CODIGO-MEMORIA$/);
+  });
+
+  it('si no se puede abrir la web, avisa', async () => {
+    const repo = crearMemoriaPerfilRepository({
+      falla: { msg: 'Inicia sesión de nuevo' },
+    });
+    const dependencias = crearDependenciasDePrueba({ perfil: repo });
+    await render(
+      <SafeAreaProvider>
+        <TemaProvider preferenciaInicial="oscuro">
+          <DependenciasProvider valor={dependencias}>
+            <PerfilScreen
+              usuario={{ nombre: 'Ana', usuario: 'ana', rol: 'estudiante' }}
+              alVolver={jest.fn()}
+            />
+          </DependenciasProvider>
+        </TemaProvider>
+      </SafeAreaProvider>,
+    );
+    await fireEvent.press(screen.getByTestId('perfil-web-abrir'));
+    await waitFor(() =>
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({ text2: 'Inicia sesión de nuevo' }),
+      ),
+    );
+  });
+
   it('con el tema se puede elegir sistema, claro u oscuro', async () => {
     await montar();
     expect(await screen.findByTestId('perfil-tema-oscuro')).toBeChecked();
@@ -227,5 +277,69 @@ describe('PerfilScreen', () => {
     await vista.unmount();
     await act(async () => soltar({ error: false }));
     expect(Toast.show).not.toHaveBeenCalled();
+  });
+});
+
+describe('abrir la web con la sesión (1.16)', () => {
+  it('pide el código y abre el navegador con él', async () => {
+    const repo = crearMemoriaPerfilRepository();
+    const abrir = jest.fn().mockResolvedValue(true);
+    const r = await abrirWebUseCase(repo, { abrir }, 'https://app.x.com');
+    expect(r.error).toBe(false);
+    expect(abrir).toHaveBeenCalledWith(
+      'https://app.x.com/?app_code=CODIGO-MEMORIA',
+    );
+    expect(repo.codigosPedidos).toBe(1);
+  });
+
+  it('el código se codifica en la URL', async () => {
+    const repo = crearMemoriaPerfilRepository();
+    jest
+      .spyOn(repo, 'codigoWeb')
+      .mockResolvedValue(respuestaOk({ codigo: 'a b&c' }));
+    const abrir = jest.fn().mockResolvedValue(true);
+    await abrirWebUseCase(repo, { abrir }, 'https://x');
+    expect(abrir).toHaveBeenCalledWith('https://x/?app_code=a%20b%26c');
+  });
+
+  it('si Leap falla o no hay navegador, lo dice y no abre nada', async () => {
+    const abrir = jest.fn().mockResolvedValue(true);
+    const falla = await abrirWebUseCase(
+      crearMemoriaPerfilRepository({ falla: { msg: 'sin sesión', code: 401 } }),
+      { abrir },
+      'https://x',
+    );
+    expect(falla).toMatchObject({ error: true, msg: 'sin sesión' });
+    expect(abrir).not.toHaveBeenCalled();
+    const sinMsg = await abrirWebUseCase(
+      crearMemoriaPerfilRepository({ falla: { msg: '' } }),
+      { abrir },
+      'https://x',
+    );
+    expect(sinMsg.msg).toMatch(/inesperado/);
+    const sinNav = await abrirWebUseCase(
+      crearMemoriaPerfilRepository(),
+      { abrir: jest.fn().mockResolvedValue(false) },
+      'https://x',
+    );
+    expect(sinNav.msg).toMatch(/navegador/);
+  });
+
+  it('el adaptador API pide web_code y valida la respuesta', async () => {
+    const post = jest
+      .fn()
+      .mockResolvedValueOnce(respuestaOk({ code: 'ABC', expiresIn: 60 }))
+      .mockResolvedValueOnce(respuestaOk({}))
+      .mockResolvedValueOnce(respuestaError('Inicia sesión', 401))
+      .mockResolvedValueOnce(respuestaError(undefined as never, 500));
+    const repo = crearApiPerfilRepository({
+      get: jest.fn(),
+      post,
+    } as unknown as ClienteApi);
+    expect((await repo.codigoWeb()).response).toEqual({ codigo: 'ABC' });
+    expect(post).toHaveBeenCalledWith('auth.php', {}, { action: 'web_code' });
+    expect((await repo.codigoWeb()).msg).toMatch(/formato/);
+    expect((await repo.codigoWeb()).msg).toBe('Inicia sesión');
+    expect((await repo.codigoWeb()).msg).toMatch(/inesperado/);
   });
 });

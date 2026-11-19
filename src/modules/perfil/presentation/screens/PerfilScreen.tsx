@@ -135,6 +135,24 @@ export function PerfilScreen({ usuario, alVolver }: IPropsPerfilScreen) {
           </View>
         </Tarjeta>
 
+        <Tarjeta testID="perfil-web">
+          <View style={estilos.bloque}>
+            <Texto variante="titulo">{textos.web.titulo}</Texto>
+            <Texto variante="detalle" color="textoSecundario">
+              {textos.web.ayuda}
+            </Texto>
+            <Boton
+              testID="perfil-web-abrir"
+              variante="secundario"
+              titulo={textos.web.abrir}
+              onPress={() => {
+                c._abrirWeb();
+              }}
+              cargando={c.abriendoWeb}
+            />
+          </View>
+        </Tarjeta>
+
         <Tarjeta testID="perfil-pin">
           <View style={estilos.bloque}>
             <Texto variante="titulo">{textos.pin.titulo}</Texto>

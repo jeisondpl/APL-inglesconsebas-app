@@ -5,6 +5,8 @@ export type EntornoApp = 'dev' | 'staging' | 'prod';
 
 export interface IEntorno {
   apiUrl: string;
+  /** Web de Leap a la que lleva «Abrir en la web» (1.16). Por defecto, la API sin su `/api` final. */
+  webUrl: string;
   appEnv: EntornoApp;
   /** Client ID web de Google (login con Google, F1-06). `null` = botón oculto. */
   googleWebClientId: string | null;
@@ -44,6 +46,9 @@ export function leerEntorno(
   }
   return {
     apiUrl: apiUrl.replace(/\/+$/, ''),
+    webUrl: (
+      config.WEB_URL?.trim() || apiUrl.replace(/\/+$/, '').replace(/\/api$/, '')
+    ).replace(/\/+$/, ''),
     appEnv,
     googleWebClientId: config.GOOGLE_WEB_CLIENT_ID?.trim() || null,
     googleIosClientId: config.GOOGLE_IOS_CLIENT_ID?.trim() || null,

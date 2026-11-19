@@ -9,6 +9,7 @@ describe('leerEntorno', () => {
       }),
     ).toEqual({
       apiUrl: 'https://app.inglesconsebas.com/api',
+      webUrl: 'https://app.inglesconsebas.com',
       appEnv: 'prod',
       googleWebClientId: null,
       googleIosClientId: null,
@@ -21,6 +22,7 @@ describe('leerEntorno', () => {
       leerEntorno({ API_URL: '  http://h:8080/api//  ', APP_ENV: 'staging' }),
     ).toEqual({
       apiUrl: 'http://h:8080/api',
+      webUrl: 'http://h:8080',
       appEnv: 'staging',
       googleWebClientId: null,
       googleIosClientId: null,
@@ -60,6 +62,7 @@ describe('entorno', () => {
     // Valores del mock global de jest.setup.ts.
     expect(entorno).toEqual({
       apiUrl: 'http://localhost:8080/api',
+      webUrl: 'http://localhost:8080',
       appEnv: 'dev',
       googleWebClientId: null,
       googleIosClientId: null,
@@ -75,5 +78,14 @@ describe('entorno', () => {
     });
     expect(conGoogle.googleWebClientId).toBe('web.apps.googleusercontent.com');
     expect(conGoogle.googleIosClientId).toBeNull();
+  });
+
+  it('WEB_URL manda sobre la deducida de API_URL (sin barras finales)', () => {
+    expect(
+      leerEntorno({
+        API_URL: 'https://api.x.com/api',
+        WEB_URL: ' https://web.x.com// ',
+      }).webUrl,
+    ).toBe('https://web.x.com');
   });
 });

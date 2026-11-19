@@ -1,5 +1,10 @@
 import type { HttpResponse } from '@/shared/lib/HttpResponse';
 
+export interface IResponseCodigoWeb {
+  /** Código de un solo uso (60 s) que la web canjea por una sesión. */
+  codigo: string;
+}
+
 export interface IArgsCambiarPin {
   actual: string;
   nuevo: string;
@@ -9,6 +14,8 @@ export interface IArgsCambiarPin {
 export interface PerfilRepository {
   /** Cambia el PIN propio. Leap pide el actual y cierra las demás sesiones de la persona. */
   cambiarPin(args: IArgsCambiarPin): Promise<HttpResponse<void>>;
+  /** Pide un código para entrar a la web sin escribir el PIN (`web_code`, F1-02B). */
+  codigoWeb(): Promise<HttpResponse<IResponseCodigoWeb>>;
 }
 
 /** El PIN de la academia tiene 4 dígitos. */
@@ -29,6 +36,8 @@ export const mensajesPerfil = {
   pinCambiadoDetalle:
     'Tus otros dispositivos tendrán que iniciar sesión de nuevo.',
   noSeCambio: 'No se cambió el PIN',
+  noSePudoWeb: 'No pudimos abrir la web',
+  sinNavegador: 'No encontramos un navegador para abrir la web.',
 } as const;
 
 /** Deja solo dígitos y corta a 4: lo que se escribe en los campos de PIN. */
