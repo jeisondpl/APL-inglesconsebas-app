@@ -19,8 +19,7 @@ const crearEstilos = (tema: ITema) =>
       borderBottomWidth: 1,
       borderBottomColor: tema.colores.borde,
       paddingHorizontal: tema.espaciado.xl,
-      paddingBottom: tema.espaciado.s,
-      gap: 2,
+      paddingBottom: tema.espaciado.xs,
     },
   });
 
@@ -43,9 +42,10 @@ export function BannerConexion() {
       accessibilityLiveRegion="polite"
       style={[estilos.banner, { paddingTop: insets.top + 6 }]}
     >
-      <Texto variante="cuerpoFuerte">{textos.titulo}</Texto>
-      <Texto variante="detalle" color="textoSecundario">
-        {mostrandoGuardado ? textos.guardado : textos.sinGuardado}
+      <Texto variante="detalle">
+        {`${textos.titulo} · ${
+          mostrandoGuardado ? textos.guardado : textos.sinGuardado
+        }`}
       </Texto>
     </View>
   );

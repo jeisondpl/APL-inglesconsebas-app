@@ -25,11 +25,13 @@ describe('BannerConexion', () => {
 
     await act(async () => conexion.marcarSinConexion());
     expect(screen.getByTestId('banner-sin-conexion')).toBeOnTheScreen();
-    expect(screen.getByText(/Revisa tu internet/)).toBeOnTheScreen();
+    expect(
+      screen.getByText('Sin conexión · revisa tu internet'),
+    ).toBeOnTheScreen();
 
     await act(async () => conexion.marcarGuardado());
     expect(
-      screen.getByText('Estás viendo lo último que guardamos.'),
+      screen.getByText('Sin conexión · viendo lo último que guardamos'),
     ).toBeOnTheScreen();
 
     await act(async () => conexion.marcarEnLinea());
