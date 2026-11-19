@@ -49,7 +49,7 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
   - `di/`: `crearDependencias()` es el único sitio donde se instancian el cliente HTTP, los repositorios y los adaptadores. Un módulo nuevo añade su puerto a `IRepositorios`; un SDK nuevo, el suyo a `INativos`. Se consumen con `useRepository` y `useNative`. En los tests, `DependenciasProvider valor={…}` (o `Providers dependencias={…}`) sustituye el contenedor;
   - `providers/`: SafeArea, `TemaProvider`, dependencias y `LimiteDeErrores`, con `HostNotificaciones` como hermano dentro del tema;
   - `navigation/`: native-stack con `temaNavegacion(tema)` desde los tokens y `RaizParamList` tipado globalmente; `onReady` oculta el splash;
-  - `inicio/InicioProvisionalScreen.tsx`: inicio **provisional** de profe y admin (saludo, rol, versión, entorno y «Cerrar sesión»). El estudiante ya tiene el suyo (F1-05).
+  - `navigation/PantallaInicioAdmin.tsx`: inicio del admin (F1-04, 1.19) con el módulo `admin`: alertas, asistencias por marcar y cumpleaños. Estudiante y profe tienen sus pestañas (F1-05, F1-07).
 - **`src/shared/lib/`**: `HttpResponse`, `api.ts` (`crearClienteApi`, nunca lanza), `entorno.ts` (`leerEntorno` puro + `entorno`), `notify.ts` (única puerta a los toasts), `utils.ts` y `textos.ts`.
 - **Tests**: `jest.setup.ts` mockea `react-native-config` (`API_URL` local y `APP_ENV=dev`), `react-native-safe-area-context`, `react-native-toast-message` (`Toast.show`/`hide` son `jest.fn`) y `react-native-bootsplash` (`hide` resuelve). `react-native-svg` se renderiza sin mock. Lo que use `useTema` se monta dentro de `TemaProvider` (o de `Providers`). `transformIgnorePatterns` incluye `react-native-*` y `@react-navigation`.
 - **Pasos nativos hechos**: `MainActivity.kt` asigna `RNScreensFragmentFactory` antes de `super.onCreate` (react-native-screens). **Pendiente sin Mac**: `pod install` para `react-native-screens` y `react-native-safe-area-context` (y los de F1-01b), y versionar `Podfile.lock`.
@@ -149,3 +149,12 @@ Ver [`docs/DISTRIBUCION.md`](docs/DISTRIBUCION.md).
   - `npm run android` en un emulador o dispositivo;
   - iOS solo en macOS o en CI.
 - Todo en español: código, comentarios e interfaz. Los identificadores siguen la sección 6 de la guía.
+
+## Chat, tareas, push, perfil y sin conexión (F3-01, F3-02, F2-03, F1-03b)
+
+- **Chat** (`src/modules/mensajes`): texto, foto, nota de voz, reacciones y leído contra el endpoint `chat` (sondeo incremental, la lista no trae el base64). **Tareas** (`tareas`): endpoint `tareas`, entrega con texto/audio y feedback de la profe. Detalle en `docs/features/F3-01-chat/plan.md`.
+- **Push** (`notificaciones`, `FirebasePushAdapter`): ver `docs/NOTIFICACIONES.md`. Sin `google-services.json` la app compila y arranca sin push.
+- **Perfil** (`perfil`): cambio de PIN (`auth.php?action=change_pin`, pide el actual), tema recordado (`TemaPersistente`), «Abrir en la web» (código de un solo uso, `web_code`) y desbloqueo con huella o rostro (`BiometriaPort`, `Bloqueo`; `NavegadorRaiz` pinta `PantallaBloqueo` encima). Variable opcional `WEB_URL`.
+- **Sin conexión** (`src/app/di/apiConCache.ts`): cada GET correcto se guarda en disco por persona (`CacheLocalPort`) y, sin red, se responde con lo guardado; `BannerConexion` avisa. No se guardan `auth.php`, el sondeo del chat ni `view=media`; se borra al cerrar sesión.
+- **Admin** (`admin`): inicio con `alerts` (incluye `cumples`) y `pending_attendance_admin`.
+- **Compilar en Windows con librerías Nitro/Firebase**: desde una unidad `subst` y con `org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m` en `~/.gradle/gradle.properties` (se quita después).
