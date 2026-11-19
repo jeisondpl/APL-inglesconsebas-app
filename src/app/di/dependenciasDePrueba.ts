@@ -28,6 +28,10 @@ import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import type { ClienteApi } from '@/shared/lib/api';
+import {
+  crearEstadoConexion,
+  type EstadoConexion,
+} from '@/shared/lib/conexion';
 import { respuestaError } from '@/shared/lib/HttpResponse';
 
 import type { IDependencias } from './contenedor';
@@ -95,6 +99,8 @@ export interface IOpcionesDependenciasDePrueba {
   mensajes?: MensajesRepository;
   /** Dispositivos push (F2-03). Por defecto, en memoria. */
   notificaciones?: NotificacionesRepository;
+  /** Estado de la conexión (1.15). Por defecto, uno nuevo (con conexión). */
+  conexion?: EstadoConexion;
   /** Perfil (F1-03b). Por defecto, en memoria con el PIN 1234. */
   perfil?: PerfilRepository;
   /** Tareas (F3-02). Por defecto, en memoria y vacío. */
@@ -160,6 +166,7 @@ export function crearDependenciasDePrueba(
     },
     api,
     sesionActiva,
+    conexion: opciones.conexion ?? crearEstadoConexion(),
     banderaOnboarding: crearBanderaOnboarding(
       opciones.onboardingInicial ?? { tipo: 'visto' },
     ),

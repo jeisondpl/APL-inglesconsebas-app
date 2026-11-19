@@ -22,6 +22,7 @@ import type { SesionActiva } from '@/modules/sesion/domain/models/SesionActiva';
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { crearApiSesionRepository } from '@/modules/sesion/infrastructure/apiSesionRepository';
 import { crearBootSplashAdapter } from '@/native/adapters/BootSplashAdapter';
+import { crearBlobUtilCacheLocalAdapter } from '@/native/adapters/BlobUtilCacheLocalAdapter';
 import { crearFirebasePushAdapter } from '@/native/adapters/FirebasePushAdapter';
 import { crearGoogleSignInAdapter } from '@/native/adapters/GoogleSignInAdapter';
 import { crearGoogleSimuladoAdapter } from '@/native/adapters/GoogleSimuladoAdapter';
@@ -37,8 +38,13 @@ import type { GoogleSignInPort } from '@/native/ports/GoogleSignInPort';
 import type { SecureStoragePort } from '@/native/ports/SecureStoragePort';
 import type { SplashPort } from '@/native/ports/SplashPort';
 import { crearClienteApi, type ClienteApi } from '@/shared/lib/api';
+import {
+  crearEstadoConexion,
+  type EstadoConexion,
+} from '@/shared/lib/conexion';
 import { entorno } from '@/shared/lib/entorno';
 
+import { crearApiConCache } from './apiConCache';
 import { etiquetaDispositivo } from './etiquetaDispositivo';
 
 /** Repositorios de los módulos de negocio. Cada módulo añade aquí su puerto cuando se construye. */
@@ -84,6 +90,8 @@ export interface IDependencias {
   sesionActiva: SesionActiva;
   /** Bandera `hasSeenOnboarding` en memoria (EXT-01), compartida por el navegador y la bienvenida. */
   banderaOnboarding: BanderaOnboarding;
+  /** Si hay conexión con Leap, deducido de las peticiones (F1-03b, 1.15). Opcional en los tests. */
+  conexion?: EstadoConexion;
 }
 
 /**
@@ -93,13 +101,30 @@ export interface IDependencias {
 export function crearDependencias(): IDependencias {
   const almacenSeguro = crearKeychainSecureStorageAdapter();
   const sesionActiva = crearSesionActiva();
-  const api = crearClienteApi({
+  const cache = crearBlobUtilCacheLocalAdapter();
+  const conexion = crearEstadoConexion();
+  const apiRed = crearClienteApi({
     urlBase: entorno.apiUrl,
     // El token sale de la sesión activa; un 401 con sesión la limpia y vuelve al login (CA9).
     obtenerToken: () => Promise.resolve(sesionActiva.token()),
     alNoAutorizado: tokenPeticion => {
       invalidarSesionUseCase(almacenSeguro, sesionActiva, tokenPeticion);
     },
+  });
+  // Cada lectura se guarda por persona y, sin conexión, se responde con lo guardado (1.15).
+  const api = crearApiConCache(apiRed, {
+    cache,
+    conexion,
+    usuario: () => {
+      const e = sesionActiva.obtener();
+      return e.tipo === 'autenticado' ? e.sesion.usuario.id : null;
+    },
+  });
+  // Al cerrar o vencer la sesión se borra lo guardado: la caché no pasa de una persona a otra.
+  sesionActiva.suscribir(() => {
+    if (sesionActiva.obtener().tipo === 'sinSesion') {
+      cache.limpiar();
+    }
   });
   return {
     repositorios: {
@@ -135,6 +160,7 @@ export function crearDependencias(): IDependencias {
     },
     api,
     sesionActiva,
+    conexion,
     // Empieza en `cargando`: el navegador raíz la lee del almacén al arrancar.
     banderaOnboarding: crearBanderaOnboarding(),
   };

@@ -7,6 +7,7 @@ export {
 export {
   DependenciasProvider,
   useBanderaOnboarding,
+  useEstadoConexion,
   useNative,
   useRepository,
   useSesionActiva,

@@ -1,4 +1,15 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
+
+import {
+  crearEstadoConexion,
+  type IEstadoConexion,
+} from '@/shared/lib/conexion';
 
 import {
   crearDependencias,
@@ -85,4 +96,13 @@ export function useBanderaOnboarding(): IDependencias['banderaOnboarding'] {
     );
   }
   return banderaOnboarding;
+}
+
+/** Estado de la conexión en memoria del contenedor (1.15). Sin él, siempre «con conexión». */
+const SIN_CONEXION_OPCIONAL = crearEstadoConexion();
+
+export function useEstadoConexion(): IEstadoConexion {
+  const { conexion } = useDependencias('useEstadoConexion');
+  const store = conexion ?? SIN_CONEXION_OPCIONAL;
+  return useSyncExternalStore(store.suscribir, store.obtener);
 }
