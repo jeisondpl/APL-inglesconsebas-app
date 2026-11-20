@@ -5,9 +5,9 @@ import { StatusBar } from 'react-native';
 
 import { useEstadoBloqueo, useNative } from '@/app/di';
 import { textosEscaparate } from '@/app/escaparate/escaparate.textos';
+import { PantallaInicioAdmin } from './PantallaInicioAdmin';
 import { PantallaPerfil } from './PantallaPerfil';
 import { SistemaDisenoScreen } from '@/app/escaparate/SistemaDisenoScreen';
-import { InicioProvisionalScreen } from '@/app/inicio/InicioProvisionalScreen';
 import { useArranqueOnboarding } from '@/modules/onboarding/aplications/controllers/Onboarding.controller';
 import { pantallasOnboarding } from '@/modules/onboarding/presentation/navigation';
 import { useArranqueBloqueo } from '@/modules/sesion/aplications/controllers/Bloqueo.controller';
@@ -81,7 +81,7 @@ export function NavegadorRaiz() {
                     ? PestanasEstudiante
                     : rutaInicio === 'InicioProfe'
                     ? PestanasProfe
-                    : InicioProvisionalScreen
+                    : PantallaInicioAdmin
                 }
               />
               {rutaInicio !== 'InicioAdmin' ? (

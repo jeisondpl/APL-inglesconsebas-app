@@ -1,5 +1,7 @@
 import type { InicioRepository } from '@/modules/inicio/domain/models/InicioRepository';
 import type { AgendaRepository } from '@/modules/agenda/domain/models/AgendaRepository';
+import type { AdminRepository } from '@/modules/admin/domain/admin.dominio';
+import { crearMemoriaAdminRepository } from '@/modules/admin/infrastructure/adminRepositories';
 import type { PerfilRepository } from '@/modules/perfil/domain/perfil.dominio';
 import { crearMemoriaPerfilRepository } from '@/modules/perfil/infrastructure/perfilRepositories';
 import type { TareasRepository } from '@/modules/tareas/domain/models/TareasRepository';
@@ -115,6 +117,8 @@ export interface IOpcionesDependenciasDePrueba {
   bloqueo?: Bloqueo;
   /** Estado de la conexión (1.15). Por defecto, uno nuevo (con conexión). */
   conexion?: EstadoConexion;
+  /** Inicio del admin (F1-04). Por defecto, en memoria y vacío. */
+  admin?: AdminRepository;
   /** Perfil (F1-03b). Por defecto, en memoria con el PIN 1234. */
   perfil?: PerfilRepository;
   /** Tareas (F3-02). Por defecto, en memoria y vacío. */
@@ -163,6 +167,7 @@ export function crearDependenciasDePrueba(
       mensajes: opciones.mensajes ?? crearMemoriaMensajesRepository(),
       tareas: opciones.tareas ?? crearMemoriaTareasRepository(),
       perfil: opciones.perfil ?? crearMemoriaPerfilRepository(),
+      admin: opciones.admin ?? crearMemoriaAdminRepository(),
       notificaciones:
         opciones.notificaciones ?? crearMemoriaNotificacionesRepository(),
     },

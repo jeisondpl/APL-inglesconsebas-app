@@ -35,6 +35,7 @@ import type { IResponseSesion } from '@/modules/sesion/domain/entities/Sesion.en
 import type { SesionRepository } from '@/modules/sesion/domain/models/SesionRepository';
 import { serializarSesion } from '@/modules/sesion/domain/validations/sesion.validations';
 import { crearMemoriaAgendaRepository } from '@/modules/agenda/infrastructure/memoriaAgendaRepository';
+import { crearMemoriaAdminRepository } from '@/modules/admin/infrastructure/adminRepositories';
 import { crearMemoriaPerfilRepository } from '@/modules/perfil/infrastructure/perfilRepositories';
 import { crearMemoriaTareasRepository } from '@/modules/tareas/infrastructure/memoriaTareasRepository';
 import { crearMemoriaNotificacionesRepository } from '@/modules/notificaciones/infrastructure/memoriaNotificacionesRepository';
@@ -330,10 +331,10 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
   });
 
   it.each([
-    // F1-05/F1-07: estudiante y profe entran a sus pestañas; el admin, al inicio provisional.
+    // F1-05/F1-07: estudiante y profe entran a sus pestañas; el admin, a su inicio (F1-04, 1.19).
     ['ana', '1234', 'Hola, Ana', 'pestanas-estudiante'],
     ['meli', '1111', 'Hola, Meli', 'pestanas-profe'],
-    ['yggodguz', '2905', 'Hola, Admin', 'Rol: Admin'],
+    ['yggodguz', '2905', 'Hola, Admin', 'inicio-admin'],
   ])(
     'el login de %s lleva a su inicio',
     async (usuario, pin, saludo, destino) => {
@@ -342,11 +343,7 @@ describe('NavegadorRaiz: sesión (F1-03)', () => {
       await screen.findByText('Inicia sesión');
       await iniciarSesion(usuario, pin);
       expect(await screen.findByText(saludo)).toBeOnTheScreen();
-      if (destino.startsWith('pestanas-')) {
-        expect(screen.getByTestId(destino)).toBeOnTheScreen();
-      } else {
-        expect(screen.getByText(destino)).toBeOnTheScreen();
-      }
+      expect(screen.getByTestId(destino)).toBeOnTheScreen();
       await expect(
         dependencias.nativos.almacenSeguro.leer('sesion'),
       ).resolves.toMatch(/"token"/);
@@ -600,6 +597,7 @@ function contenedorConApi(
       mensajes: crearMemoriaMensajesRepository(),
       tareas: crearMemoriaTareasRepository(),
       perfil: crearMemoriaPerfilRepository(),
+      admin: crearMemoriaAdminRepository(),
       notificaciones: crearMemoriaNotificacionesRepository(),
     },
     nativos: {
