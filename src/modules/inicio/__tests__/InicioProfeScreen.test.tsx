@@ -124,7 +124,7 @@ describe('InicioProfeScreen (F1-07)', () => {
     expect(screen.getByTestId('clase-hoy-c2')).toBeOnTheScreen();
     expect(screen.queryByTestId('clase-hoy-c3')).toBeNull();
     expect(
-      screen.getByLabelText('8:00 a. m., Ana Torres, Clase 2, Tomada'),
+      screen.getByLabelText('8:00 a. m., Ana Torres, Clase 2, Realizada'),
     ).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir Zoom' }));
     expect(enlaces.abrir).toHaveBeenCalledWith('https://zoom.us/j/meli');

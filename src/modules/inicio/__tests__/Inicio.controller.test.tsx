@@ -187,16 +187,6 @@ describe('useInicioController', () => {
     });
   });
 
-  it('_reagendar avisa «Próximamente»', async () => {
-    const { result } = await montar();
-    await act(async () => result.current._reagendar());
-    expect(Toast.show).toHaveBeenCalledWith({
-      type: 'info',
-      text1: mensajesInicio.proximamente,
-      text2: mensajesInicio.reagendarProximamente,
-    });
-  });
-
   it('desmontado durante la carga no actualiza el estado', async () => {
     let soltar: () => void = () => {};
     const base = crearMemoriaInicioRepository();

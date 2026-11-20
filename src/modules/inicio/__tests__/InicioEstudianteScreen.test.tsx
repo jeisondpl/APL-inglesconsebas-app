@@ -155,7 +155,7 @@ describe('InicioEstudianteScreen', () => {
   });
 
   it('próxima clase: cuenta atrás, cuándo, profe, duración y Zoom (CA9)', async () => {
-    const { enlaces } = await montar();
+    const { enlaces, props } = await montar();
     expect(await screen.findByText('Mañana · 6:00 p. m.')).toBeOnTheScreen();
     expect(screen.getByText('Con Meli · 50 min · por Zoom')).toBeOnTheScreen();
     expect(screen.getByTestId('cuenta-atras')).toHaveTextContent(
@@ -167,10 +167,9 @@ describe('InicioEstudianteScreen', () => {
     expect(enlaces.abrir).toHaveBeenCalledWith(
       'https://us06web.zoom.us/j/00000000001',
     );
+    // Reagendar ya existe en la pestaña Clases (F2-01): el botón lleva allí.
     await fireEvent.press(screen.getByRole('button', { name: 'Reagendar' }));
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'info', text1: 'Próximamente' }),
-    );
+    expect(props.alIrA).toHaveBeenCalledWith('clases');
   });
 
   it('sin enlace de Zoom no ofrece «Ir a mi clase» y lo explica', async () => {

@@ -76,15 +76,8 @@ export function InicioEstudianteScreen({
   const estilos = useEstilos(crearEstilos);
   const alDesplazar = useOcultarBarraAlDesplazar();
   const [cuentaAbierta, setCuentaAbierta] = useState(false);
-  const {
-    estado,
-    ahoraMs,
-    refrescando,
-    _cargar,
-    _refrescar,
-    _abrirClase,
-    _reagendar,
-  } = useInicioController({ idEstudiante: usuario.id, alCambiarNoLeidos });
+  const { estado, ahoraMs, refrescando, _cargar, _refrescar, _abrirClase } =
+    useInicioController({ idEstudiante: usuario.id, alCambiarNoLeidos });
 
   const vista = estado.tipo === 'listo' ? estado.vista : null;
   const subtitulo =
@@ -154,7 +147,7 @@ export function InicioEstudianteScreen({
             estilos={estilos}
             avisoSeccion={avisoSeccion}
             alIrAClase={_abrirClase}
-            alReagendar={_reagendar}
+            alReagendar={() => alIrA?.('clases')}
             alIrA={alIrA}
           />
         ) : null}

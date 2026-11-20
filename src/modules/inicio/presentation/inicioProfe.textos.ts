@@ -8,7 +8,8 @@ const MOMENTOS: Record<MomentoClase, string> = {
   proxima: 'Próxima',
   en_curso: 'En curso',
   por_marcar: 'Sin marcar',
-  tomada: 'Tomada',
+  // Igual que en la agenda (agenda.textos.ts), donde se marca «Realizada».
+  tomada: 'Realizada',
   no_asistio: 'No asistió',
 };
 
