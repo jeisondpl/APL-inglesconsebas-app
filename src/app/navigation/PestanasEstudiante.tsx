@@ -193,7 +193,7 @@ export function PestanasEstudiante() {
   );
 }
 
-/** Inicio del profe con las mismas cuatro pestañas (F1-07); Tareas, próximamente. */
+/** Inicio del profe con las mismas cuatro pestañas (F1-07). */
 export function PestanasProfe() {
   return (
     <ProveedorBarraPestanas>

@@ -2,6 +2,7 @@
 import {
   crearApiConCache,
   esCacheable,
+  esLecturaPost,
   MAX_CACHE_CARACTERES,
 } from '@/app/di/apiConCache';
 import type { CacheLocalPort } from '@/native/ports/CacheLocalPort';
@@ -189,6 +190,48 @@ describe('crearApiConCache · escrituras', () => {
     expect(conexion.obtener().sinConexion).toBe(false);
     await envuelta.post('api.php', { a: 1 }, { endpoint: 'x' });
     expect(conexion.obtener().sinConexion).toBe(false);
+    expect(cache.datos.size).toBe(0);
+  });
+});
+
+describe('crearApiConCache · lecturas por POST', () => {
+  it('solo las asistencias por marcar cuentan como lectura', () => {
+    expect(
+      esLecturaPost({ action: 'pending_attendance', teacherId: 't1' }),
+    ).toBe(true);
+    expect(esLecturaPost({ action: 'pending_attendance_admin' })).toBe(true);
+    expect(esLecturaPost({ action: 'student_cancel' })).toBe(false);
+    expect(esLecturaPost({ action: 7 })).toBe(false);
+    expect(esLecturaPost(null)).toBe(false);
+    expect(esLecturaPost('pending_attendance')).toBe(false);
+  });
+
+  it('sin conexión responde con lo último guardado, por acción y cuerpo', async () => {
+    const post = jest
+      .fn()
+      .mockResolvedValueOnce(respuestaOk([{ id: 'c1' }]))
+      .mockResolvedValueOnce(SIN_RED)
+      .mockResolvedValueOnce(SIN_RED);
+    const { envuelta, conexion } = montar({ post });
+    const cuerpo = { action: 'pending_attendance', teacherId: 't1' };
+    const params = { endpoint: 'class_sessions' };
+    await envuelta.post('api.php', cuerpo, params);
+    const r = await envuelta.post('api.php', cuerpo, params);
+    expect(r).toMatchObject({ error: false, response: [{ id: 'c1' }] });
+    expect(conexion.obtener()).toMatchObject({ sinConexion: true });
+    // Otra profe (otro cuerpo) no recibe lo guardado de la primera.
+    const otra = await envuelta.post(
+      'api.php',
+      { action: 'pending_attendance', teacherId: 't2' },
+      params,
+    );
+    expect(otra.error).toBe(true);
+  });
+
+  it('sin sesión la lectura por POST no se guarda', async () => {
+    const post = jest.fn().mockResolvedValue(respuestaOk([]));
+    const { envuelta, cache } = montar({ post }, null);
+    await envuelta.post('api.php', { action: 'pending_attendance_admin' });
     expect(cache.datos.size).toBe(0);
   });
 });

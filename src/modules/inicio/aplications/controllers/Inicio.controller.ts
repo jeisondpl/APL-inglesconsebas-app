@@ -32,8 +32,6 @@ export interface IInicioController {
   _refrescar(): Promise<void>;
   /** Abre el enlace de Zoom de la próxima clase. */
   _abrirClase(enlace: string): Promise<void>;
-  /** Reagendar aún no existe en la App: avisa «Próximamente». */
-  _reagendar(): void;
 }
 
 export interface IOpcionesInicioController {
@@ -152,13 +150,6 @@ export function useInicioController({
     [enlaces],
   );
 
-  const _reagendar = useCallback(() => {
-    notify.info(
-      mensajesInicio.proximamente,
-      mensajesInicio.reagendarProximamente,
-    );
-  }, []);
-
   return {
     estado,
     ahoraMs,
@@ -166,6 +157,5 @@ export function useInicioController({
     _cargar,
     _refrescar,
     _abrirClase,
-    _reagendar,
   };
 }
