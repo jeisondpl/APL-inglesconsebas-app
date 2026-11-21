@@ -60,6 +60,7 @@ export const textosTareas = {
     nota: 'Nota',
     notaMarcador: 'Ej. 9 o A+',
     enviarFeedback: 'Enviar feedback',
+    editarFeedback: 'Editar feedback',
     grabar: 'Grabar audio',
     grabando: (tiempo: string) => `Grabando ${tiempo}`,
     detener: 'Terminar grabación',
