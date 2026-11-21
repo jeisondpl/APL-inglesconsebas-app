@@ -9,12 +9,10 @@ import { textosConexion as textos } from './conexion.textos';
 
 const crearEstilos = (tema: ITema) =>
   StyleSheet.create({
+    // En el flujo, no flotando: empuja la pantalla hacia abajo en vez de tapar su cabecera
+    // (en el moto g77 tapaba «Hola, Meli»). Las pantallas usan el SafeAreaView nativo, que solo
+    // aplica el margen superior que de verdad se solapa con la barra de estado.
     banner: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: 0,
-      zIndex: 10,
       backgroundColor: tema.colores.superficie,
       borderBottomWidth: 1,
       borderBottomColor: tema.colores.borde,

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DependenciasProvider, type IDependencias } from '@/app/di';
@@ -32,11 +33,17 @@ export function Providers({
       <TemaProvider preferenciaInicial={preferenciaTema}>
         <DependenciasProvider valor={dependencias}>
           <TemaPersistente />
-          <BannerConexion />
-          <LimiteDeErrores>{children}</LimiteDeErrores>
+          <View style={estilos.columna}>
+            <BannerConexion />
+            <View style={estilos.columna}>
+              <LimiteDeErrores>{children}</LimiteDeErrores>
+            </View>
+          </View>
         </DependenciasProvider>
         <HostNotificaciones />
       </TemaProvider>
     </SafeAreaProvider>
   );
 }
+
+const estilos = StyleSheet.create({ columna: { flex: 1 } });
