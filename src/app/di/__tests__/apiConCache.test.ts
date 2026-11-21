@@ -195,11 +195,13 @@ describe('crearApiConCache · escrituras', () => {
 });
 
 describe('crearApiConCache · lecturas por POST', () => {
-  it('solo las asistencias por marcar cuentan como lectura', () => {
+  it('solo las lecturas del inicio (asistencias y mensajes) cuentan como lectura', () => {
     expect(
       esLecturaPost({ action: 'pending_attendance', teacherId: 't1' }),
     ).toBe(true);
     expect(esLecturaPost({ action: 'pending_attendance_admin' })).toBe(true);
+    expect(esLecturaPost({ action: 'get_unread', role: 'teacher' })).toBe(true);
+    expect(esLecturaPost({ action: 'get_thread', studentId: 's1' })).toBe(true);
     expect(esLecturaPost({ action: 'student_cancel' })).toBe(false);
     expect(esLecturaPost({ action: 7 })).toBe(false);
     expect(esLecturaPost(null)).toBe(false);

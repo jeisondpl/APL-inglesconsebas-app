@@ -22,7 +22,12 @@ import Svg, {
 import { useTema } from '@/shared/theme';
 
 import logo from '../../../assets/marca/logo.json';
-import { duraciones, ESCALA_HALO } from './movimiento.tokens';
+import {
+  duraciones,
+  ESCALA_HALO,
+  REPETICIONES_DECORATIVAS,
+  REPETICIONES_DERIVA,
+} from './movimiento.tokens';
 
 export interface IPropsFondoMarca {
   /**
@@ -56,7 +61,8 @@ const { capas, viewBox } = logo.isotipo;
 
 /**
  * Fondo de marca animado (F1-04), sin fotos: el fondo del tema, un halo verde que respira, el
- * isotipo grande y difuminado que deriva despacio y un gradiente hacia el fondo en la parte de
+ * isotipo grande y difuminado que deriva despacio (unos ciclos y luego quieto, ver
+ * `REPETICIONES_DECORATIVAS`) y un gradiente hacia el fondo en la parte de
  * abajo, para que el contenido anclado (tarjeta, botones) se lea bien. Es decorativo: no recibe
  * toques ni se anuncia. Con reduce-motion queda quieto.
  */
@@ -86,7 +92,7 @@ export function FondoMarca({
         duration: duraciones.respiracionHalo,
         easing: Easing.inOut(Easing.quad),
       }),
-      -1,
+      REPETICIONES_DECORATIVAS,
       true,
     );
     deriva.value = withRepeat(
@@ -94,7 +100,7 @@ export function FondoMarca({
         duration: DERIVA_ISOTIPO / 2,
         easing: Easing.inOut(Easing.sin),
       }),
-      -1,
+      REPETICIONES_DERIVA,
       true,
     );
   }, [reducido, respiracion, deriva]);

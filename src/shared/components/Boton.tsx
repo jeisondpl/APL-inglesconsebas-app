@@ -50,7 +50,14 @@ const crearEstilos = (tema: ITema) => {
     peligro: { borderWidth: 1.5, borderColor: colores.bordePeligro },
     inactivo: { opacity: 0.5 },
     pulsado: { opacity: 0.8 },
-    contenido: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    contenido: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      maxWidth: '100%',
+    },
+    titulo: { flexShrink: 1, textAlign: 'center' },
   });
 };
 
@@ -116,7 +123,16 @@ export function Boton({
             color={tema.colores[colorTexto[variante]]}
           />
         ) : null}
-        <Texto variante="boton" color={colorTexto[variante]}>
+        {/* Una sola línea: en botones a media anchura (p. ej. «Reenviar código en 58 s») el texto
+            se encoge un poco en vez de partirse en dos. */}
+        <Texto
+          variante="boton"
+          color={colorTexto[variante]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={estilos.titulo}
+        >
           {titulo}
         </Texto>
       </View>

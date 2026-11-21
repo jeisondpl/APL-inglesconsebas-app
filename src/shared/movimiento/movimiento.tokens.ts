@@ -44,5 +44,14 @@ export const GOLPES_SACUDIDA = [-8, 8, -6, 6, 0] as const;
 /** Escala máxima de la respiración del halo (1 ↔ 1.08). */
 export const ESCALA_HALO = 1.08;
 
+/**
+ * Cuántas veces (ida o vuelta) se repiten los bucles decorativos antes de quedarse quietos. Un bucle
+ * infinito impide que Android dé la pantalla por «quieta», y entonces las herramientas de
+ * accesibilidad y de pruebas (uiautomator) no la pueden leer. Par: termina donde empezó. Con
+ * estas cifras todo queda quieto en unos 10 s (6 × 1600 ms del halo; 2 × 4500 ms de la deriva).
+ */
+export const REPETICIONES_DECORATIVAS = 6;
+export const REPETICIONES_DERIVA = 2;
+
 /** Escala máxima de la respiración del logo en la carga (1 ↔ 1.06). */
 export const ESCALA_LOGO_CARGA = 1.06;

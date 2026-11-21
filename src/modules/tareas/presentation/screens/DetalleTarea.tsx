@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Insignia, Tarjeta, Texto } from '@/shared/components';
+import { Boton, Insignia, Tarjeta, Texto } from '@/shared/components';
 import { fechaCorta } from '@/shared/lib/fechas';
 import { IconoFlecha } from '@/shared/iconos';
 import { ESPACIO_BARRA_PESTANAS } from '@/shared/movimiento';
@@ -71,6 +72,12 @@ export function DetalleTarea({
     tarea.imagenesEntrega > 0;
   const hayFeedback =
     tarea.comentario !== null || tarea.nota !== null || tarea.tieneVozFeedback;
+  // Con el feedback ya dado, el formulario de la profe queda cerrado tras «Editar feedback»: si no,
+  // la pantalla repite el mismo comentario y la nota dos veces. Cada tarea nueva lo vuelve a cerrar.
+  const [editando, setEditando] = useState(false);
+  useEffect(() => {
+    setEditando(false);
+  }, [tarea]);
 
   return (
     <SafeAreaView
@@ -180,7 +187,15 @@ export function DetalleTarea({
         {c.puedeEntregar ? (
           <FormularioTarea c={c} rol="estudiante" reentrega={hayEntrega} />
         ) : null}
-        {c.puedeRevisar ? (
+        {c.puedeRevisar && hayFeedback && !editando ? (
+          <Boton
+            testID="tarea-editar-feedback"
+            variante="secundario"
+            titulo={textos.formulario.editarFeedback}
+            onPress={() => setEditando(true)}
+          />
+        ) : null}
+        {c.puedeRevisar && (!hayFeedback || editando) ? (
           <FormularioTarea c={c} rol="profe" reentrega={hayEntrega} />
         ) : null}
       </ScrollView>

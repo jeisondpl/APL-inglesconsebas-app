@@ -422,6 +422,30 @@ describe('revisión de la profe (3.10)', () => {
     );
   });
 
+  it('con el feedback ya dado, el formulario queda cerrado hasta «Editar feedback»', async () => {
+    await montar(
+      [
+        tarea({
+          id: 1,
+          estado: 'reviewed',
+          entrega: 'Mi respuesta',
+          comentario: 'Muy bien',
+          nota: '9',
+        }),
+      ],
+      'profe',
+    );
+    await fireEvent.press(
+      await screen.findByTestId('tareas-seccion-revisadas'),
+    );
+    await fireEvent.press(await screen.findByTestId('tarea-1'));
+    expect(await screen.findByTestId('tarea-feedback')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tarea-comentario')).toBeNull();
+    await fireEvent.press(screen.getByTestId('tarea-editar-feedback'));
+    expect(screen.getByTestId('tarea-comentario')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tarea-editar-feedback')).toBeNull();
+  });
+
   it('con una tarea sin entregar no hay formulario de feedback', async () => {
     await montar([tarea({ id: 1, estado: 'pending' })], 'profe');
     await fireEvent.press(

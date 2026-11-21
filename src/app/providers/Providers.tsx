@@ -5,7 +5,7 @@ import { DependenciasProvider, type IDependencias } from '@/app/di';
 import { HostNotificaciones } from '@/shared/components';
 import { TemaProvider, type PreferenciaTema } from '@/shared/theme';
 
-import { BannerConexion } from '@/app/conexion/BannerConexion';
+import { ConBannerConexion } from '@/app/conexion/BannerConexion';
 
 import { LimiteDeErrores } from './LimiteDeErrores';
 import { TemaPersistente } from './TemaPersistente';
@@ -32,8 +32,9 @@ export function Providers({
       <TemaProvider preferenciaInicial={preferenciaTema}>
         <DependenciasProvider valor={dependencias}>
           <TemaPersistente />
-          <BannerConexion />
-          <LimiteDeErrores>{children}</LimiteDeErrores>
+          <ConBannerConexion>
+            <LimiteDeErrores>{children}</LimiteDeErrores>
+          </ConBannerConexion>
         </DependenciasProvider>
         <HostNotificaciones />
       </TemaProvider>

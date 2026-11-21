@@ -199,8 +199,12 @@ describe('FondoMarca (CA4, CA5)', () => {
       expect(plano(fondo).backgroundColor).toBe(tema.colores.fondo);
       expect(fondo.props.pointerEvents).toBe('none');
       expect(fondo.props.importantForAccessibility).toBe('no-hide-descendants');
-      // Halo que respira e isotipo que deriva.
+      // Halo que respira e isotipo que deriva, con un número finito de repeticiones: un bucle
+      // infinito impide que Android dé la pantalla por quieta y la lea por accesibilidad.
       expect(bucle).toHaveBeenCalledTimes(2);
+      for (const [, veces] of bucle.mock.calls) {
+        expect(veces).toBeGreaterThan(0);
+      }
     },
   );
 

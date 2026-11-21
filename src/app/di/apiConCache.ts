@@ -34,12 +34,15 @@ export function esCacheable(ruta: string, params?: ParametrosQuery): boolean {
 
 /**
  * Lecturas que Leap hace por POST (no cambian nada) y que también se guardan: las asistencias por
- * marcar del inicio de la profe y del admin. El resto de POST son escrituras o vistas previas que
- * deben ver el estado real (cancelar, reagendar, espacios Flex).
+ * marcar del inicio de la profe y del admin, y los mensajes sin leer y el último hilo del inicio
+ * (`chispa`), que sin esto desaparecían del inicio de la profe sin conexión. El resto de POST son
+ * escrituras o vistas previas que deben ver el estado real (cancelar, reagendar, espacios Flex).
  */
 export const LECTURAS_POST: ReadonlySet<string> = new Set([
   'pending_attendance',
   'pending_attendance_admin',
+  'get_unread',
+  'get_thread',
 ]);
 
 export function esLecturaPost(cuerpo: unknown): boolean {
