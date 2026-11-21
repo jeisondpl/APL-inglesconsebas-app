@@ -1,10 +1,14 @@
 // F1-03b (1.15): el aviso «sin conexión».
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DependenciasProvider } from '@/app/di';
 import { crearDependenciasDePrueba } from '@/app/di/dependenciasDePrueba';
-import { BannerConexion } from '@/app/conexion/BannerConexion';
+import {
+  BannerConexion,
+  ConBannerConexion,
+} from '@/app/conexion/BannerConexion';
 import { crearEstadoConexion } from '@/shared/lib/conexion';
 import { TemaProvider } from '@/shared/theme';
 
@@ -53,5 +57,32 @@ describe('BannerConexion', () => {
       </SafeAreaProvider>,
     );
     expect(screen.queryByTestId('banner-sin-conexion')).toBeNull();
+  });
+
+  it('mientras se ve, la app baja lo justo para no quedar tapada', async () => {
+    const conexion = crearEstadoConexion();
+    const dependencias = crearDependenciasDePrueba({ conexion });
+    await render(
+      <SafeAreaProvider>
+        <TemaProvider preferenciaInicial="oscuro">
+          <DependenciasProvider valor={dependencias}>
+            <ConBannerConexion>
+              <Text>Hola, Meli</Text>
+            </ConBannerConexion>
+          </DependenciasProvider>
+        </TemaProvider>
+      </SafeAreaProvider>,
+    );
+    const app = () =>
+      StyleSheet.flatten(screen.getByTestId('app-bajo-banner').props.style);
+    expect(app().paddingTop).toBe(0);
+    await act(async () => conexion.marcarSinConexion());
+    await fireEvent(screen.getByTestId('banner-sin-conexion'), 'layout', {
+      nativeEvent: { layout: { height: 80 } },
+    });
+    expect(app().paddingTop).toBe(80);
+    expect(screen.getByText('Hola, Meli')).toBeOnTheScreen();
+    await act(async () => conexion.marcarEnLinea());
+    expect(app().paddingTop).toBe(0);
   });
 });

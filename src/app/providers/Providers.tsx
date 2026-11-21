@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DependenciasProvider, type IDependencias } from '@/app/di';
 import { HostNotificaciones } from '@/shared/components';
 import { TemaProvider, type PreferenciaTema } from '@/shared/theme';
 
-import { BannerConexion } from '@/app/conexion/BannerConexion';
+import { ConBannerConexion } from '@/app/conexion/BannerConexion';
 
 import { LimiteDeErrores } from './LimiteDeErrores';
 import { TemaPersistente } from './TemaPersistente';
@@ -33,17 +32,12 @@ export function Providers({
       <TemaProvider preferenciaInicial={preferenciaTema}>
         <DependenciasProvider valor={dependencias}>
           <TemaPersistente />
-          <View style={estilos.columna}>
-            <BannerConexion />
-            <View style={estilos.columna}>
-              <LimiteDeErrores>{children}</LimiteDeErrores>
-            </View>
-          </View>
+          <ConBannerConexion>
+            <LimiteDeErrores>{children}</LimiteDeErrores>
+          </ConBannerConexion>
         </DependenciasProvider>
         <HostNotificaciones />
       </TemaProvider>
     </SafeAreaProvider>
   );
 }
-
-const estilos = StyleSheet.create({ columna: { flex: 1 } });
